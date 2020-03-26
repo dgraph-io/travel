@@ -21,6 +21,17 @@ github.com/leodido/go-urn
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/sergi/go-diff v1.1.0
+## explicit
+# github.com/stretchr/testify v1.5.1
+## explicit
+# golang.org/x/time v0.0.0-20191024005414-555d28b269f0
+## explicit
+golang.org/x/time/rate
+# googlemaps.github.io/maps v0.0.0-20200130222743-aef6b08443c7
+## explicit
+googlemaps.github.io/maps
+googlemaps.github.io/maps/internal
 # gopkg.in/go-playground/assert.v1 v1.2.1
 ## explicit
 # gopkg.in/go-playground/validator.v9 v9.31.0
