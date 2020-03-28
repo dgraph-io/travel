@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -32,7 +33,7 @@ func run() error {
 
 	var cfg struct {
 		DB struct {
-			Host string `conf:"default:0.0.0.0:9000"`
+			Host string `conf:"default:localhost:9080"`
 		}
 	}
 
@@ -64,7 +65,15 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(log); err != nil {
+	//if err := feed.Pull(log); err != nil {
+	//	return err
+	//}
+
+	ctx := context.TODO()
+	if err := feed.DB(ctx, cfg.DB.Host); err != nil {
+		return err
+	}
+	if err := feed.Query(ctx); err != nil {
 		return err
 	}
 
