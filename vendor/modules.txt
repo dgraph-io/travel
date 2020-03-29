@@ -28,11 +28,6 @@ github.com/google/uuid
 # github.com/leodido/go-urn v1.2.0
 ## explicit
 github.com/leodido/go-urn
-# github.com/machinebox/graphql v0.2.2
-## explicit
-github.com/machinebox/graphql
-# github.com/matryer/is v1.3.0
-## explicit
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
