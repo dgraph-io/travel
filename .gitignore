@@ -1,8 +1,6 @@
-travel
-
 # binaries
-places
-travel-api
+cmd/places/places
+cmd/travel-api/travel-api
 
 # Mac
 .DS_Store
