@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+//	"context"
 	"fmt"
 	"log"
 	"os"
@@ -65,17 +65,18 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	//if err := feed.Pull(log); err != nil {
-	//	return err
-	//}
+	if err := feed.Pull(log); err != nil {
+		return err
+	}
 
-	ctx := context.TODO()
+	//ctx := context.TODO()
+/*
 	if err := feed.DB(ctx, cfg.DB.Host); err != nil {
 		return err
 	}
 	if err := feed.Query(ctx); err != nil {
 		return err
 	}
-
+*/
 	return nil
 }
