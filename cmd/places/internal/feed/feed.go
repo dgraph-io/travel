@@ -12,7 +12,7 @@ import (
 func Pull(log *log.Logger) error {
 
 	// Construct a new client for API access.
-	mc, err := maps.NewClient(maps.WithAPIKey("AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnU"))
+	mc, err := maps.NewClient(maps.WithAPIKey("AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"))
 	if err != nil {
 		return err
 	}
