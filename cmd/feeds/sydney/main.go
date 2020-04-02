@@ -67,7 +67,7 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(cfg.API.Key, cfg.DB.Host); err != nil {
+	if err := feed.Pull(log, cfg.API.Key, cfg.DB.Host); err != nil {
 		return err
 	}
 

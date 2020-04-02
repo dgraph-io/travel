@@ -2,12 +2,13 @@ package feed
 
 import (
 	"context"
+	"log"
 
 	"github.com/dgraph-io/travel/cmd/feeds/sydney/internal/places"
 )
 
 // Pull retrieves and stores the feed data for this API.
-func Pull(apiKey string, dbHost string) error {
+func Pull(log *log.Logger, apiKey string, dbHost string) error {
 	ctx := context.Background()
 
 	loc := places.Location{
@@ -20,6 +21,8 @@ func Pull(apiKey string, dbHost string) error {
 	if err != nil {
 		return err
 	}
+
+	log.Print("place result\n", string(result))
 
 	if err := places.Store(ctx, dbHost, result); err != nil {
 		return err
