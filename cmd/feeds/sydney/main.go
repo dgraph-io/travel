@@ -1,14 +1,12 @@
 package main
 
 import (
-	//	"context"
-	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/ardanlabs/conf"
-	"github.com/dgraph-io/travel/cmd/feeds/places/internal/feed"
+	"github.com/dgraph-io/travel/cmd/feeds/sydney/internal/feed"
 	"github.com/pkg/errors"
 )
 
@@ -33,6 +31,9 @@ func run() error {
 	// Configuration
 
 	var cfg struct {
+		API struct {
+			Key string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
+		}
 		DB struct {
 			Host string `conf:"default:localhost:9080"`
 		}
@@ -66,7 +67,7 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(context.TODO(), cfg.DB.Host); err != nil {
+	if err := feed.Pull(cfg.API.Key, cfg.DB.Host); err != nil {
 		return err
 	}
 
