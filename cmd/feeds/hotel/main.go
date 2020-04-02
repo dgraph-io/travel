@@ -2,13 +2,12 @@ package main
 
 import (
 	//	"context"
-	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/ardanlabs/conf"
-	"github.com/dgraph-io/travel/cmd/places/internal/feed"
+	"github.com/dgraph-io/travel/cmd/feeds/hotel/internal/feed"
 	"github.com/pkg/errors"
 )
 
@@ -66,9 +65,18 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(context.TODO(), cfg.DB.Host); err != nil {
+	if err := feed.Pull(log); err != nil {
 		return err
 	}
 
+	//ctx := context.TODO()
+	/*
+		if err := feed.DB(ctx, cfg.DB.Host); err != nil {
+			return err
+		}
+		if err := feed.Query(ctx); err != nil {
+			return err
+		}
+	*/
 	return nil
 }
