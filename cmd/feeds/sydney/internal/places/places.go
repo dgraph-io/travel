@@ -1,4 +1,4 @@
-package feed
+package places
 
 import (
 	"context"
@@ -10,28 +10,30 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-type location struct {
-	lat     float64
-	lng     float64
-	keyword string
-	radius  uint
+// Location represents a geo-location on a map for search.
+type Location struct {
+	Lat     float64
+	Lng     float64
+	Keyword string
+	Radius  uint
 }
 
-func retrieveLocation(ctx context.Context, apiKey string, loc location) ([]byte, error) {
+// Retrieve finds places for the specified location.
+func Retrieve(ctx context.Context, apiKey string, loc Location) ([]byte, error) {
 	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, err
 	}
 
 	latLng := maps.LatLng{
-		Lat: loc.lat,
-		Lng: loc.lng,
+		Lat: loc.Lat,
+		Lng: loc.Lng,
 	}
 	nsr := maps.NearbySearchRequest{
 		Location:  &latLng,
-		Keyword:   loc.keyword,
+		Keyword:   loc.Keyword,
 		PageToken: "",
-		Radius:    loc.radius,
+		Radius:    loc.Radius,
 	}
 	resp, err := mc.NearbySearch(ctx, &nsr)
 	if err != nil {
@@ -41,7 +43,8 @@ func retrieveLocation(ctx context.Context, apiKey string, loc location) ([]byte,
 	return json.Marshal(resp.Results)
 }
 
-func storeLocation(ctx context.Context, dbHost string, jsonData []byte) error {
+// Store takes the result from a retrieve and stores that into DGraph.
+func Store(ctx context.Context, dbHost string, result []byte) error {
 	conn, err := grpc.Dial(dbHost, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -84,7 +87,7 @@ func storeLocation(ctx context.Context, dbHost string, jsonData []byte) error {
 	txn := client.NewTxn()
 	{
 		mut := api.Mutation{
-			SetJson: jsonData,
+			SetJson: result,
 		}
 		if _, err := txn.Mutate(ctx, &mut); err != nil {
 			txn.Discard(ctx)

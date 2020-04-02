@@ -2,24 +2,26 @@ package feed
 
 import (
 	"context"
+
+	"github.com/dgraph-io/travel/cmd/feeds/sydney/internal/places"
 )
 
 // Pull retrieves and stores the feed data for this API.
 func Pull(apiKey string, dbHost string) error {
 	ctx := context.Background()
 
-	loc := location{
-		lat:     -33.865143,
-		lng:     151.209900,
-		keyword: "Sydney",
-		radius:  5000,
+	loc := places.Location{
+		Lat:     -33.865143,
+		Lng:     151.209900,
+		Keyword: "Sydney",
+		Radius:  5000,
 	}
-	jsonData, err := retrieveLocation(ctx, apiKey, loc)
+	result, err := places.Retrieve(ctx, apiKey, loc)
 	if err != nil {
 		return err
 	}
 
-	if err := storeLocation(ctx, dbHost, jsonData); err != nil {
+	if err := places.Store(ctx, dbHost, result); err != nil {
 		return err
 	}
 
