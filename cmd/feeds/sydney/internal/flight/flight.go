@@ -1,4 +1,4 @@
-package feed
+package sydney
 
 import (
 	"io/ioutil"
@@ -6,9 +6,8 @@ import (
 	"net/http"
 )
 
-// Pull extracts the feed from the source.
-func Pull(log *log.Logger) error {
-
+// Retrieve finds flights for the specified location.
+func Retrieve(log *log.Logger) error {
 	key := "5e85cd97f030026c843fbfe0"
 	from := "LOND"
 	to := "LAX"
@@ -20,9 +19,9 @@ func Pull(log *log.Logger) error {
 	cabinClass := "Economy" // Business, Economy, First, PremiumEconomy
 	currency := "USD"
 
-	url := "https://api.flightapi.io/onewaytrip/" + key + "/" + from + "/" + to + "/" + fromDate + "/" + 
-	noAdults + "/" + noChild + "/" +noInfant + "/" + cabinClass + "/" + currency 
-	
+	url := "https://api.flightapi.io/onewaytrip/" + key + "/" + from + "/" + to + "/" + fromDate + "/" +
+		noAdults + "/" + noChild + "/" + noInfant + "/" + cabinClass + "/" + currency
+
 	//https://api.flightapi.io/onewaytrip/5e85cd97f030026c843fbfe0/BLR/KTM/2020-04-20/2/1/1/Economy/INR
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)

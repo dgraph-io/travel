@@ -6,12 +6,9 @@ import (
 	"net/http"
 )
 
-// Pull extracts the feed from the source.
-func Pull(log *log.Logger) error {
-
-	
-	
-	url := "https://api.makcorps.com/free/" 
+// Retrieve finds hotels for the specified location.
+func Retrieve(log *log.Logger) error {
+	url := "https://api.makcorps.com/free/"
 	city := "sydney"
 
 	url = url + city
