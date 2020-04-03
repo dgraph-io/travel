@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/dgraph-io/travel/cmd/feeds/sydney/internal/places"
+	"github.com/dgraph-io/travel/cmd/travel-data/internal/places"
 )
 
 // Pull retrieves and stores the feed data for this API.

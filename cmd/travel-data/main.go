@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf"
-	"github.com/dgraph-io/travel/cmd/feeds/sydney/internal/feed"
+	"github.com/dgraph-io/travel/cmd/travel-data/internal/feed"
 	"github.com/pkg/errors"
 )
 
