@@ -70,6 +70,8 @@ func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
 	// is happening at a pace too fast for the API.
 	var resp maps.PlacesSearchResponse
 	for i := 0; i < 3; i++ {
+
+		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
 				Lat: loc.Lat,
@@ -101,6 +103,7 @@ func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
 	data, err := json.Marshal(resp.Results)
 	if err != nil {
 		return nil, err
+<<<<<<< HEAD
 	}
 
 	// If the NextPageToken on the result is empty, we have all
@@ -113,6 +116,20 @@ func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
 	return data, nil
 }
 
+=======
+	}
+
+	// If the NextPageToken on the result is empty, we have all
+	// the results. Send an EOF to confirm that back to the caller.
+	loc.pageToken = resp.NextPageToken
+	if resp.NextPageToken == "" {
+		return data, io.EOF
+	}
+
+	return data, nil
+}
+
+>>>>>>> a361e555a49ba642a0147fc5712f93cf8fb6729d
 // Store takes the result from a retrieve and stores that into DGraph.
 func (p *Places) Store(ctx context.Context, data []byte) error {
 	op := &api.Operation{
