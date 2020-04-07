@@ -27,9 +27,6 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 		Radius:  5000,
 	}
 
-	// Grab 2 pages of data for now for testing.
-	for i := 0; i < 2; i++ {
-
 		// I hate this but we need to keep this non-idiomatic error
 		// variable because an io.EOF error means we are done but
 		// we did get data back to process.
@@ -48,7 +45,6 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 		if errRet == io.EOF {
 			break
 		}
-	}
-
+	
 	return nil
 }

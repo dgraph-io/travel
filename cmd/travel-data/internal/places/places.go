@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"time"
+	"log"
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -34,6 +35,20 @@ func New(apiKey string, dbHost string) (*Places, error) {
 		return nil, err
 	}
 
+	log.Printf("Initializing the database schema")
+	op := &api.Operation{
+		Schema: `
+			id: string @index(hash)  .
+			icon: string .
+			lat: float .
+			lng: float .
+			name: string @index(trigram, hash) .
+			photo_reference: string @index(hash) .
+			place_id: string @index(hash) .
+			scope: string @index(hash) .
+		`,
+	}
+	
 	// Construct the places value for use.
 	p := Places{
 		mc: mc,
@@ -42,17 +57,20 @@ func New(apiKey string, dbHost string) (*Places, error) {
 		),
 	}
 
+	if err := p.dgraph.Alter(ctx, op); err != nil {
+		return nil, err
+	}
+
 	return &p, nil
 }
 
 func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Places, error) {
-
 	// Retrieve finds places for the specified location.
 
 	// If this call is not looking for page 1, we need to pace
-	// the searches out. We are using 1/2 second for now.
+	// the searches out. We are using three seconds.
 	if loc.pageToken != "" {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 	}
 
 	// We will make three attempts to perform a search. You need to
@@ -60,6 +78,9 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 	// The call may result in an INVALID_REQUEST error if the call
 	// is happening at a pace too fast for the API.
 	var resp maps.PlacesSearchResponse
+
+	var placesResult []Places
+
 	for i := 0; i < 3; i++ {
 		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
@@ -78,10 +99,10 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 
 		// This is the problem. We need to check for the INVALID_REQUEST
 		// error. The only way to do that is to compare this string :(
-		// If this is the error, then wait 1/2 a second before trying again.
+		// If this is the error, then wait for a second before trying again.
 		if err != nil {
 			if err.Error() == "maps: INVALID_REQUEST - " {
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(1000 * time.Millisecond)
 				continue
 			}
 			return nil, err
@@ -91,7 +112,7 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 
 	// For quick refeence https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
 	searchResults := resp.Results
-	var placeResult []Places
+	placeResult := Places{}
 
 	for i:=0; i < len(searchResults); i++ {
 		placeResult.Name =  searchResults[i].Name
@@ -106,17 +127,15 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 		if len(SearchResults[i].Photos) {
 			placeResult.PhotoReferenceID = SearchResults[i].Photos[0].PhotoReference
 		}
-	}
-	// Marshal the result to JSON for processing with Dgraph.
-	data, err := json.Marshal(resp.Results)
-		return nil, err
+		placesResult.append(placeResult)
 	}
 
+	fmt.Printf("\nplace: \n %v", places[0])
 	// If the NextPageToken on the result is empty, we have all
 	// the results. Send an EOF to confirm that back to the caller.
 	loc.pageToken = resp.NextPageToken
 	if resp.NextPageToken == "" {
-		return data, io.EOF
+		return placesResult, io.EOF
 	}
 
 	return placeResult, nil
@@ -124,36 +143,6 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 
 // Store takes the result from a retrieve and stores that into DGraph.
 func (p *Places) Store(ctx context.Context, data []byte) error {
-	op := &api.Operation{
-		Schema: `
-			height: int .
-			width: int .
-			id: string @index(hash)  .
-			icon: string .
-			lat: float .
-			lng: float .
-			location_type: string  .
-			name: string @index(trigram, hash) .
-			photo_reference: string @index(hash) .
-			place_id: string @index(hash) .
-			scope: string @index(hash) .
-			vicinity: string @index(trigram) .
-			types: [string] .
-			html_attributions: [string] .
-
-			location: uid .
-			bounds: uid .
-			geometry: uid @reverse .
-			photos: [uid] @reverse @count .
-			northeast: uid .
-			southwest: uid .
-			viewport: uid .
-		`,
-	}
-	if err := p.dgraph.Alter(ctx, op); err != nil {
-		return err
-	}
-
 	txn := p.dgraph.NewTxn()
 	{
 		mut := api.Mutation{
@@ -163,7 +152,6 @@ func (p *Places) Store(ctx context.Context, data []byte) error {
 			txn.Discard(ctx)
 			return err
 		}
-
 		if err := txn.Commit(ctx); err != nil {
 			return nil
 		}
