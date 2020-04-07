@@ -12,15 +12,6 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-// Location represents a geo-location on a map for search.
-type Location struct {
-	Lat       float64
-	Lng       float64
-	Keyword   string
-	Radius    uint
-	pageToken string
-}
-
 // Places provides support for retrieving and storing results from
 // a Google Places search.
 type Places struct {
@@ -31,7 +22,6 @@ type Places struct {
 // New constructs a Places value that is initialized to both
 // search Google map Places and store the results in Dgraph.
 func New(apiKey string, dbHost string) (*Places, error) {
-
 	// Initialize the Google maps client with our key.
 	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
@@ -55,8 +45,9 @@ func New(apiKey string, dbHost string) (*Places, error) {
 	return &p, nil
 }
 
-// Retrieve finds places for the specified location.
-func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
+func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Places, error) {
+
+	// Retrieve finds places for the specified location.
 
 	// If this call is not looking for page 1, we need to pace
 	// the searches out. We are using 1/2 second for now.
@@ -70,7 +61,6 @@ func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
 	// is happening at a pace too fast for the API.
 	var resp maps.PlacesSearchResponse
 	for i := 0; i < 3; i++ {
-
 		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
@@ -99,11 +89,27 @@ func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
 		break
 	}
 
+	// For quick refeence https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
+	searchResults := resp.Results
+	var placeResult []Places
+
+	for i:=0; i < len(searchResults); i++ {
+		placeResult.Name =  searchResults[i].Name
+		placeResult.Address =  searchResults[i].Geometry.FormattedAddress
+		placeResult.Lat =  searchResults[i].Geometry.Location.Lat
+		placeResult.Lng =  searchResults[i].Geometry.Location.Lng
+		placeResult.GooglePlaceID =  searchResults[i].PlaceID
+		placeResult.LocationType =  searchResults[i].Types
+		placeResult.AvgUserRating =  searchResults[i].Rating
+		placeResult.NumberOfRatings =  searchResults[i].UserRatingsTotal
+		placeResult.PhotoReferenceID =  searchResults[i].FormattedAddress
+		if len(SearchResults[i].Photos) {
+			placeResult.PhotoReferenceID = SearchResults[i].Photos[0].PhotoReference
+		}
+	}
 	// Marshal the result to JSON for processing with Dgraph.
 	data, err := json.Marshal(resp.Results)
-	if err != nil {
 		return nil, err
-<<<<<<< HEAD
 	}
 
 	// If the NextPageToken on the result is empty, we have all
@@ -113,23 +119,9 @@ func (p *Places) Retrieve(ctx context.Context, loc *Location) ([]byte, error) {
 		return data, io.EOF
 	}
 
-	return data, nil
+	return placeResult, nil
 }
 
-=======
-	}
-
-	// If the NextPageToken on the result is empty, we have all
-	// the results. Send an EOF to confirm that back to the caller.
-	loc.pageToken = resp.NextPageToken
-	if resp.NextPageToken == "" {
-		return data, io.EOF
-	}
-
-	return data, nil
-}
-
->>>>>>> a361e555a49ba642a0147fc5712f93cf8fb6729d
 // Store takes the result from a retrieve and stores that into DGraph.
 func (p *Places) Store(ctx context.Context, data []byte) error {
 	op := &api.Operation{
