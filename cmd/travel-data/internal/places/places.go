@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"time"
 	"log"
+	"time"
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -22,7 +22,7 @@ type Places struct {
 
 // New constructs a Places value that is initialized to both
 // search Google map Places and store the results in Dgraph.
-func New(apiKey string, dbHost string) (*Places, error) {
+func New(apiKey string, dbHost string, CityInfo City) (*Places, error) {
 	// Initialize the Google maps client with our key.
 	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
@@ -35,7 +35,7 @@ func New(apiKey string, dbHost string) (*Places, error) {
 		return nil, err
 	}
 
-	log.Printf("Initializing the database schema")
+	// initialize the schema once
 	op := &api.Operation{
 		Schema: `
 			id: string @index(hash)  .
@@ -48,7 +48,7 @@ func New(apiKey string, dbHost string) (*Places, error) {
 			scope: string @index(hash) .
 		`,
 	}
-	
+
 	// Construct the places value for use.
 	p := Places{
 		mc: mc,
@@ -57,14 +57,32 @@ func New(apiKey string, dbHost string) (*Places, error) {
 		),
 	}
 
+	log.Printf("Initializing the database schema")
+
 	if err := p.dgraph.Alter(ctx, op); err != nil {
 		return nil, err
+	}
+
+	// TODO: Find if the node for sydney already exists, if yes, return the UID
+	log.Printf("Storing the city information for Sydney")
+	txn := p.dgraph.NewTxn()
+	{
+		mut := api.Mutation{
+			SetJson: data,
+		}
+		if _, err := txn.Mutate(ctx, &mut); err != nil {
+			txn.Discard(ctx)
+			return err
+		}
+		if err := txn.Commit(ctx); err != nil {
+			return nil
+		}
 	}
 
 	return &p, nil
 }
 
-func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Places, error) {
+func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Place, error) {
 	// Retrieve finds places for the specified location.
 
 	// If this call is not looking for page 1, we need to pace
@@ -85,8 +103,8 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
-				Lat: loc.Lat,
-				Lng: loc.Lng,
+				Lat: loc.CityInfo.Lat,
+				Lng: loc.CityInfo.Lng,
 			},
 			Keyword:   loc.Keyword,
 			PageToken: loc.pageToken,
@@ -114,16 +132,16 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 	searchResults := resp.Results
 	placeResult := Places{}
 
-	for i:=0; i < len(searchResults); i++ {
-		placeResult.Name =  searchResults[i].Name
-		placeResult.Address =  searchResults[i].Geometry.FormattedAddress
-		placeResult.Lat =  searchResults[i].Geometry.Location.Lat
-		placeResult.Lng =  searchResults[i].Geometry.Location.Lng
-		placeResult.GooglePlaceID =  searchResults[i].PlaceID
-		placeResult.LocationType =  searchResults[i].Types
-		placeResult.AvgUserRating =  searchResults[i].Rating
-		placeResult.NumberOfRatings =  searchResults[i].UserRatingsTotal
-		placeResult.PhotoReferenceID =  searchResults[i].FormattedAddress
+	for i := 0; i < len(searchResults); i++ {
+		placeResult.Name = searchResults[i].Name
+		placeResult.Address = searchResults[i].Geometry.FormattedAddress
+		placeResult.Lat = searchResults[i].Geometry.Location.Lat
+		placeResult.Lng = searchResults[i].Geometry.Location.Lng
+		placeResult.GooglePlaceID = searchResults[i].PlaceID
+		placeResult.LocationType = searchResults[i].Types
+		placeResult.AvgUserRating = searchResults[i].Rating
+		placeResult.NumberOfRatings = searchResults[i].UserRatingsTotal
+		placeResult.PhotoReferenceID = searchResults[i].FormattedAddress
 		if len(SearchResults[i].Photos) {
 			placeResult.PhotoReferenceID = SearchResults[i].Photos[0].PhotoReference
 		}
@@ -142,7 +160,7 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 }
 
 // Store takes the result from a retrieve and stores that into DGraph.
-func (p *Places) Store(ctx context.Context, data []byte) error {
+func (p *Places) Store(ctx context.Context, placesResult []Place) error {
 	txn := p.dgraph.NewTxn()
 	{
 		mut := api.Mutation{
