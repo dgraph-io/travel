@@ -3,6 +3,7 @@ package places
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -16,14 +17,14 @@ import (
 // Places provides support for retrieving and storing results from a
 // Google Places search.
 type Places struct {
-	mc     *maps.Client
-	dgraph *dgo.Dgraph
+	mc      *maps.Client
+	dgraph  *dgo.Dgraph
+	cityUID int
 }
 
 // New constructs a Places value that is initialized to both search Google
 // map Places and store the results in Dgraph.
-func New(ctx context.Context, apiKey string, dbHost string) (*Places, error) {
-
+func New(ctx context.Context, city City, apiKey string, dbHost string) (*Places, error) {
 	// Initialize the Google maps client with our key.
 	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
@@ -43,6 +44,9 @@ func New(ctx context.Context, apiKey string, dbHost string) (*Places, error) {
 		return nil, err
 	}
 
+	if _, err := SetCity(ctx, dgraph, city); err != nil {
+		return nil, err
+	}
 	// Construct the places value for use.
 	p := Places{
 		mc:     mc,
@@ -64,10 +68,9 @@ func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
 			icon: string .
 			lat: float .
 			lng: float .
-			name: string @index(trigram, hash) .
+			city_name: string @index(trigram, hash) @upsert .
 			photo_reference: string @index(hash) .
 			place_id: string @index(hash) .
-			scope: string @index(hash) .
 		`,
 	}
 
@@ -81,28 +84,50 @@ func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
 // SetCity checks to see if the specified city exits in the database or
 // creates the city. In either case, it returns the city id associated
 // with the city.
-func (p *Places) SetCity(ctx context.Context, city City) (int, error) {
+func SetCity(ctx context.Context, dgraph *dgo.Dgraph, city City) (int, error) {
 
 	// Convert the city value into json for the mutation call.
 	data, err := json.Marshal(city)
 	if err != nil {
 		return 0, err
 	}
+	log.Printf("city: %s", string(data))
+	// examples for upserts https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
+	// Docs https://dgraph.io/docs/mutations/#upsert-block
+	// Query variable example https://godoc.org/github.com/dgraph-io/dgo#Txn.Do
 
-	// TODO: Find if the node for sydney already exists, if yes, return the UID
-	txn := p.dgraph.NewTxn()
-	{
-		mut := api.Mutation{
-			SetJson: data,
-		}
-		if _, err := txn.Mutate(ctx, &mut); err != nil {
-			txn.Discard(ctx)
-			return 0, err
-		}
-		if err := txn.Commit(ctx); err != nil {
-			return 0, err
-		}
+	q1 := `
+{
+  findCity(func: eq(city_name, %s)) {
+	v as uid
+	city_name
+  }
+}`
+
+	// add the city name to the query string
+	q1 = fmt.Sprintf(q1, city.Name)
+
+	log.Printf("query: \n %s", q1)
+
+	// Create a node for the city, only if it doesn't exist.
+	req := &api.Request{
+		CommitNow: true,
+		Query:     q1,
+		Mutations: []*api.Mutation{
+			&api.Mutation{
+				Cond:    ` @if(eq(len(v), 0)) `,
+				SetJson: []byte(data),
+			},
+		},
 	}
+
+	// Update email only if matching uid found.
+	upsertResp, err := dgraph.NewTxn().Do(ctx, req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf(" upsert %v", upsertResp)
+	// TODO: Find if the node for sydney already exists, if yes, return the UID
 
 	return 0, nil
 }

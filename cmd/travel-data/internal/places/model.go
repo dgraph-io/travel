@@ -2,9 +2,9 @@ package places
 
 // City represents a city and its coordinates.
 type City struct {
-	Name string
-	Lat  float64
-	Lng  float64
+	Name string  `json:"city_name"`
+	Lat  float64 `json:"lat"`
+	Lng  float64 `json:"lng"`
 }
 
 // Search defines parameters that can be used in a Places
