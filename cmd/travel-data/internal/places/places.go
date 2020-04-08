@@ -13,29 +13,51 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-// Places provides support for retrieving and storing results from
-// a Google Places search.
+// Places provides support for retrieving and storing results from a
+// Google Places search.
 type Places struct {
 	mc     *maps.Client
 	dgraph *dgo.Dgraph
 }
 
-// New constructs a Places value that is initialized to both
-// search Google map Places and store the results in Dgraph.
-func New(apiKey string, dbHost string, CityInfo City) (*Places, error) {
+// New constructs a Places value that is initialized to both search Google
+// map Places and store the results in Dgraph.
+func New(ctx context.Context, apiKey string, dbHost string) (*Places, error) {
+
 	// Initialize the Google maps client with our key.
 	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, err
 	}
 
-	// Dial up an grpc connection to Dgraph.
+	// Dial up an grpc connection to dgraph and construct
+	// a dgraph client.
 	conn, err := grpc.Dial(dbHost, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
+	dgraph := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
-	// initialize the schema once
+	// Validate the schema we need in dgraph.
+	if err := validateSchema(ctx, dgraph); err != nil {
+		return nil, err
+	}
+
+	// Construct the places value for use.
+	p := Places{
+		mc:     mc,
+		dgraph: dgraph,
+	}
+
+	return &p, nil
+}
+
+// validateSchema is used to identify if a schema exists. If the schema
+// does not exist, the one is created.
+func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
+
+	// Define a dgraph schema operation for validating and
+	// creating a schema.
 	op := &api.Operation{
 		Schema: `
 			id: string @index(hash)  .
@@ -49,22 +71,25 @@ func New(apiKey string, dbHost string, CityInfo City) (*Places, error) {
 		`,
 	}
 
-	// Construct the places value for use.
-	p := Places{
-		mc: mc,
-		dgraph: dgo.NewDgraphClient(
-			api.NewDgraphClient(conn),
-		),
+	if err := dgraph.Alter(ctx, op); err != nil {
+		return err
 	}
 
-	log.Printf("Initializing the database schema")
+	return nil
+}
 
-	if err := p.dgraph.Alter(ctx, op); err != nil {
-		return nil, err
+// SetCity checks to see if the specified city exits in the database or
+// creates the city. In either case, it returns the city id associated
+// with the city.
+func (p *Places) SetCity(ctx context.Context, city City) (int, error) {
+
+	// Convert the city value into json for the mutation call.
+	data, err := json.Marshal(city)
+	if err != nil {
+		return 0, err
 	}
 
 	// TODO: Find if the node for sydney already exists, if yes, return the UID
-	log.Printf("Storing the city information for Sydney")
 	txn := p.dgraph.NewTxn()
 	{
 		mut := api.Mutation{
@@ -72,22 +97,22 @@ func New(apiKey string, dbHost string, CityInfo City) (*Places, error) {
 		}
 		if _, err := txn.Mutate(ctx, &mut); err != nil {
 			txn.Discard(ctx)
-			return err
+			return 0, err
 		}
 		if err := txn.Commit(ctx); err != nil {
-			return nil
+			return 0, err
 		}
 	}
 
-	return &p, nil
+	return 0, nil
 }
 
-func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Place, error) {
-	// Retrieve finds places for the specified location.
+// Search finds places for the specified search criteria.
+func (p *Places) Search(ctx context.Context, search Search) ([]Place, error) {
 
 	// If this call is not looking for page 1, we need to pace
 	// the searches out. We are using three seconds.
-	if loc.pageToken != "" {
+	if search.pageToken != "" {
 		time.Sleep(3000 * time.Millisecond)
 	}
 
@@ -96,19 +121,17 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 	// The call may result in an INVALID_REQUEST error if the call
 	// is happening at a pace too fast for the API.
 	var resp maps.PlacesSearchResponse
-
-	var placesResult []Places
-
 	for i := 0; i < 3; i++ {
+
 		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
-				Lat: loc.CityInfo.Lat,
-				Lng: loc.CityInfo.Lng,
+				Lat: search.Lat,
+				Lng: search.Lng,
 			},
-			Keyword:   loc.Keyword,
-			PageToken: loc.pageToken,
-			Radius:    loc.Radius,
+			Keyword:   search.Keyword,
+			PageToken: search.pageToken,
+			Radius:    search.Radius,
 		}
 
 		// Perform the Google Places search.
@@ -128,39 +151,54 @@ func (p *Places) Retrieve(ctx context.Context, loc *PlacesSearchRequest) ([]Plac
 		break
 	}
 
-	// For quick refeence https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
-	searchResults := resp.Results
-	placeResult := Places{}
+	// For quick reference
+	// https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
 
-	for i := 0; i < len(searchResults); i++ {
-		placeResult.Name = searchResults[i].Name
-		placeResult.Address = searchResults[i].Geometry.FormattedAddress
-		placeResult.Lat = searchResults[i].Geometry.Location.Lat
-		placeResult.Lng = searchResults[i].Geometry.Location.Lng
-		placeResult.GooglePlaceID = searchResults[i].PlaceID
-		placeResult.LocationType = searchResults[i].Types
-		placeResult.AvgUserRating = searchResults[i].Rating
-		placeResult.NumberOfRatings = searchResults[i].UserRatingsTotal
-		placeResult.PhotoReferenceID = searchResults[i].FormattedAddress
-		if len(SearchResults[i].Photos) {
-			placeResult.PhotoReferenceID = SearchResults[i].Photos[0].PhotoReference
+	var places []Place
+	for _, result := range resp.Results {
+
+		// Validate if a photo even exists for this place.
+		var photoReferenceID string
+		if len(result.Photos) == 0 {
+			photoReferenceID = result.Photos[0].PhotoReference
 		}
-		placesResult.append(placeResult)
+
+		// Construct a place value based on search results.
+		place := Place{
+			Name:             result.Name,
+			Address:          result.FormattedAddress,
+			Lat:              result.Geometry.Location.Lat,
+			Lng:              result.Geometry.Location.Lng,
+			GooglePlaceID:    result.PlaceID,
+			LocationType:     result.Types,
+			AvgUserRating:    result.Rating,
+			NumberOfRatings:  result.UserRatingsTotal,
+			PhotoReferenceID: photoReferenceID,
+		}
+
+		// Save the place in the collection of places.
+		places = append(places, place)
 	}
 
-	fmt.Printf("\nplace: \n %v", places[0])
 	// If the NextPageToken on the result is empty, we have all
 	// the results. Send an EOF to confirm that back to the caller.
-	loc.pageToken = resp.NextPageToken
+	search.pageToken = resp.NextPageToken
 	if resp.NextPageToken == "" {
-		return placesResult, io.EOF
+		return places, io.EOF
 	}
 
-	return placeResult, nil
+	return places, nil
 }
 
 // Store takes the result from a retrieve and stores that into DGraph.
-func (p *Places) Store(ctx context.Context, placesResult []Place) error {
+func (p *Places) Store(ctx context.Context, log *log.Logger, place Place) error {
+
+	// Convert the collection of palces into json for the mutation call.
+	data, err := json.Marshal(place)
+	if err != nil {
+		return err
+	}
+
 	txn := p.dgraph.NewTxn()
 	{
 		mut := api.Mutation{

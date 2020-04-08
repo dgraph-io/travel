@@ -1,5 +1,23 @@
 package places
 
+// City represents a city and its coordinates.
+type City struct {
+	Name string
+	Lat  float64
+	Lng  float64
+}
+
+// Search defines parameters that can be used in a Places
+// search call.
+type Search struct {
+	Lat       float64
+	Lng       float64
+	Keyword   string
+	Radius    uint
+	pageToken string
+}
+
+// Place represents a location that can be found on a Google map.
 type Place struct {
 	Name             string
 	Address          string
@@ -11,18 +29,4 @@ type Place struct {
 	NumberOfRatings  int
 	GmapsURL         string
 	PhotoReferenceID string
-}
-
-type City struct {
-	Name string
-	Lat  float64
-	Lng  float64
-}
-
-// Location represents a geo-location on a map for Google location search
-type PlacesSearchRequest struct {
-	CityInfo  City
-	Keyword   string
-	Radius    uint
-	pageToken string
 }

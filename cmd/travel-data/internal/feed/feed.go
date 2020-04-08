@@ -12,42 +12,60 @@ import (
 func Pull(log *log.Logger, apiKey string, dbHost string) error {
 	ctx := context.Background()
 
+	// Construct a places value so we can search and store
+	// the place data we need.
+	p, err := places.New(ctx, apiKey, dbHost)
+	if err != nil {
+		return err
+	}
+
+	// Make sure Sydney is set in the database.
+	// TODO: need to use the cityID that is returned.
+	log.Print("feed : Pull : SetCity : Setting Sydney in DB")
 	city := places.City{
 		Name: "Sydney",
 		Lat:  -33.865143, // This is the lat,lng for Sydney.
 		Lng:  151.209900,
 	}
-	// Construct a places value so we can search and store
-	// the place data we need.
-	p, err := places.New(apiKey, dbHost)
+	_, err = p.SetCity(ctx, city)
 	if err != nil {
 		return err
 	}
 
 	// Pull all the hotels for Sydney, Australia.
-	loc := places.PlacesSearchRequest{
-		CityInfo: city,
-		Keyword:  "hotels",
-		Radius:   5000,
+	search := places.Search{
+		Lat:     city.Lat,
+		Lng:     city.Lng,
+		Keyword: "hotels",
+		Radius:  5000,
 	}
 
-	// I hate this but we need to keep this non-idiomatic error
-	// variable because an io.EOF error means we are done but
-	// we did get data back to process.
-	result, errRet := p.Retrieve(ctx, &loc)
-	if errRet != nil && errRet != io.EOF {
-		return errRet
-	}
-	log.Printf("******************** place result ********************\n\n%s\n\n", string(result))
+	// For now we will test with 1 place.
+	for i := 0; i < 1; i++ {
 
-	// Store the results in Dgraph.
-	// if err := p.Store(ctx, result); err != nil {
-	// 	return err
-	// }
+		// I hate this but we need to keep this non-idiomatic error
+		// variable because an io.EOF error means we are done but
+		// we did get data back to process.
+		log.Printf("feed : Pull : Search : Searching for %q", search.Keyword)
+		places, errRet := p.Search(ctx, search)
+		if errRet != nil && errRet != io.EOF {
+			return errRet
+		}
 
-	// If this was the last result, we are done.
-	if errRet == io.EOF {
-		break
+		log.Printf("******************** place result ********************\n\n%+v\n\n", places)
+
+		// Store the places in Dgraph.
+		for _, place := range places {
+			log.Printf("feed : Pull : Store : Adding place %q", place.Name)
+			if err := p.Store(ctx, log, place); err != nil {
+				return err
+			}
+		}
+
+		// If this was the last result, we are done.
+		if errRet == io.EOF {
+			break
+		}
 	}
 
 	return nil
