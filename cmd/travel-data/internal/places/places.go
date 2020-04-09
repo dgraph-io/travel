@@ -14,17 +14,17 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-// Places provides support for retrieving and storing results from a
+// Client provides support for retrieving and storing results from a
 // Google Places search.
-type Places struct {
-	mc      *maps.Client
-	dgraph  *dgo.Dgraph
-	cityUID int
+type Client struct {
+	mc     *maps.Client
+	dgraph *dgo.Dgraph
 }
 
-// New constructs a Places value that is initialized to both search Google
-// map Places and store the results in Dgraph.
-func New(ctx context.Context, city City, apiKey string, dbHost string) (*Places, error) {
+// NewClient constructs a Client value that is initialized for use with
+// Google places search and Dgraph.
+func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, error) {
+
 	// Initialize the Google maps client with our key.
 	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
@@ -44,16 +44,13 @@ func New(ctx context.Context, city City, apiKey string, dbHost string) (*Places,
 		return nil, err
 	}
 
-	if _, err := SetCity(ctx, dgraph, city); err != nil {
-		return nil, err
-	}
 	// Construct the places value for use.
-	p := Places{
+	client := Client{
 		mc:     mc,
 		dgraph: dgraph,
 	}
 
-	return &p, nil
+	return &client, nil
 }
 
 // validateSchema is used to identify if a schema exists. If the schema
@@ -81,59 +78,84 @@ func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
 	return nil
 }
 
-// SetCity checks to see if the specified city exits in the database or
-// creates the city. In either case, it returns the city id associated
-// with the city.
-func SetCity(ctx context.Context, dgraph *dgo.Dgraph, city City) (int, error) {
+// Search defines parameters that can be used in a search.
+type Search struct {
+	Keyword   string
+	Radius    uint
+	pageToken string
+}
+
+// Place represents a location that can be retrieved from a search.
+type Place struct {
+	Name             string
+	Address          string
+	Lat              float64
+	Lng              float64
+	GooglePlaceID    string
+	LocationType     []string
+	AvgUserRating    float32
+	NumberOfRatings  int
+	GmapsURL         string
+	PhotoReferenceID string
+}
+
+// City represents a city and its coordinates.
+type City struct {
+	*Client
+	ID   string  `json:"-"`
+	Name string  `json:"city_name"`
+	Lat  float64 `json:"lat"`
+	Lng  float64 `json:"lng"`
+}
+
+// NewCity constructs a city that can be used to preform searches and
+// database operations.
+func NewCity(ctx context.Context, client *Client, name string, lat float64, lng float64) (*City, error) {
+
+	// Construct a city value.
+	city := City{
+		Name:   name,
+		Lat:    lat,
+		Lng:    lng,
+		Client: client,
+	}
 
 	// Convert the city value into json for the mutation call.
 	data, err := json.Marshal(city)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	log.Printf("city: %s", string(data))
+
+	// Define a graphql function to find the specified city by name.
+	q1 := fmt.Sprintf(`{ findCity(func: eq(city_name, %s)) { v as uid city_name } }`, city.Name)
+
 	// examples for upserts https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
 	// Docs https://dgraph.io/docs/mutations/#upsert-block
 	// Query variable example https://godoc.org/github.com/dgraph-io/dgo#Txn.Do
 
-	q1 := `
-{
-  findCity(func: eq(city_name, %s)) {
-	v as uid
-	city_name
-  }
-}`
-
-	// add the city name to the query string
-	q1 = fmt.Sprintf(q1, city.Name)
-
-	log.Printf("query: \n %s", q1)
-
-	// Create a node for the city, only if it doesn't exist.
-	req := &api.Request{
+	// Define and execute a request to add the city if it doesn't exist yet.
+	req := api.Request{
 		CommitNow: true,
 		Query:     q1,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:    ` @if(eq(len(v), 0)) `,
 				SetJson: []byte(data),
 			},
 		},
 	}
-
-	// Update email only if matching uid found.
-	upsertResp, err := dgraph.NewTxn().Do(ctx, req)
+	_, err = client.dgraph.NewTxn().Do(ctx, &req)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	log.Printf(" upsert %v", upsertResp)
+
 	// TODO: Find if the node for sydney already exists, if yes, return the UID
 
-	return 0, nil
+	return &city, nil
 }
 
 // Search finds places for the specified search criteria.
-func (p *Places) Search(ctx context.Context, search Search) ([]Place, error) {
+func (cty *City) Search(ctx context.Context, search Search) ([]Place, error) {
 
 	// If this call is not looking for page 1, we need to pace
 	// the searches out. We are using three seconds.
@@ -151,8 +173,8 @@ func (p *Places) Search(ctx context.Context, search Search) ([]Place, error) {
 		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
-				Lat: search.Lat,
-				Lng: search.Lng,
+				Lat: cty.Lat,
+				Lng: cty.Lng,
 			},
 			Keyword:   search.Keyword,
 			PageToken: search.pageToken,
@@ -161,7 +183,7 @@ func (p *Places) Search(ctx context.Context, search Search) ([]Place, error) {
 
 		// Perform the Google Places search.
 		var err error
-		resp, err = p.mc.NearbySearch(ctx, &nsr)
+		resp, err = cty.mc.NearbySearch(ctx, &nsr)
 
 		// This is the problem. We need to check for the INVALID_REQUEST
 		// error. The only way to do that is to compare this string :(
@@ -216,7 +238,7 @@ func (p *Places) Search(ctx context.Context, search Search) ([]Place, error) {
 }
 
 // Store takes the result from a retrieve and stores that into DGraph.
-func (p *Places) Store(ctx context.Context, log *log.Logger, place Place) error {
+func (cty *City) Store(ctx context.Context, log *log.Logger, place Place) error {
 
 	// Convert the collection of palces into json for the mutation call.
 	data, err := json.Marshal(place)
@@ -224,7 +246,7 @@ func (p *Places) Store(ctx context.Context, log *log.Logger, place Place) error 
 		return err
 	}
 
-	txn := p.dgraph.NewTxn()
+	txn := cty.dgraph.NewTxn()
 	{
 		mut := api.Mutation{
 			SetJson: data,
