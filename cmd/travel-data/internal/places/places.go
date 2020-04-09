@@ -17,8 +17,8 @@ import (
 // Client provides support for retrieving and storing results from a
 // Google Places search.
 type Client struct {
-	mc     *maps.Client
-	dgraph *dgo.Dgraph
+	mapClient *maps.Client
+	dgraph    *dgo.Dgraph
 }
 
 // NewClient constructs a Client value that is initialized for use with
@@ -26,7 +26,7 @@ type Client struct {
 func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, error) {
 
 	// Initialize the Google maps client with our key.
-	mc, err := maps.NewClient(maps.WithAPIKey(apiKey))
+	mapClient, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, err
 	}
@@ -39,43 +39,13 @@ func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, erro
 	}
 	dgraph := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
-	// Validate the schema we need in dgraph.
-	if err := validateSchema(ctx, dgraph); err != nil {
-		return nil, err
-	}
-
 	// Construct the places value for use.
 	client := Client{
-		mc:     mc,
-		dgraph: dgraph,
+		mapClient: mapClient,
+		dgraph:    dgraph,
 	}
 
 	return &client, nil
-}
-
-// validateSchema is used to identify if a schema exists. If the schema
-// does not exist, the one is created.
-func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
-
-	// Define a dgraph schema operation for validating and
-	// creating a schema.
-	op := &api.Operation{
-		Schema: `
-			id: string @index(hash)  .
-			icon: string .
-			lat: float .
-			lng: float .
-			city_name: string @index(trigram, hash) @upsert .
-			photo_reference: string @index(hash) .
-			place_id: string @index(hash) .
-		`,
-	}
-
-	if err := dgraph.Alter(ctx, op); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Search defines parameters that can be used in a search.
@@ -111,6 +81,11 @@ type City struct {
 // NewCity constructs a city that can be used to preform searches and
 // database operations.
 func NewCity(ctx context.Context, client *Client, name string, lat float64, lng float64) (*City, error) {
+
+	// Validate the schema we need in dgraph.
+	if err := validateSchema(ctx, client.dgraph); err != nil {
+		return nil, err
+	}
 
 	// Construct a city value.
 	city := City{
@@ -154,6 +129,31 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 	return &city, nil
 }
 
+// validateSchema is used to identify if a schema exists. If the schema
+// does not exist, the one is created.
+func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
+
+	// Define a dgraph schema operation for validating and
+	// creating a schema.
+	op := &api.Operation{
+		Schema: `
+			id: string @index(hash)  .
+			icon: string .
+			lat: float .
+			lng: float .
+			city_name: string @index(trigram, hash) @upsert .
+			photo_reference: string @index(hash) .
+			place_id: string @index(hash) .
+		`,
+	}
+
+	if err := dgraph.Alter(ctx, op); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Search finds places for the specified search criteria.
 func (cty *City) Search(ctx context.Context, search Search) ([]Place, error) {
 
@@ -183,7 +183,7 @@ func (cty *City) Search(ctx context.Context, search Search) ([]Place, error) {
 
 		// Perform the Google Places search.
 		var err error
-		resp, err = cty.mc.NearbySearch(ctx, &nsr)
+		resp, err = cty.mapClient.NearbySearch(ctx, &nsr)
 
 		// This is the problem. We need to check for the INVALID_REQUEST
 		// error. The only way to do that is to compare this string :(

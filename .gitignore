@@ -1,10 +1,5 @@
 # binaries
-cmd/feeds/places/places
-cmd/feeds/advisory/advisory
-cmd/feeds/flight/flight
-cmd/feeds/hotel/hotel
-cmd/feeds/weather/weather
-cmd/feeds/sydney/sydney
+cmd/travel-data/travel-data
 cmd/travel-api/travel-api
 
 # Mac
