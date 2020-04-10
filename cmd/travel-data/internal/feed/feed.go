@@ -3,10 +3,8 @@ package feed
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"log"
-	"strings"
 
 	"github.com/dgraph-io/travel/cmd/travel-data/internal/places"
 )
@@ -58,15 +56,13 @@ func Pull(log *log.Logger, cityName string, apiKey string, dbHost string) error 
 
 		// Store each individual place in Dgraph.
 		log.Printf("feed : Pull : Store : Adding %d Places", len(places))
-		var out strings.Builder
 		for _, place := range places {
-			out.WriteString(fmt.Sprintf("%+v\n", place))
 			if err := city.Store(ctx, log, place); err != nil {
-				log.Print("feed : Pull : Store : ERROR : ", err)
-				return ErrFailed
+				log.Printf("feed : Pull : Store : ERROR : %s : %+v", err, place)
+				continue
 			}
+			log.Printf("feed : Pull : Store : Success : %+v", place)
 		}
-		log.Printf("feed : Pull : Store : Places Added\n%+v", out.String())
 
 		// If this was the last result, we are done.
 		if errRet == io.EOF {

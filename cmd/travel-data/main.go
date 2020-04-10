@@ -11,9 +11,10 @@ import (
 )
 
 // TODO
+// Add TODO items here so they are all together and the team can
+// cherry pick those they want to get done.
 /*
-	If a store call fails, don't quit but keep adding.
-	Log those places that are saved.
+	Describe the TODO item here.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
