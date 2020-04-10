@@ -133,29 +133,16 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 	}
 
 	// Capture the database id for the city.
-	val, ok := result.Uids["sydney"]
-	switch {
-	case ok:
-
-		// This means we just added the city.
-		city.ID = val
-
-	default:
-
-		// TODO: Check this works in both situation.
-		var uid struct {
-			FindCity []City `json:"findCity"`
-		}
-		if err := json.Unmarshal(result.Json, &uid); err != nil {
-			return nil, err
-		}
-
-		if len(uid.FindCity) == 0 {
-			return nil, errors.New("unable to capture id for city")
-		}
-
-		city.ID = uid.FindCity[0].ID
+	var uid struct {
+		FindCity []City `json:"findCity"`
 	}
+	if err := json.Unmarshal(result.Json, &uid); err != nil {
+		return nil, err
+	}
+	if len(uid.FindCity) == 0 {
+		return nil, errors.New("unable to capture id for city")
+	}
+	city.ID = uid.FindCity[0].ID
 
 	return &city, nil
 }
