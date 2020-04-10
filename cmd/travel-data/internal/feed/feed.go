@@ -48,12 +48,12 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 		log.Printf("******************** place result ********************\n\n%+v\n\n", places)
 
 		// Store the places in Dgraph.
-		// for _, place := range places {
-		// 	log.Printf("feed : Pull : Store : Adding place %q", place.Name)
-		// 	if err := city.Store(ctx, log, place); err != nil {
-		// 		return err
-		// 	}
-		// }
+		for _, place := range places {
+			log.Printf("feed : Pull : Store : Adding place %q", place.Name)
+			if err := city.Store(ctx, log, place); err != nil {
+				return err
+			}
+		}
 
 		// If this was the last result, we are done.
 		if errRet == io.EOF {
