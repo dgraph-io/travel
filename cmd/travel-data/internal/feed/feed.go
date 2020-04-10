@@ -16,7 +16,7 @@ import (
 var ErrFailed = errors.New("feed failed")
 
 // Pull retrieves and stores the feed data for this API.
-func Pull(log *log.Logger, apiKey string, dbHost string) error {
+func Pull(log *log.Logger, cityName string, apiKey string, dbHost string) error {
 	ctx := context.Background()
 
 	// Construct a client value so we can search and store
@@ -28,7 +28,7 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 	}
 
 	// Construct a city so we can perform work against that city.
-	city, err := places.NewCity(ctx, client, "Sydney", -33.865143, 151.209900)
+	city, err := places.NewCity(ctx, client, cityName, -33.865143, 151.209900)
 	if err != nil {
 		log.Print("feed : Pull : NewCity : ERROR : ", err)
 		return ErrFailed
@@ -36,7 +36,7 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 
 	log.Printf("feed : Pull : SetCity : Set %q with ID %q in DB", city.Name, city.ID)
 
-	// Pull all the hotels for Sydney, Australia.
+	// Pull all the hotels for the configured city.
 	search := places.Search{
 		Keyword: "hotels",
 		Radius:  5000,
@@ -56,7 +56,7 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 		}
 		log.Printf("feed : Pull : Search : Result\n%+v", places)
 
-		// Store the places in Dgraph.
+		// Store each individual place in Dgraph.
 		log.Printf("feed : Pull : Store : Adding %d Places", len(places))
 		var out strings.Builder
 		for _, place := range places {

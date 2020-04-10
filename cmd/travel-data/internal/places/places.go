@@ -12,7 +12,6 @@ package places
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -99,7 +98,7 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 
 	// Construct a city value.
 	city := City{
-		ID:     "_:sydney",
+		ID:     "_:" + name,
 		Name:   name,
 		Lat:    lat,
 		Lng:    lng,
@@ -140,7 +139,7 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 		return nil, err
 	}
 	if len(uid.FindCity) == 0 {
-		return nil, errors.New("unable to capture id for city")
+		return nil, fmt.Errorf("unable to capture id for city: %s", result.Json)
 	}
 	city.ID = uid.FindCity[0].ID
 

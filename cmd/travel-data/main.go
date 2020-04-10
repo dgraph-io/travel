@@ -31,7 +31,10 @@ func run() error {
 	// Configuration
 
 	var cfg struct {
-		API struct {
+		City struct {
+			Name string `conf:"default:sydney"`
+		}
+		Maps struct {
 			Key string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
 		}
 		DB struct {
@@ -67,7 +70,7 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(log, cfg.API.Key, cfg.DB.Host); err != nil {
+	if err := feed.Pull(log, cfg.City.Name, cfg.Maps.Key, cfg.DB.Host); err != nil {
 		return err
 	}
 
