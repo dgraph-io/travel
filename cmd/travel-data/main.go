@@ -15,19 +15,17 @@ var build = "develop"
 
 func main() {
 	if err := run(); err != nil {
-		log.Println("error :", err)
+		log.Println("main : ERROR : ", err)
 		os.Exit(1)
 	}
 }
 
 func run() error {
-	// Quick way to run Dgraph
-	// docker run -it -p 8080:8080 -p 9080:9080 -p 8080:8080dgraph/standalone:v20.03.0
-	// Go to localhost:8000 on your Browser for Ratel UI
+
 	// =========================================================================
 	// Logging
 
-	log := log.New(os.Stdout, "PLACES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	log := log.New(os.Stdout, "DATA : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	// =========================================================================
 	// Configuration

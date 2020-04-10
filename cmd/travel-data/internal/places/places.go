@@ -1,8 +1,18 @@
+// Package places is providing support to query the Google maps places API
+// and retrieve places for a specified city. Places also stores the results
+// of these searches into Dgraph.
+//
+// For quick reference links:
+// https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
+// https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
+// https://dgraph.io/docs/mutations/#upsert-block
+// https://godoc.org/github.com/dgraph-io/dgo#Txn.Do
 package places
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -24,6 +34,7 @@ type Client struct {
 // NewClient constructs a Client value that is initialized for use with
 // Google places search and Dgraph.
 func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, error) {
+
 	// Initialize the Google maps client with our key.
 	mapClient, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
@@ -81,9 +92,6 @@ type City struct {
 // database operations.
 func NewCity(ctx context.Context, client *Client, name string, lat float64, lng float64) (*City, error) {
 
-	type ParseUID struct {
-		FindCity []City `json:"findCity"`
-	}
 	// Validate the schema we need in dgraph.
 	if err := validateSchema(ctx, client.dgraph); err != nil {
 		return nil, err
@@ -107,11 +115,8 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 	// Define a graphql function to find the specified city by name.
 	q1 := fmt.Sprintf(`{ findCity(func: eq(city_name, %s)) { v as uid city_name } }`, city.Name)
 
-	// examples for upserts https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
-	// Docs https://dgraph.io/docs/mutations/#upsert-block
-	// Query variable example https://godoc.org/github.com/dgraph-io/dgo#Txn.Do
-
 	// Define and execute a request to add the city if it doesn't exist yet.
+	// TODO: Can this return the City ID even if it already exists?
 	req := api.Request{
 		CommitNow: true,
 		Query:     q1,
@@ -126,39 +131,31 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 	if err != nil {
 		return nil, err
 	}
-	log.Println("here2")
-	if val, ok := result.Uids["sydney"]; ok {
-		// When the city node is inserted for the first time
+
+	// Capture the database id for the city.
+	val, ok := result.Uids["sydney"]
+	switch {
+	case ok:
+
+		// This means we just added the city.
 		city.ID = val
-		log.Printf("id :%s\n", val)
-		log.Println("here3")
-	} else {
-		// When the City node already exists.
-		parseUID := ParseUID{}
-		log.Println("here1")
-		err = json.Unmarshal(result.Json, &parseUID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if len(parseUID.FindCity) == 0 {
-			log.Fatal("uid doesn't exist")
-		} else {
-			log.Println("here4")
-			city.ID = parseUID.FindCity[0].ID
-			dataTest, _ := json.Marshal(parseUID)
-			log.Printf("city already exists :%v\n", string(dataTest))
-			log.Printf(parseUID.FindCity[0].ID)
-		}
-	}
 
-	resultByte, err := json.Marshal(result)
-	if err != nil {
-		return nil, err
-	}
+	default:
 
-	log.Printf("uid1: \n%v", string(resultByte))
-	log.Printf("uid1=2: \n%v", result)
-	// TODO: Find if the node for sydney already exists, if yes, return the UID
+		// TODO: Check this works in both situation.
+		var uid struct {
+			FindCity []City `json:"findCity"`
+		}
+		if err := json.Unmarshal(result.Json, &uid); err != nil {
+			return nil, err
+		}
+
+		if len(uid.FindCity) == 0 {
+			return nil, errors.New("unable to capture id for city")
+		}
+
+		city.ID = uid.FindCity[0].ID
+	}
 
 	return &city, nil
 }
@@ -232,9 +229,6 @@ func (city *City) Search(ctx context.Context, search Search) ([]Place, error) {
 		break
 	}
 
-	// For quick reference
-	// https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
-
 	var places []Place
 	for _, result := range resp.Results {
 
@@ -274,25 +268,18 @@ func (city *City) Search(ctx context.Context, search Search) ([]Place, error) {
 // Store takes the result from a retrieve and stores that into DGraph.
 func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error {
 
-	// Convert the collection of palces into json for the mutation call.
+	// Convert the place into json for the mutation call.
 	data, err := json.Marshal(place)
 	if err != nil {
 		return err
 	}
 
-	// Define a graphql function to find the specified city by name.
+	// Define a graphql function to find the specified city by name and
+	// a mutation connecting the place to the City node with the
+	// `has_place` relationship.
 	query := fmt.Sprintf(`{ findPlace(func: eq(google_place_id, %s)) { v as uid  } }`, place.GooglePlaceID)
-
-	// Mutation connecting the hotel to the City node with the `has_place` relationship.
-
 	mutation := fmt.Sprintf(`{ "uid": "%s", "has_place" : %s }`, city.ID, string(data))
 
-	// examples for upserts https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
-	// Docs https://dgraph.io/docs/mutations/#upsert-block
-	// Query variable example https://godoc.org/github.com/dgraph-io/dgo#Txn.Do
-
-	log.Printf("query: \n%s", query)
-	log.Printf("mutation: \n%s", mutation)
 	// Define and execute a request to add the city if it doesn't exist yet.
 	req := api.Request{
 		CommitNow: true,
@@ -304,10 +291,11 @@ func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error
 			},
 		},
 	}
-	upsertResult, err := city.dgraph.NewTxn().Do(ctx, &req)
-	if err != nil {
+	if _, err := city.dgraph.NewTxn().Do(ctx, &req); err != nil {
+		log.Printf("places : Store : query : %s", query)
+		log.Printf("places : Store : mutation : %s", mutation)
 		return err
 	}
-	log.Printf("upsert result: \n %v", upsertResult)
+
 	return nil
 }

@@ -2,11 +2,18 @@ package feed
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/dgraph-io/travel/cmd/travel-data/internal/places"
 )
+
+// ErrFailed is used to report the program failed back to main
+// so the correct error code is returned.
+var ErrFailed = errors.New("feed failed")
 
 // Pull retrieves and stores the feed data for this API.
 func Pull(log *log.Logger, apiKey string, dbHost string) error {
@@ -16,13 +23,15 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 	// the city data we need.
 	client, err := places.NewClient(ctx, apiKey, dbHost)
 	if err != nil {
-		return err
+		log.Print("feed : Pull : NewClient : ERROR : ", err)
+		return ErrFailed
 	}
 
 	// Construct a city so we can perform work against that city.
 	city, err := places.NewCity(ctx, client, "Sydney", -33.865143, 151.209900)
 	if err != nil {
-		return err
+		log.Print("feed : Pull : NewCity : ERROR : ", err)
+		return ErrFailed
 	}
 
 	log.Printf("feed : Pull : SetCity : Set %q with ID %q in DB", city.Name, city.ID)
@@ -42,18 +51,22 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 		log.Printf("feed : Pull : Search : Searching for %q", search.Keyword)
 		places, errRet := city.Search(ctx, search)
 		if errRet != nil && errRet != io.EOF {
-			return errRet
+			log.Print("feed : Pull : Search : ERROR : ", errRet)
+			return ErrFailed
 		}
-
-		log.Printf("******************** place result ********************\n\n%+v\n\n", places)
+		log.Printf("feed : Pull : Search : Result\n%+v", places)
 
 		// Store the places in Dgraph.
-		for i := 0; i < 10; i++ {
-			log.Printf("feed : Pull : Store : Adding place %q", places[i].Name)
-			if err := city.Store(ctx, log, places[i]); err != nil {
-				return err
+		log.Printf("feed : Pull : Store : Adding %d Places", len(places))
+		var out strings.Builder
+		for _, place := range places {
+			out.WriteString(fmt.Sprintf("%+v\n", place))
+			if err := city.Store(ctx, log, place); err != nil {
+				log.Print("feed : Pull : Store : ERROR : ", err)
+				return ErrFailed
 			}
 		}
+		log.Printf("feed : Pull : Store : Places Added\n%+v", out.String())
 
 		// If this was the last result, we are done.
 		if errRet == io.EOF {
