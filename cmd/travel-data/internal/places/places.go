@@ -57,16 +57,16 @@ type Search struct {
 
 // Place represents a location that can be retrieved from a search.
 type Place struct {
-	Name             string `json: "place_name"`
-	Address          string `json: "address`
-	Lat              float64 `json:"lat"`
-	Lng              float64 `json:"lng"`
-	GooglePlaceID    string  `json: "google_place_id"`
+	Name             string   `json: "place_name"`
+	Address          string   `json: "address`
+	Lat              float64  `json:"lat"`
+	Lng              float64  `json:"lng"`
+	GooglePlaceID    string   `json: "google_place_id"`
 	LocationType     []string `json: "location_type"`
-	AvgUserRating    float32 `json: "avg_user_rating"`
-	NumberOfRatings  int `json: "no_user_rating"`
-	GmapsURL         string `json: "gmaps_url"`
-	PhotoReferenceID string `json: "photo_id"`
+	AvgUserRating    float32  `json: "avg_user_rating"`
+	NumberOfRatings  int      `json: "no_user_rating"`
+	GmapsURL         string   `json: "gmaps_url"`
+	PhotoReferenceID string   `json: "photo_id"`
 }
 
 // City represents a city and its coordinates.
@@ -245,12 +245,6 @@ func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error
 		return err
 	}
 
-	// Convert the city value into json for the mutation call.
-	data, err := json.Marshal(place)
-	if err != nil {
-		return err
-	}
-
 	// Define a graphql function to find the specified city by name.
 	query := fmt.Sprintf(`{ findPlace(func: eq(google_place_id, %s)) { v as uid  } }`, place.GooglePlaceID)
 
@@ -279,6 +273,6 @@ func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
