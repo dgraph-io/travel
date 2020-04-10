@@ -48,9 +48,9 @@ func Pull(log *log.Logger, apiKey string, dbHost string) error {
 		log.Printf("******************** place result ********************\n\n%+v\n\n", places)
 
 		// Store the places in Dgraph.
-		for _, place := range places {
-			log.Printf("feed : Pull : Store : Adding place %q", place.Name)
-			if err := city.Store(ctx, log, place); err != nil {
+		for i := 0; i < 10; i++ {
+			log.Printf("feed : Pull : Store : Adding place %q", places[i].Name)
+			if err := city.Store(ctx, log, places[i]); err != nil {
 				return err
 			}
 		}

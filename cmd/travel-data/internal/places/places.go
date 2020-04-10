@@ -24,7 +24,6 @@ type Client struct {
 // NewClient constructs a Client value that is initialized for use with
 // Google places search and Dgraph.
 func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, error) {
-
 	// Initialize the Google maps client with our key.
 	mapClient, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
@@ -57,16 +56,16 @@ type Search struct {
 
 // Place represents a location that can be retrieved from a search.
 type Place struct {
-	Name             string   `json: "place_name"`
-	Address          string   `json: "address`
+	Name             string   `json:"place_name"`
+	Address          string   `json:"address"`
 	Lat              float64  `json:"lat"`
 	Lng              float64  `json:"lng"`
-	GooglePlaceID    string   `json: "google_place_id"`
-	LocationType     []string `json: "location_type"`
-	AvgUserRating    float32  `json: "avg_user_rating"`
-	NumberOfRatings  int      `json: "no_user_rating"`
-	GmapsURL         string   `json: "gmaps_url"`
-	PhotoReferenceID string   `json: "photo_id"`
+	GooglePlaceID    string   `json:"google_place_id"`
+	LocationType     []string `json:"location_type"`
+	AvgUserRating    float32  `json:"avg_user_rating"`
+	NumberOfRatings  int      `json:"no_user_rating"`
+	GmapsURL         string   `json:"gmaps_url"`
+	PhotoReferenceID string   `json:"photo_id"`
 }
 
 // City represents a city and its coordinates.
@@ -82,6 +81,9 @@ type City struct {
 // database operations.
 func NewCity(ctx context.Context, client *Client, name string, lat float64, lng float64) (*City, error) {
 
+	type ParseUID struct {
+		FindCity []City `json:"findCity"`
+	}
 	// Validate the schema we need in dgraph.
 	if err := validateSchema(ctx, client.dgraph); err != nil {
 		return nil, err
@@ -89,7 +91,7 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 
 	// Construct a city value.
 	city := City{
-		ID : "_:sydney",
+		ID:     "_:sydney",
 		Name:   name,
 		Lat:    lat,
 		Lng:    lng,
@@ -124,18 +126,36 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 	if err != nil {
 		return nil, err
 	}
-
-	// When the city node is inserted for the first time
-	
-		if val, ok := result.Uids["sydney"]; ok {
-			city.ID = val
-			log.Printf("id :%s\n", val)
+	log.Println("here2")
+	if val, ok := result.Uids["sydney"]; ok {
+		// When the city node is inserted for the first time
+		city.ID = val
+		log.Printf("id :%s\n", val)
+		log.Println("here3")
+	} else {
+		// When the City node already exists.
+		parseUID := ParseUID{}
+		log.Println("here1")
+		err = json.Unmarshal(result.Json, &parseUID)
+		if err != nil {
+			log.Fatal(err)
 		}
-	
+		if len(parseUID.FindCity) == 0 {
+			log.Fatal("uid doesn't exist")
+		} else {
+			log.Println("here4")
+			city.ID = parseUID.FindCity[0].ID
+			dataTest, _ := json.Marshal(parseUID)
+			log.Printf("city already exists :%v\n", string(dataTest))
+			log.Printf(parseUID.FindCity[0].ID)
+		}
+	}
+
 	resultByte, err := json.Marshal(result)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Printf("uid1: \n%v", string(resultByte))
 	log.Printf("uid1=2: \n%v", result)
 	// TODO: Find if the node for sydney already exists, if yes, return the UID
@@ -157,6 +177,7 @@ func validateSchema(ctx context.Context, dgraph *dgo.Dgraph) error {
 			city_name: string @index(trigram, hash) @upsert .
 			google_place_id: string @index(hash) @upsert .
 			place_id: string @index(hash) .
+			has_place: [uid] .
 		`,
 	}
 
@@ -262,9 +283,9 @@ func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error
 	// Define a graphql function to find the specified city by name.
 	query := fmt.Sprintf(`{ findPlace(func: eq(google_place_id, %s)) { v as uid  } }`, place.GooglePlaceID)
 
-	// Mutation connecting the hotel to the City node with the `has_hotel` relationship.
+	// Mutation connecting the hotel to the City node with the `has_place` relationship.
 
-	mutation := fmt.Sprintf(`{ "uid": "%s", "has_hotel" : %s }`, city.ID, string(data))
+	mutation := fmt.Sprintf(`{ "uid": "%s", "has_place" : %s }`, city.ID, string(data))
 
 	// examples for upserts https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
 	// Docs https://dgraph.io/docs/mutations/#upsert-block
@@ -283,10 +304,10 @@ func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error
 			},
 		},
 	}
-	_, err = city.dgraph.NewTxn().Do(ctx, &req)
+	upsertResult, err := city.dgraph.NewTxn().Do(ctx, &req)
 	if err != nil {
 		return err
 	}
-
+	log.Printf("upsert result: \n %v", upsertResult)
 	return nil
 }
