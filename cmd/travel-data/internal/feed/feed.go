@@ -11,9 +11,6 @@ import (
 	"github.com/dgraph-io/travel/cmd/travel-data/internal/places"
 )
 
-// If a store call fails, don't quit but keep adding.
-// Log those places that are saved.
-
 // ErrFailed is used to report the program failed back to main
 // so the correct error code is returned.
 var ErrFailed = errors.New("feed failed")

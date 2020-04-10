@@ -10,6 +10,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TODO
+/*
+	If a store call fails, don't quit but keep adding.
+	Log those places that are saved.
+*/
+
 // build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 
