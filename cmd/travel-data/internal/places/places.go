@@ -115,7 +115,6 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 	q1 := fmt.Sprintf(`{ findCity(func: eq(city_name, %s)) { v as uid city_name } }`, city.Name)
 
 	// Define and execute a request to add the city if it doesn't exist yet.
-	// TODO: Can this return the City ID even if it already exists?
 	req := api.Request{
 		CommitNow: true,
 		Query:     q1,
@@ -131,7 +130,16 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 		return nil, err
 	}
 
-	// Capture the database id for the city.
+	// Check if the city id is inside the result first.
+	// This happens when the city is added to the database
+	// for the first time.
+	if id, ok := result.Uids[name]; ok {
+		city.ID = id
+		return &city, nil
+	}
+
+	// City id was not found in the result map, so look for it
+	// in the json response from the database.
 	var uid struct {
 		FindCity []City `json:"findCity"`
 	}
@@ -142,7 +150,6 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 		return nil, fmt.Errorf("unable to capture id for city: %s", result.Json)
 	}
 	city.ID = uid.FindCity[0].ID
-
 	return &city, nil
 }
 
