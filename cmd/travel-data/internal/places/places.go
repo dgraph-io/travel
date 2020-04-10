@@ -72,7 +72,7 @@ type Place struct {
 // City represents a city and its coordinates.
 type City struct {
 	*Client
-	ID   string  `json:"-"`
+	ID   string  `json:"uid"`
 	Name string  `json:"city_name"`
 	Lat  float64 `json:"lat"`
 	Lng  float64 `json:"lng"`
@@ -89,6 +89,7 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 
 	// Construct a city value.
 	city := City{
+		ID : "_:sydney",
 		Name:   name,
 		Lat:    lat,
 		Lng:    lng,
@@ -114,16 +115,29 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 		Query:     q1,
 		Mutations: []*api.Mutation{
 			{
-				Cond:    ` @if(eq(len(v), 0)) `,
+				Cond:    `@if(eq(len(v), 0))`,
 				SetJson: []byte(data),
 			},
 		},
 	}
-	_, err = client.dgraph.NewTxn().Do(ctx, &req)
+	result, err := client.dgraph.NewTxn().Do(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
 
+	// When the city node is inserted for the first time
+	
+		if val, ok := result.Uids["sydney"]; ok {
+			city.ID = val
+			log.Printf("id :%s\n", val)
+		}
+	
+	resultByte, err := json.Marshal(result)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("uid1: \n%v", string(resultByte))
+	log.Printf("uid1=2: \n%v", result)
 	// TODO: Find if the node for sydney already exists, if yes, return the UID
 
 	return &city, nil
@@ -250,7 +264,7 @@ func (city *City) Store(ctx context.Context, log *log.Logger, place Place) error
 
 	// Mutation connecting the hotel to the City node with the `has_hotel` relationship.
 
-	mutation := fmt.Sprintf(`{ uid: %s, has_hotel : %s }`, city.ID, string(data))
+	mutation := fmt.Sprintf(`{ "uid": "%s", "has_hotel" : %s }`, city.ID, string(data))
 
 	// examples for upserts https://github.com/dgraph-io/dgo/blob/master/upsert_test.go
 	// Docs https://dgraph.io/docs/mutations/#upsert-block
