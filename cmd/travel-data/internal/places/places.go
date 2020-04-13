@@ -10,23 +10,28 @@ import (
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
+	"github.com/dgraph-io/travel/cmd/travel-data/internal/weather"
 	"google.golang.org/grpc"
 	"googlemaps.github.io/maps"
 )
 
 // Client provides support for retrieving and storing results from a
 // Google Places search.
+// Contains maps, dgraph and weather clients, which are used multiple
+// times once initialized.
+// Since the application is focussed around city and places, weather is
+// also a property of a place.
 type Client struct {
-	mapClient *maps.Client
-	dgraph    *dgo.Dgraph
+	maps    *maps.Client
+	dgraph  *dgo.Dgraph
+	weather *weather.Client
 }
 
 // NewClient constructs a Client value that is initialized for use with
 // Google places search and Dgraph.
-func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, error) {
-
+func NewClient(ctx context.Context, mapsKey, weatherKey, dbHost string) (*Client, error) {
 	// Initialize the Google maps client with our key.
-	mapClient, err := maps.NewClient(maps.WithAPIKey(apiKey))
+	mapClient, err := maps.NewClient(maps.WithAPIKey(mapsKey))
 	if err != nil {
 		return nil, err
 	}
@@ -37,12 +42,18 @@ func NewClient(ctx context.Context, apiKey string, dbHost string) (*Client, erro
 	if err != nil {
 		return nil, err
 	}
-	dgraph := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+	dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+
+	weatherClient, err := weather.NewClient(context, weatherKey)
+	if err != nil {
+		return nil, err
+	}
 
 	// Construct the places value for use.
 	client := Client{
-		mapClient: mapClient,
-		dgraph:    dgraph,
+		maps:    mapClient,
+		dgraph:  dgraphClient,
+		weather: weatherClient,
 	}
 
 	return &client, nil
@@ -67,6 +78,9 @@ type Place struct {
 	NumberOfRatings  int      `json:"no_user_rating"`
 	GmapsURL         string   `json:"gmaps_url"`
 	PhotoReferenceID string   `json:"photo_id"`
+	// A place could have its own weather information
+	// Weather weather.Weather `json:"weather"`
+
 }
 
 // City represents a city and its coordinates.
@@ -76,6 +90,8 @@ type City struct {
 	Name string  `json:"city_name"`
 	Lat  float64 `json:"lat"`
 	Lng  float64 `json:"lng"`
+	// city contains its weather information.
+	Weather weather.Weather `json:"weather"`
 }
 
 // NewCity constructs a city that can be used to preform searches and
@@ -141,6 +157,9 @@ func NewCity(ctx context.Context, client *Client, name string, lat float64, lng 
 		return nil, fmt.Errorf("unable to capture id for city: %s", result.Json)
 	}
 	city.ID = uid.FindCity[0].ID
+
+	// Pull in the weather information of the city.
+	// city.Weather = client.weather.GetWeather(lat, lng)
 	return &city, nil
 }
 
@@ -198,7 +217,7 @@ func (city *City) Search(ctx context.Context, search Search) ([]Place, error) {
 
 		// Perform the Google Places search.
 		var err error
-		resp, err = city.mapClient.NearbySearch(ctx, &nsr)
+		resp, err = city.maps.NearbySearch(ctx, &nsr)
 
 		// This is the problem. We need to check for the INVALID_REQUEST
 		// error. The only way to do that is to compare this string :(

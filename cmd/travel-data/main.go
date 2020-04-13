@@ -42,7 +42,11 @@ func run() error {
 			Name string `conf:"default:sydney"`
 		}
 		Maps struct {
-			Key string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
+			Key        string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
+			WeatherKey string `conf:"default:b2302a48062dc1da72430c612557498d"`
+		}
+		Weather struct {
+			Key string `conf:"default:b2302a48062dc1da72430c612557498d"`
 		}
 		DB struct {
 			Host string `conf:"default:localhost:9080"`
@@ -77,7 +81,7 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(log, cfg.City.Name, cfg.Maps.Key, cfg.DB.Host); err != nil {
+	if err := feed.Pull(log, cfg.City.Name, cfg.Maps.Key, cfg.Weather.Key, cfg.DB.Host); err != nil {
 		return err
 	}
 
