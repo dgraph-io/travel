@@ -14,9 +14,8 @@ import (
 // Add TODO items here so they are all together and the team can
 // cherry pick those they want to get done.
 /*
-	We are only storing 2 result of places at this time.
+	We are only storing 1 result of places at this time.
 	We need tests for the data package.
-	Maybe move the data package to internal.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
