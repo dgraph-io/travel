@@ -1,4 +1,4 @@
-package sydney
+package flight
 
 import (
 	"io/ioutil"

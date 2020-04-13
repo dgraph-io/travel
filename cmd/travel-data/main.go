@@ -14,7 +14,9 @@ import (
 // Add TODO items here so they are all together and the team can
 // cherry pick those they want to get done.
 /*
-	Describe the TODO item here.
+	We are only storing 2 result of places at this time.
+	We need tests for the data package.
+	Maybe move the data package to internal.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
@@ -38,15 +40,16 @@ func run() error {
 	// Configuration
 
 	var cfg struct {
-		City struct {
-			Name string `conf:"default:sydney"`
+		Search struct {
+			Name    string  `conf:"default:sydney"`
+			Lat     float64 `conf:"default:-33.865143"`
+			Lng     float64 `conf:"default:151.209900"`
+			Keyword string  `conf:"default:hotels"`
+			Radius  int     `conf:"default:5000"`
 		}
-		Maps struct {
-			Key        string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
+		APIKeys struct {
+			MapsKey    string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
 			WeatherKey string `conf:"default:b2302a48062dc1da72430c612557498d"`
-		}
-		Weather struct {
-			Key string `conf:"default:b2302a48062dc1da72430c612557498d"`
 		}
 		DB struct {
 			Host string `conf:"default:localhost:9080"`
@@ -81,7 +84,20 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
-	if err := feed.Pull(log, cfg.City.Name, cfg.Maps.Key, cfg.Weather.Key, cfg.DB.Host); err != nil {
+	search := feed.Search{
+		Name:    cfg.Search.Name,
+		Lat:     cfg.Search.Lat,
+		Lng:     cfg.Search.Lng,
+		Keyword: cfg.Search.Keyword,
+		Radius:  uint(cfg.Search.Radius),
+	}
+
+	keys := feed.Keys{
+		MapKey:     cfg.APIKeys.MapsKey,
+		WeatherKey: cfg.APIKeys.WeatherKey,
+	}
+
+	if err := feed.Work(log, search, keys, cfg.DB.Host); err != nil {
 		return err
 	}
 
