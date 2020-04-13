@@ -1,6 +1,5 @@
-// Package places is providing support to query the Google maps places API
-// and retrieve places for a specified city. Places also stores the results
-// of these searches into Dgraph.
+// Package data is providing data support for storing and querying
+// data to and from the database.
 //
 // For quick reference links:
 // https://godoc.org/googlemaps.github.io/maps#NearbySearchRequest
@@ -25,4 +24,4 @@
 // 	  }
 // 	}
 // }
-package places
+package data
