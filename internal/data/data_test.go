@@ -30,7 +30,7 @@ func TestReadiness(t *testing.T) {
 	t.Log("Given the need to be able to validate the database is ready.")
 	{
 		for _, test := range tt {
-			f := func(t *testing.T) {
+			tf := func(t *testing.T) {
 				t.Logf("\tWhen waiting up to %v for the database to be ready.", test.Duration)
 				{
 					err := data.Readiness(apiHost, test.Duration)
@@ -50,7 +50,7 @@ func TestReadiness(t *testing.T) {
 					}
 				}
 			}
-			t.Run(test.Name, f)
+			t.Run(test.Name, tf)
 		}
 	}
 }

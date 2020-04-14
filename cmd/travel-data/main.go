@@ -16,7 +16,7 @@ import (
 // I missed this and added TODOs all over the place :(
 /*
 	We are only storing 1 result of places at this time.
-	We need tests for the data package.
+	Finish tests for data.
 	Validate upserts are working for weather and places.
 	Need to apply proper times on the Client.Do calls in the feeds.
 */
