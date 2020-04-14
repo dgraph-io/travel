@@ -11,12 +11,15 @@ import (
 )
 
 // TODO
-// Add TODO items here so they are all together and the team can
-// cherry pick those they want to get done.
 /*
 	We are only storing 1 result of places at this time.
-	Finish tests for data.
+	Finish tests for data, places.
+	Write integration tests.
+	Finish Advisory and Flight feeds.
+	Decide on UI, Ratel or some CLI tooling.
 	Validate upserts are working for weather and places.
+	Running in Kind with Ready checks
+	Working with Circle CI
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
