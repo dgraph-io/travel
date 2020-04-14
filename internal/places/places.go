@@ -17,13 +17,14 @@ type Filter struct {
 	pageToken string
 }
 
-// Place represents a location that can be retrieved from a search.
+// Place contains the place data points captured from the API.
 type Place struct {
-	Name             string   `json:"place_name"`
+	PlaceID          string   `json:"place_id"`
+	CityName         string   `json:"city_name"`
+	Name             string   `json:"name"`
 	Address          string   `json:"address"`
 	Lat              float64  `json:"lat"`
 	Lng              float64  `json:"lng"`
-	GooglePlaceID    string   `json:"google_place_id"`
 	LocationType     []string `json:"location_type"`
 	AvgUserRating    float32  `json:"avg_user_rating"`
 	NumberOfRatings  int      `json:"no_user_rating"`
@@ -94,11 +95,12 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 
 		// Construct a place value based on search results.
 		place := Place{
+			PlaceID:          result.PlaceID,
+			CityName:         city.Name,
 			Name:             result.Name,
 			Address:          result.FormattedAddress,
 			Lat:              result.Geometry.Location.Lat,
 			Lng:              result.Geometry.Location.Lng,
-			GooglePlaceID:    result.PlaceID,
 			LocationType:     result.Types,
 			AvgUserRating:    result.Rating,
 			NumberOfRatings:  result.UserRatingsTotal,

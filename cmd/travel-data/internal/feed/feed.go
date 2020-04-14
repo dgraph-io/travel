@@ -8,6 +8,7 @@ import (
 
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/places"
+	"github.com/dgraph-io/travel/internal/weather"
 	"googlemaps.github.io/maps"
 )
 
@@ -39,13 +40,13 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	// Construct a Data value for working with the database.
 	data, err := data.New(dbHost)
 	if err != nil {
-		log.Print("feed : Pull : New Data : ERROR : ", err)
+		log.Print("feed : Work : New Data : ERROR : ", err)
 		return ErrFailed
 	}
 
 	// Validate the schema in the database before we start.
-	if err := data.ValidateSchema(ctx); err != nil {
-		log.Print("feed : Pull : ValidateSchema : ERROR : ", err)
+	if err := data.Validate.Schema(ctx); err != nil {
+		log.Print("feed : Work : ValidateSchema : ERROR : ", err)
 		return ErrFailed
 	}
 
@@ -53,7 +54,7 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	// the city data we need.
 	client, err := maps.NewClient(maps.WithAPIKey(keys.MapKey))
 	if err != nil {
-		log.Print("feed : Pull : NewClient : ERROR : ", err)
+		log.Print("feed : Work : NewClient : ERROR : ", err)
 		return ErrFailed
 	}
 
@@ -65,9 +66,25 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	}
 
 	// Validate this city is in the database or add it.
-	cityID, err := data.ValidateCity(ctx, city)
+	cityID, err := data.Validate.City(ctx, city)
 	if err != nil {
-		log.Print("feed : Pull : ValidateCity : ERROR : ", err)
+		log.Print("feed : Work : ValidateCity : ERROR : ", err)
+		return ErrFailed
+	}
+
+	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", cityID, search.Name, search.Lat, search.Lng)
+
+	// Pull the weather for the city being specified.
+	weather, err := weather.Search(ctx, keys.WeatherKey, search.Lat, search.Lng)
+	if err != nil {
+		log.Print("feed : Work : Search Weather : ERROR : ", err)
+		return ErrFailed
+	}
+	log.Printf("feed : Work : Search Weather : Result : %+v", weather)
+
+	// Store the weather for the specified city.
+	if err := data.Store.Weather(ctx, log, cityID, weather); err != nil {
+		log.Print("feed : Work : Store Weather : ERROR : ", err)
 		return ErrFailed
 	}
 
@@ -77,29 +94,28 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 		Radius:  search.Radius,
 	}
 
-	log.Printf("feed : Pull : Search : cityID[%s] city[%+v] filter[%+v]", cityID, city, filter)
+	log.Printf("feed : Work : Search Places : filter[%+v]", filter)
 
 	// For now we will test with 1 place.
 	for i := 0; i < 1; i++ {
 
-		// I hate this but we need to keep this non-idiomatic error
-		// variable because an io.EOF error means we are done but
-		// we did get data back to process.
+		// Search for a collection of pages. Each new call to Search will
+		// bring back a new page until io.EOF is reached.
 		places, errRet := city.Search(ctx, client, &filter)
 		if errRet != nil && errRet != io.EOF {
-			log.Print("feed : Pull : Search : ERROR : ", errRet)
+			log.Print("feed : Work : Search Places : ERROR : ", errRet)
 			return ErrFailed
 		}
-		log.Printf("feed : Pull : Search : Result\n%+v", places)
+		log.Printf("feed : Work : Search Places : Result\n%+v", places)
 
 		// Store each individual place in the database.
-		log.Printf("feed : Pull : Store : Adding %d Places", len(places))
+		log.Printf("feed : Work : Store : Adding %d Places", len(places))
 		for _, place := range places {
-			if err := data.StorePlace(ctx, log, cityID, place); err != nil {
-				log.Printf("feed : Pull : Store : ERROR : %s : %+v", err, place)
+			if err := data.Store.Place(ctx, log, cityID, place); err != nil {
+				log.Printf("feed : Work : Store Place : ERROR : %s : %+v", err, place)
 				continue
 			}
-			log.Printf("feed : Pull : Store : Success : %+v", place)
+			log.Printf("feed : Work : Store Place : Success : %+v", place)
 		}
 
 		// If this was the last result, we are done.

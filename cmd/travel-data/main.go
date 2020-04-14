@@ -16,6 +16,8 @@ import (
 /*
 	We are only storing 1 result of places at this time.
 	We need tests for the data package.
+	Add wrapping calls to errors inside of internal.
+	Validate upserts are working for weather and places.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
