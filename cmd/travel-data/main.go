@@ -15,7 +15,7 @@ import (
 // cherry pick those they want to get done.
 /*
 	We are only storing 1 result of places at this time.
-	We need tests for the data package.
+	Finish tests for data.
 	Validate upserts are working for weather and places.
 */
 
