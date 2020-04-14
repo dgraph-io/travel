@@ -27,7 +27,7 @@ func TestValidateSchema(t *testing.T) {
 			t.Logf("\t%s\tShould be able to connect to Dgraph.", tests.Success)
 
 			// Validate the schema in the database before we start.
-			if err := data.ValidateSchema(ctx); err != nil {
+			if err := data.Validate.Schema(ctx); err != nil {
 				t.Fatalf("\t%s\tShould be able to perform the schema operation : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to perform the schema operation.", tests.Success)
