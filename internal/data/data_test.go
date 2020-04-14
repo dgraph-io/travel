@@ -38,13 +38,13 @@ func TestReadiness(t *testing.T) {
 					switch test.Success {
 					case true:
 						if err != nil {
-							t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %s.", tests.Failed, err)
+							t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %v", tests.Failed, err)
 						}
 						t.Logf("\t%s\tShould be able to see Dgraph is ready.", tests.Success)
 
 					case false:
 						if err == nil {
-							t.Fatalf("\t%s\tShould be able to see Dgraph is Not ready : %s.", tests.Failed, err)
+							t.Fatalf("\t%s\tShould be able to see Dgraph is Not ready : %v", tests.Failed, err)
 						}
 						t.Logf("\t%s\tShould be able to see Dgraph is Not ready.", tests.Success)
 					}
@@ -70,18 +70,18 @@ func TestValidateSchema(t *testing.T) {
 		{
 			err := data.Readiness(apiHost, 10*time.Second)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to to see Dgraph is ready.", tests.Success)
 
 			data, err := data.New(dbHost)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to connect to Dgraph : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tShould be able to connect to Dgraph : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to connect to Dgraph.", tests.Success)
 
 			if err := data.Validate.Schema(context.Background()); err != nil {
-				t.Fatalf("\t%s\tShould be able to perform the schema operation : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tShould be able to perform the schema operation : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to perform the schema operation.", tests.Success)
 		}

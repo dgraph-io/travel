@@ -40,13 +40,13 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	// Construct a Data value for working with the database.
 	data, err := data.New(dbHost)
 	if err != nil {
-		log.Print("feed : Work : New Data : ERROR : ", err)
+		log.Printf("feed : Work : New Data : ERROR : %+v", err)
 		return ErrFailed
 	}
 
 	// Validate the schema in the database before we start.
 	if err := data.Validate.Schema(ctx); err != nil {
-		log.Print("feed : Work : ValidateSchema : ERROR : ", err)
+		log.Printf("feed : Work : ValidateSchema : ERROR : %+v", err)
 		return ErrFailed
 	}
 
@@ -54,7 +54,7 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	// the city data we need.
 	client, err := maps.NewClient(maps.WithAPIKey(keys.MapKey))
 	if err != nil {
-		log.Print("feed : Work : NewClient : ERROR : ", err)
+		log.Printf("feed : Work : NewClient : ERROR : %+v", err)
 		return ErrFailed
 	}
 
@@ -68,7 +68,7 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	// Validate this city is in the database or add it.
 	cityID, err := data.Validate.City(ctx, city)
 	if err != nil {
-		log.Print("feed : Work : ValidateCity : ERROR : ", err)
+		log.Printf("feed : Work : ValidateCity : ERROR : %+v", err)
 		return ErrFailed
 	}
 
@@ -77,14 +77,14 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 	// Pull the weather for the city being specified.
 	weather, err := weather.Search(ctx, keys.WeatherKey, search.Lat, search.Lng)
 	if err != nil {
-		log.Print("feed : Work : Search Weather : ERROR : ", err)
+		log.Printf("feed : Work : Search Weather : ERROR : %+v", err)
 		return ErrFailed
 	}
 	log.Printf("feed : Work : Search Weather : Result : %+v", weather)
 
 	// Store the weather for the specified city.
-	if err := data.Store.Weather(ctx, log, cityID, weather); err != nil {
-		log.Print("feed : Work : Store Weather : ERROR : ", err)
+	if err := data.Store.Weather(ctx, cityID, weather); err != nil {
+		log.Printf("feed : Work : Store Weather : ERROR : %+v", err)
 		return ErrFailed
 	}
 
@@ -103,7 +103,7 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 		// bring back a new page until io.EOF is reached.
 		places, errRet := city.Search(ctx, client, &filter)
 		if errRet != nil && errRet != io.EOF {
-			log.Print("feed : Work : Search Places : ERROR : ", errRet)
+			log.Printf("feed : Work : Search Places : ERROR : %+v", errRet)
 			return ErrFailed
 		}
 		log.Printf("feed : Work : Search Places : Result\n%+v", places)
@@ -111,8 +111,8 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 		// Store each individual place in the database.
 		log.Printf("feed : Work : Store : Adding %d Places", len(places))
 		for _, place := range places {
-			if err := data.Store.Place(ctx, log, cityID, place); err != nil {
-				log.Printf("feed : Work : Store Place : ERROR : %s : %+v", err, place)
+			if err := data.Store.Place(ctx, cityID, place); err != nil {
+				log.Printf("feed : Work : Store Place : ERROR : %v : %+v", place, err)
 				continue
 			}
 			log.Printf("feed : Work : Store Place : Success : %+v", place)

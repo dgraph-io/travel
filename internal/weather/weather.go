@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // result represents the result of the weather query.
@@ -63,7 +65,7 @@ func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weath
 	// Construct a request.
 	req, err := http.NewRequest(http.MethodGet, "http://api.openweathermap.org/data/2.5/weather", nil)
 	if err != nil {
-		return Weather{}, err
+		return Weather{}, errors.Wrap(err, "new request")
 	}
 
 	// Apply the apiKey, lat and lng to the request.
@@ -77,20 +79,20 @@ func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weath
 	var client http.Client
 	resp, err := client.Do(req)
 	if err != nil {
-		return Weather{}, err
+		return Weather{}, errors.Wrap(err, "client do")
 	}
 	defer resp.Body.Close()
 
 	// Read the entire JSON response into memory.
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return Weather{}, err
+		return Weather{}, errors.Wrap(err, "readall")
 	}
 
 	// Unmarshal the JSON into a Weather value.
 	var res result
 	if err := json.Unmarshal(data, &res); err != nil {
-		return Weather{}, err
+		return Weather{}, errors.Wrapf(err, "unmarshal[%s]", string(data))
 	}
 
 	// Convert the result to a Weather value so we can
