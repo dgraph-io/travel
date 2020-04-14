@@ -137,8 +137,6 @@ func (s *store) Weather(ctx context.Context, cityID string, w weather.Weather) e
 
 	// Add the city id to the weather node.
 	db := struct {
-		// TODO: Just connect the weather node with city node via an edge.
-		// No need to use a foriegn key kind of relationship.
 		CityID string `json:"city_id"`
 		weather.Weather
 	}{
@@ -154,12 +152,6 @@ func (s *store) Weather(ctx context.Context, cityID string, w weather.Weather) e
 
 	// Define a graphql function to find the weather by its unique id. The
 	// cityID will be the unique id for the weather.
-	// TODO: Instead, check whether the City node has it's weather information available
-	// via the `weather` edge. Also update the weather info if its last udpated time
-	// is more than 24 hours.
-	// TODO: We need to flip the feed fetching.
-	// TODO: First find whether the weather info exists and its not outdated, and
-	// TODO: then go fetch from the Feed only if required.
 	query := fmt.Sprintf(`{ findWeather(func: eq(weather_id, %d)) { id as uid } }`, w.ID)
 
 	//  Define a mutation by connecting the weather to the city with the
@@ -189,7 +181,6 @@ func (s *store) Place(ctx context.Context, cityID string, place places.Place) er
 
 	// Add the city id to the place node.
 	db := struct {
-		// TODO: Establish the relationship by creating an edge with the city node.
 		CityID string `json:"city_id"`
 		places.Place
 	}{
@@ -208,7 +199,7 @@ func (s *store) Place(ctx context.Context, cityID string, place places.Place) er
 	query := fmt.Sprintf(`{ findPlace(func: eq(place_id, %s)) { id as uid } }`, place.PlaceID)
 
 	//  Define a mutation by connecting the place to the city with the
-	// `has_place` relationship.
+	// `places` relationship.
 	mutation := fmt.Sprintf(`{ "uid": "%s", "places" : %s }`, cityID, string(data))
 
 	// Define and execute a request to add the city if it doesn't exist yet.
@@ -233,7 +224,6 @@ func (s *store) Advisory(ctx context.Context, cityID string, a advisory.Advisory
 
 	// Add the city id to the weather node.
 	db := struct {
-		// TODO: Establish the relationship by creating an edge with the city node.
 		CityID string `json:"city_id"`
 		advisory.Advisory
 	}{
@@ -247,11 +237,7 @@ func (s *store) Advisory(ctx context.Context, cityID string, a advisory.Advisory
 		return err
 	}
 
-	// Check Check whether Advisory for the country code exists.
-	// TODO: Check the last update time of the advisory, update if it's more than 7 days.
-	// TODO: We need to flip the feed fetching.
-	// TODO: First find whether the Advisory exists and its not outdated, and
-	// TODO: then go fetch from the Feed only if required.
+	// Check whether Advisory for the country code exists.
 	query := fmt.Sprintf(`{ findAdvisory(func: eq(country_code, %s)) { id as uid } }`, a.CountryCode)
 
 	//  Define a mutation by connecting the advisory to the city with the
@@ -270,9 +256,7 @@ func (s *store) Advisory(ctx context.Context, cityID string, a advisory.Advisory
 		},
 	}
 	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
-		log.Printf("places : StoreAdvisory : query : %s", query)
-		log.Printf("places : StoreAdvisory : mutation : %s", mutation)
-		return err
+		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
 	}
 
 	return nil

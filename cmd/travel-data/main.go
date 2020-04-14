@@ -11,14 +11,34 @@ import (
 )
 
 // TODO
-// Add TODO items here so they are all together and the team can
-// cherry pick those they want to get done.
-// I missed this and added TODOs all over the place :(
 /*
 	We are only storing 1 result of places at this time.
-	Finish tests for data.
+	Finish tests for data, places.
+	Write integration tests.
+	Finish Advisory and Flight feeds.
+	Decide on UI, Ratel or some CLI tooling.
 	Validate upserts are working for weather and places.
 	Need to apply proper times on the Client.Do calls in the feeds.
+	Running in Kind with Ready checks
+	Working with Circle CI
+	Review the use of foriegn key kinds of relationship.
+
+	Place Store
+		Establish the relationship by creating an edge with the city node.
+
+	Advisory Store
+		Establish the relationship by creating an edge with the city node.
+
+	Weather Store
+		Just connect the weather node with city node via an edge.
+		Instead, check whether the City node has it's weather information available
+			via the `weather` edge. Also update the weather info if its last udpated time
+			is more than 24 hours.
+		We need to flip the feed fetching. First find whether the weather info
+			exists and its not outdated and then go fetch from the Feed only if required.
+
+	Advisory Store
+
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
