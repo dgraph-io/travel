@@ -23,7 +23,7 @@ func TestSearch(t *testing.T) {
 			apiKey := "AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"
 			client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to create a map client : %s.", failed, err)
+				t.Fatalf("\t%s\tShould be able to create a map client : %v", failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create a map client.", success)
 
@@ -42,13 +42,13 @@ func TestSearch(t *testing.T) {
 			for i := 0; i < 2; i++ {
 				places, err := city.Search(context.Background(), client, &filter)
 				if err != nil {
-					t.Fatalf("\t%s\tShould be able to search for places : %s.", failed, err)
+					t.Fatalf("\t%s\tShould be able to search for places : %v", failed, err)
 				}
 				t.Logf("\t%s\tShould be able to search for places.", success)
 
 				exp := 20
 				if len(places) != 20 {
-					t.Errorf("\t%s\t\tShould get a full page of places : %s.", failed, err)
+					t.Errorf("\t%s\t\tShould get a full page of places : %v", failed, err)
 					t.Log("\t\tGot:", len(places))
 					t.Log("\t\tExp:", exp)
 				} else {
@@ -56,7 +56,7 @@ func TestSearch(t *testing.T) {
 				}
 
 				if savePlace == places[0].Name {
-					t.Errorf("\t%s\t\tShould get different places per page : %s.", failed, err)
+					t.Errorf("\t%s\t\tShould get different places per page : %v", failed, err)
 				} else {
 					t.Logf("\t%s\t\tShould get different places per page.", success)
 				}

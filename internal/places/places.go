@@ -7,6 +7,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/pkg/errors"
 	"googlemaps.github.io/maps"
 )
 
@@ -57,7 +58,7 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 				time.Sleep(1000 * time.Millisecond)
 				continue
 			}
-			return nil, err
+			return nil, errors.Wrapf(err, "nsr[%+v]", &nsr)
 		}
 		break
 	}

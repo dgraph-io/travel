@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/places"
 	"github.com/dgraph-io/travel/internal/weather"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
 
@@ -28,7 +28,7 @@ func New(dbHost string) (*Data, error) {
 	// a dgraph client.
 	conn, err := grpc.Dial(dbHost, grpc.WithInsecure())
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "dbHost[%s]", dbHost)
 	}
 	dgraph := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
@@ -64,7 +64,7 @@ func (v *validate) Schema(ctx context.Context) error {
 
 	// Perform that operation.
 	if err := v.dgraph.Alter(ctx, op); err != nil {
-		return err
+		return errors.Wrapf(err, "op[%+v]", op)
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func (v *validate) City(ctx context.Context, city places.City) (string, error) {
 	// Convert the city value into json for the mutation call.
 	data, err := json.Marshal(city)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "city[%+v]", city)
 	}
 
 	// Define a graphql function to find the specified city by name.
@@ -99,7 +99,7 @@ func (v *validate) City(ctx context.Context, city places.City) (string, error) {
 	}
 	result, err := v.dgraph.NewTxn().Do(ctx, &req)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "req[%+v]", &req)
 	}
 
 	// If there is a key/value pair inside of this map of
@@ -119,10 +119,11 @@ func (v *validate) City(ctx context.Context, city places.City) (string, error) {
 		} `json:"findCity"`
 	}
 	if err := json.Unmarshal(result.Json, &uid); err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "json[%+v]", result.Json)
 	}
 	if len(uid.FindCity) == 0 {
-		return "", fmt.Errorf("unable to capture id for city: %s", result.Json)
+		err := errors.New("unable to find city")
+		return "", errors.Wrapf(err, "city[%s]", uid.FindCity)
 	}
 	return uid.FindCity[0].ID, nil
 }
@@ -132,7 +133,7 @@ type store struct {
 }
 
 // Weather will add the specified Place into the database.
-func (s *store) Weather(ctx context.Context, log *log.Logger, cityID string, w weather.Weather) error {
+func (s *store) Weather(ctx context.Context, cityID string, w weather.Weather) error {
 
 	// Add the city id to the weather node.
 	db := struct {
@@ -148,7 +149,7 @@ func (s *store) Weather(ctx context.Context, log *log.Logger, cityID string, w w
 	// Convert the data to store into json for the mutation call.
 	data, err := json.Marshal(db)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "db[%+v]", db)
 	}
 
 	// Define a graphql function to find the weather by its unique id. The
@@ -177,16 +178,14 @@ func (s *store) Weather(ctx context.Context, log *log.Logger, cityID string, w w
 		},
 	}
 	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
-		log.Printf("places : StoreWeather : query : %s", query)
-		log.Printf("places : StoreWeather : mutation : %s", mutation)
-		return err
+		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
 	}
 
 	return nil
 }
 
 // Place will add the specified Place into the database.
-func (s *store) Place(ctx context.Context, log *log.Logger, cityID string, place places.Place) error {
+func (s *store) Place(ctx context.Context, cityID string, place places.Place) error {
 
 	// Add the city id to the place node.
 	db := struct {
@@ -201,7 +200,7 @@ func (s *store) Place(ctx context.Context, log *log.Logger, cityID string, place
 	// Convert the data to store into json for the mutation call.
 	data, err := json.Marshal(db)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "db[%+v]", db)
 	}
 
 	// Define a graphql function to find a place by its unique id. The
@@ -224,9 +223,7 @@ func (s *store) Place(ctx context.Context, log *log.Logger, cityID string, place
 		},
 	}
 	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
-		log.Printf("places : StorePlace : query : %s", query)
-		log.Printf("places : StorePlace : mutation : %s", mutation)
-		return err
+		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
 	}
 
 	return nil

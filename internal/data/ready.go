@@ -3,10 +3,11 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // Readiness checks if Dgraph is ready to receive requests. It will attempt
@@ -77,7 +78,7 @@ func Readiness(apiHost string, retryDelay time.Duration) error {
 		case err != nil && i < attempts:
 			continue
 		case err != nil && i == attempts:
-			return fmt.Errorf("not healthy : %s", err)
+			return errors.Wrap(err, "not healthy")
 		}
 
 		// We are health so break and return.
