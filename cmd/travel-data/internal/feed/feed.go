@@ -9,6 +9,7 @@ import (
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/places"
 	"github.com/dgraph-io/travel/internal/weather"
+	"github.com/dgraph-io/travel/internal/advisory"
 	"googlemaps.github.io/maps"
 )
 
@@ -84,6 +85,21 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 
 	// Store the weather for the specified city.
 	if err := data.Store.Weather(ctx, log, cityID, weather); err != nil {
+		log.Print("feed : Work : Store Weather : ERROR : ", err)
+		return ErrFailed
+	}
+
+	// Fetching the travel advisory for Australia.
+	// TODO: Pass the country code as a configuration.
+	advisory, err := advisory.Search(ctx, "AU")
+	if err != nil {
+		log.Print("feed : Work : Search Weather : ERROR : ", err)
+		return ErrFailed
+	}
+	log.Printf("feed : Work : Search Advisory : Result : %+v", advisory)
+
+	// Store the travel advisory information
+	if err := data.Store.Advisory(ctx, cityID, advisory); err != nil {
 		log.Print("feed : Work : Store Weather : ERROR : ", err)
 		return ErrFailed
 	}
