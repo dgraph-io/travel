@@ -19,6 +19,7 @@ import (
 	We need tests for the data package.
 	Add wrapping calls to errors inside of internal.
 	Validate upserts are working for weather and places.
+	Need to apply proper times on the Client.Do calls in the feeds.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.

@@ -7,6 +7,67 @@ import (
 	"net/http"
 )
 
+// Search can locate weather for a given latitude and longitude.
+func Search(ctx context.Context, countryCode string) (Advisory, error) {
+
+	// Construct a request.
+	req, err := http.NewRequest(http.MethodGet, "https://www.travel-advisory.info/api", nil)
+	if err != nil {
+		return Advisory{}, err
+	}
+
+	// Apply the country code to the request.
+	q := req.URL.Query()
+	q.Add("countrycode", countryCode)
+	req.URL.RawQuery = q.Encode()
+
+	// Execute the request.
+	var client http.Client
+	resp, err := client.Do(req)
+	if err != nil {
+		return Advisory{}, err
+	}
+	defer resp.Body.Close()
+
+	// Read the entire JSON response into memory.
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return Advisory{}, err
+	}
+
+	// Unmarshal the JSON into a Advisory value.
+	var res result
+	if err := json.Unmarshal(data, &res); err != nil {
+		return Advisory{}, err
+	}
+
+	// Convert the result to a Advisory value so we can
+	// use our own tags for JSON marshaling.
+	advisory := Advisory{
+		Country:     res.Data.AU.Name,
+		CountryCode: res.Data.AU.IsoAlpha2,
+		Continent:   res.Data.AU.Continent,
+		Score:       res.Data.AU.Advisory.Score,
+		LastUpdated: res.Data.AU.Advisory.Updated,
+		Message:     res.Data.AU.Advisory.Message,
+		Source:      res.Data.AU.Advisory.Source,
+	}
+
+	return advisory, nil
+}
+
+// Advisory contains the travel advisory result captured for a city. When
+// the advisory score is below 4 out of 5, it's not considered safe to travel.
+type Advisory struct {
+	Country     string  `json:"country"`
+	CountryCode string  `json:"country_code"`
+	Continent   string  `json:"continent"`
+	Score       float64 `json:"advisory_score"`
+	LastUpdated string  `json:"advisory_last_updated"`
+	Message     string  `json:"advisory_message"`
+	Source      string  `json:"temp_min"`
+}
+
 // result represents the result of the weather query.
 type result struct {
 	APIStatus struct {
@@ -37,72 +98,4 @@ type result struct {
 			} `json:"advisory"`
 		} `json:"au"`
 	} `json:"data"`
-}
-
-// Advisory contains the travel advisory result captured from the feed.
-// Here is the sample response from the advisory feed
-// https://gist.github.com/hackintoshrao/e07b9f742edf4606f61dce877aa72392.
-type Advisory struct {
-	Country     string `json:"country"`
-	CountryCode string `json:"country_code"`
-	Continent   string `json:"continent"`
-	// Advisory score out of 5
-	// Scores below 4 is considered not so safe to travel
-	Score       float64 `json:"advisory_score"`
-	LastUpdated string  `json:"advisory_last_updated"`
-	Message     string  `json:"advisory_message"`
-	Source      string  `json:"temp_min"`
-}
-
-// Search can locate weather for a given latitude and longitude.
-// Here is the output https://gist.github.com/hackintoshrao/f55430d644634ecf72ef67a7d847fb8b
-func Search(ctx context.Context, countryCode string) (Advisory, error) {
-
-	req, err := http.NewRequest(http.MethodGet, "https://www.travel-advisory.info/api", nil)
-	if err != nil {
-		return Advisory{}, err
-	}
-
-	q := req.URL.Query()
-	// Setting the country code.
-	q.Add("countrycode", countryCode)
-
-	req.URL.RawQuery = q.Encode()
-
-	// Execute the request.
-	var client http.Client
-	resp, err := client.Do(req)
-	if err != nil {
-		return Advisory{}, err
-	}
-	defer resp.Body.Close()
-
-	// Read the entire JSON response into memory.
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return Advisory{}, err
-	}
-
-	// Unmarshal the JSON into a Advisory value.
-	var res result
-	if err := json.Unmarshal(data, &res); err != nil {
-		return Advisory{}, err
-	}
-
-	// Convert the result to a Advisory value so we can
-	// use out own names for JSON marshaling.
-	advisory := Advisory{
-		Country:     res.Data.AU.Name,
-		CountryCode: res.Data.AU.IsoAlpha2,
-		Continent:   res.Data.AU.Continent,
-
-		// Advisory score out of 5
-		// Scores below 4 is considered not so safe to travel
-		Score:       res.Data.AU.Advisory.Score,
-		LastUpdated: res.Data.AU.Advisory.Updated,
-		Message:     res.Data.AU.Advisory.Message,
-		Source:      res.Data.AU.Advisory.Source,
-	}
-
-	return advisory, nil
 }
