@@ -11,7 +11,6 @@ import (
 )
 
 // Search can locate weather for a given latitude and longitude.
-// Here is the output https://gist.github.com/hackintoshrao/f55430d644634ecf72ef67a7d847fb8b
 func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weather, error) {
 
 	// Construct a request.

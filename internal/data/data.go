@@ -220,6 +220,7 @@ func (s *store) Place(ctx context.Context, cityID string, place places.Place) er
 	return nil
 }
 
+// Advisory will add the specified Advisory into the database.
 func (s *store) Advisory(ctx context.Context, cityID string, a advisory.Advisory) error {
 
 	// Add the city id to the weather node.

@@ -12,34 +12,35 @@ import (
 
 // TODO
 /*
-	We are only storing 1 result of places at this time.
-	Finish tests for data, places.
-	Write integration tests.
-	Finish Advisory and Flight feeds.
-	Decide on UI, Ratel or some CLI tooling.
-	Validate upserts are working for weather and places.
-	Need to apply proper times on the Client.Do calls in the feeds.
-	Running in Kind with Ready checks
-	Working with Circle CI
-	Review the use of foriegn key kinds of relationship.
+	General
+		We are only storing 1 result of places at this time.
+		Finish Flight feed.
+		Decide on UI, Ratel or some CLI tooling.
+		Need to apply proper times on the Client.Do calls in the feeds.
+		Review the use of foriegn key kinds of relationship.
+
+	Building/Testing
+		Write integration tests.
+		Finish tests for data, places.
+		Running in Kind with Ready checks
+		Working with Circle CI
 
 	Place Store
 		Establish the relationship by creating an edge with the city node.
+		Validate upserts are working.
 
 	Advisory Store
 		Establish the relationship by creating an edge with the city node.
-		Pass the country code as a configuration.
+		Validate upserts are working.
 
 	Weather Store
+		Validate upserts are working.
 		Just connect the weather node with city node via an edge.
 		Instead, check whether the City node has it's weather information available
 			via the `weather` edge. Also update the weather info if its last udpated time
 			is more than 24 hours.
 		We need to flip the feed fetching. First find whether the weather info
 			exists and its not outdated and then go fetch from the Feed only if required.
-
-	Advisory Store
-
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
@@ -63,12 +64,15 @@ func run() error {
 	// Configuration
 
 	var cfg struct {
+		City struct {
+			CountryCode string  `conf:"default:AU"`
+			Name        string  `conf:"default:sydney"`
+			Lat         float64 `conf:"default:-33.865143"`
+			Lng         float64 `conf:"default:151.209900"`
+		}
 		Search struct {
-			Name    string  `conf:"default:sydney"`
-			Lat     float64 `conf:"default:-33.865143"`
-			Lng     float64 `conf:"default:151.209900"`
-			Keyword string  `conf:"default:hotels"`
-			Radius  int     `conf:"default:5000"`
+			Keyword string `conf:"default:hotels"`
+			Radius  int    `conf:"default:5000"`
 		}
 		APIKeys struct {
 			MapsKey    string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
@@ -108,11 +112,12 @@ func run() error {
 	// Process the feed
 
 	search := feed.Search{
-		Name:    cfg.Search.Name,
-		Lat:     cfg.Search.Lat,
-		Lng:     cfg.Search.Lng,
-		Keyword: cfg.Search.Keyword,
-		Radius:  uint(cfg.Search.Radius),
+		CountryCode: cfg.City.CountryCode,
+		CityName:    cfg.City.Name,
+		Lat:         cfg.City.Lat,
+		Lng:         cfg.City.Lng,
+		Keyword:     cfg.Search.Keyword,
+		Radius:      uint(cfg.Search.Radius),
 	}
 
 	keys := feed.Keys{

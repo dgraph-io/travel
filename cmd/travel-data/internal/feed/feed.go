@@ -27,11 +27,12 @@ type Keys struct {
 // Search represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type Search struct {
-	Name    string
-	Lat     float64
-	Lng     float64
-	Keyword string
-	Radius  uint
+	CountryCode string
+	CityName    string
+	Lat         float64
+	Lng         float64
+	Keyword     string
+	Radius      uint
 }
 
 // Work retrieves and stores the feed data for this API.
@@ -61,7 +62,7 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 
 	// Construct a city so we can perform searches against that city.
 	city := places.City{
-		Name: search.Name,
+		Name: search.CityName,
 		Lat:  search.Lat,
 		Lng:  search.Lng,
 	}
@@ -73,7 +74,7 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 		return ErrFailed
 	}
 
-	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", cityID, search.Name, search.Lat, search.Lng)
+	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", cityID, search.CityName, search.Lat, search.Lng)
 
 	// Pull the weather for the city being specified.
 	weather, err := weather.Search(ctx, keys.WeatherKey, search.Lat, search.Lng)
@@ -89,16 +90,15 @@ func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
 		return ErrFailed
 	}
 
-	// Fetching the travel advisory for Australia.
-	// TODO: Pass the country code as a configuration.
-	advisory, err := advisory.Search(ctx, "AU")
+	// Pull the travel advisory for Australia.
+	advisory, err := advisory.Search(ctx, search.CountryCode)
 	if err != nil {
 		log.Print("feed : Work : Search Weather : ERROR : ", err)
 		return ErrFailed
 	}
 	log.Printf("feed : Work : Search Advisory : Result : %+v", advisory)
 
-	// Store the travel advisory information
+	// Store the travel advisory information.
 	if err := data.Store.Advisory(ctx, cityID, advisory); err != nil {
 		log.Print("feed : Work : Store Weather : ERROR : ", err)
 		return ErrFailed
