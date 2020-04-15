@@ -20,21 +20,10 @@ func Readiness(ctx context.Context, apiHost string, retryDelay time.Duration) er
 	defer t.Stop()
 
 	// We will try until the retryDelay time has exipired.
-	var err error
 	for {
 
-		// After the first attempt, wait before we try again.
-		if err != nil {
-			select {
-			case <-ctx.Done():
-				return errors.Wrap(ctx.Err(), "timed out")
-			case <-t.C:
-				t.Reset(retryDelay)
-			}
-		}
-
 		// Define and execute a function to perform the health check call.
-		err = func() error {
+		err := func() error {
 
 			// Construct a request to perform the health call.
 			req, err := http.NewRequest(http.MethodGet, "http://"+apiHost+"/health", nil)
@@ -81,6 +70,14 @@ func Readiness(ctx context.Context, apiHost string, retryDelay time.Duration) er
 		// If there is no error, then report health.
 		if err == nil {
 			return nil
+		}
+
+		// Wait before we try again.
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "timed out")
+		case <-t.C:
+			t.Reset(retryDelay)
 		}
 	}
 }
