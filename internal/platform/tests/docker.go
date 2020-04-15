@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"os/exec"
 	"testing"
-	"time"
 )
 
 // Container tracks information about a docker container started for tests.
 type Container struct {
-	ID   string
-	Host string // IP:Port
+	ID      string
+	DBHost  string
+	APIHost string
 }
 
 // StartContainer runs a postgres container to execute commands.
@@ -42,6 +42,10 @@ func StartContainer(t *testing.T) *Container {
 					HostIP   string `json:"HostIp"`
 					HostPort string `json:"HostPort"`
 				} `json:"9080/tcp"`
+				TCP8080 []struct {
+					HostIP   string `json:"HostIp"`
+					HostPort string `json:"HostPort"`
+				} `json:"8080/tcp"`
 			} `json:"Ports"`
 		} `json:"NetworkSettings"`
 	}
@@ -49,20 +53,16 @@ func StartContainer(t *testing.T) *Container {
 		t.Fatalf("could not decode json: %v", err)
 	}
 
-	network := doc[0].NetworkSettings.Ports.TCP9080[0]
+	dbNet := doc[0].NetworkSettings.Ports.TCP9080[0]
+	apiNet := doc[0].NetworkSettings.Ports.TCP8080[0]
 
 	c := Container{
-		ID:   id,
-		Host: network.HostIP + ":" + network.HostPort,
+		ID:      id,
+		DBHost:  dbNet.HostIP + ":" + dbNet.HostPort,
+		APIHost: apiNet.HostIP + ":" + apiNet.HostPort,
 	}
 
-	t.Log("DB Host:", c.Host)
-
-	t.Log("Waiting 5 seconds for the database to be ready")
-	for i := 5; i > 0; i-- {
-		t.Log(i)
-		time.Sleep(1 * time.Second)
-	}
+	t.Log("DB Host[", c.DBHost, "]  API Host[", c.APIHost, "]")
 
 	return &c
 }
