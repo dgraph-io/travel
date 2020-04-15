@@ -23,6 +23,7 @@ func Readiness(apiHost string, retryDelay time.Duration) error {
 	attempts := int(retryDelay) / int(delay)
 
 	// We will try until the retryDelay time has exipired.
+	var err error
 	for i := 1; i <= attempts; i++ {
 
 		// After the first attempt, wait for before we try again.
@@ -31,7 +32,7 @@ func Readiness(apiHost string, retryDelay time.Duration) error {
 		}
 
 		// Define and execute a function to perform the health check call.
-		err := func() error {
+		err = func() error {
 
 			// Construct a request to perform the health call.
 			req, err := http.NewRequest(http.MethodGet, "http://"+apiHost+"/health", nil)
@@ -75,17 +76,11 @@ func Readiness(apiHost string, retryDelay time.Duration) error {
 			return nil
 		}()
 
-		// Check for errors resulting in the call.
-		switch {
-		case err != nil && i < attempts:
-			continue
-		case err != nil && i == attempts:
-			return errors.Wrap(err, "not healthy")
+		// If there is no error, then report health.
+		if err == nil {
+			return nil
 		}
-
-		// We are health so break and return.
-		break
 	}
 
-	return nil
+	return errors.Wrap(err, "not healthy")
 }
