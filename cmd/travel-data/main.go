@@ -16,6 +16,7 @@ import (
 		We are only storing 1 result of places at this time.
 		Decide on UI, Ratel or some CLI tooling.
 		May not want to use the default Client in the Advisory/Weather feeds.
+		Review all comments for necessity.
 
 	Building/Testing
 		Write integration tests.
