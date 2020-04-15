@@ -10,25 +10,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Readiness checks if Dgraph is ready to receive requests. It will attempt
-// to check the server for readiness every 1/2 second through out the
-// specified amount of rety delay.
-func Readiness(apiHost string, retryDelay time.Duration) error {
+// Readiness checks if the DB is ready to receive requests. It will attempt
+// a check between each retryDelay duration specified. The context holds the
+// total amount of time Readiness will wait to validate the DB is healthy.
+func Readiness(ctx context.Context, apiHost string, retryDelay time.Duration) error {
 
-	// Minimal wait between attempts will be 1/2 second.
-	delay := 500 * time.Millisecond
-
-	// Calculate the total number of attempts we need to satisfy
-	// the retry delay.
-	attempts := int(retryDelay) / int(delay)
+	// Create a timer to pump the iteration of the loop.
+	t := time.NewTimer(retryDelay)
+	defer t.Stop()
 
 	// We will try until the retryDelay time has exipired.
 	var err error
-	for i := 1; i <= attempts; i++ {
+	for {
 
-		// After the first attempt, wait for before we try again.
-		if i > 1 {
-			time.Sleep(delay)
+		// After the first attempt, wait before we try again.
+		if err != nil {
+			select {
+			case <-ctx.Done():
+				return errors.Wrap(ctx.Err(), "timed out")
+			case <-t.C:
+				t.Reset(retryDelay)
+			}
 		}
 
 		// Define and execute a function to perform the health check call.
@@ -81,6 +83,4 @@ func Readiness(apiHost string, retryDelay time.Duration) error {
 			return nil
 		}
 	}
-
-	return errors.Wrap(err, "not healthy")
 }
