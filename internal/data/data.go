@@ -8,6 +8,7 @@ import (
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
+	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/places"
 	"github.com/dgraph-io/travel/internal/weather"
 	"google.golang.org/grpc"
@@ -55,6 +56,7 @@ func (v *validate) Schema(ctx context.Context) error {
 			city_name: string @index(trigram, hash) @upsert .
 			place_id: string @index(hash) @upsert .
 			weather_id: int @index(int) @upsert .
+			
 			weather: [uid] .
 			places: [uid] .
 		`,
@@ -134,6 +136,8 @@ func (s *store) Weather(ctx context.Context, log *log.Logger, cityID string, w w
 
 	// Add the city id to the weather node.
 	db := struct {
+		// TODO: Just connect the weather node with city node via an edge.
+		// No need to use a foriegn key kind of relationship.
 		CityID string `json:"city_id"`
 		weather.Weather
 	}{
@@ -149,10 +153,16 @@ func (s *store) Weather(ctx context.Context, log *log.Logger, cityID string, w w
 
 	// Define a graphql function to find the weather by its unique id. The
 	// cityID will be the unique id for the weather.
+	// TODO: Instead, check whether the City node has it's weather information available
+	// via the `weather` edge. Also update the weather info if its last udpated time
+	// is more than 24 hours.
+	// TODO: We need to flip the feed fetching.
+	// TODO: First find whether the weather info exists and its not outdated, and
+	// TODO: then go fetch from the Feed only if required.
 	query := fmt.Sprintf(`{ findWeather(func: eq(weather_id, %d)) { id as uid } }`, w.ID)
 
 	//  Define a mutation by connecting the weather to the city with the
-	// `has_weather` relationship.
+	// `weather` relationship.
 	mutation := fmt.Sprintf(`{ "uid": "%s", "weather" : %s }`, cityID, string(data))
 
 	// Define and execute a request to add the city if it doesn't exist yet.
@@ -180,6 +190,7 @@ func (s *store) Place(ctx context.Context, log *log.Logger, cityID string, place
 
 	// Add the city id to the place node.
 	db := struct {
+		// TODO: Establish the relationship by creating an edge with the city node.
 		CityID string `json:"city_id"`
 		places.Place
 	}{
@@ -194,7 +205,7 @@ func (s *store) Place(ctx context.Context, log *log.Logger, cityID string, place
 	}
 
 	// Define a graphql function to find a place by its unique id. The
-	// GooglePlaceID will be the unique id for the weather.
+	// GooglePlaceID will be the unique id for the place.
 	query := fmt.Sprintf(`{ findPlace(func: eq(place_id, %s)) { id as uid } }`, place.PlaceID)
 
 	//  Define a mutation by connecting the place to the city with the
@@ -215,6 +226,55 @@ func (s *store) Place(ctx context.Context, log *log.Logger, cityID string, place
 	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
 		log.Printf("places : StorePlace : query : %s", query)
 		log.Printf("places : StorePlace : mutation : %s", mutation)
+		return err
+	}
+
+	return nil
+}
+
+func (s *store) Advisory(ctx context.Context, cityID string, a advisory.Advisory) error {
+
+	// Add the city id to the weather node.
+	db := struct {
+		// TODO: Establish the relationship by creating an edge with the city node.
+		CityID string `json:"city_id"`
+		advisory.Advisory
+	}{
+		CityID:   cityID,
+		Advisory: a,
+	}
+
+	// Convert the data to store into json for the mutation call.
+	data, err := json.Marshal(db)
+	if err != nil {
+		return err
+	}
+
+	// Check Check whether Advisory for the country code exists.
+	// TODO: Check the last update time of the advisory, update if it's more than 7 days.
+	// TODO: We need to flip the feed fetching.
+	// TODO: First find whether the Advisory exists and its not outdated, and
+	// TODO: then go fetch from the Feed only if required.
+	query := fmt.Sprintf(`{ findAdvisory(func: eq(country_code, %s)) { id as uid } }`, a.CountryCode)
+
+	//  Define a mutation by connecting the advisory to the city with the
+	// `advisory` relationship.
+	mutation := fmt.Sprintf(`{ "uid": "%s", "advisory" : %s }`, cityID, string(data))
+
+	// Define and execute a request to add the city if it doesn't exist yet.
+	req := api.Request{
+		CommitNow: true,
+		Query:     query,
+		Mutations: []*api.Mutation{
+			{
+				Cond:    `@if(eq(len(id), 0))`,
+				SetJson: []byte(mutation),
+			},
+		},
+	}
+	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
+		log.Printf("places : StoreAdvisory : query : %s", query)
+		log.Printf("places : StoreAdvisory : mutation : %s", mutation)
 		return err
 	}
 

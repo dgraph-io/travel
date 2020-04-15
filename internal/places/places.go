@@ -10,28 +10,6 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-// Filter defines the specific places to filter out.
-type Filter struct {
-	Keyword   string
-	Radius    uint
-	pageToken string
-}
-
-// Place contains the place data points captured from the API.
-type Place struct {
-	PlaceID          string   `json:"place_id"`
-	CityName         string   `json:"city_name"`
-	Name             string   `json:"name"`
-	Address          string   `json:"address"`
-	Lat              float64  `json:"lat"`
-	Lng              float64  `json:"lng"`
-	LocationType     []string `json:"location_type"`
-	AvgUserRating    float32  `json:"avg_user_rating"`
-	NumberOfRatings  int      `json:"no_user_rating"`
-	GmapsURL         string   `json:"gmaps_url"`
-	PhotoReferenceID string   `json:"photo_id"`
-}
-
 // City represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type City struct {
@@ -119,4 +97,26 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 	}
 
 	return places, nil
+}
+
+// Place contains the place data points captured from the API.
+type Place struct {
+	PlaceID          string   `json:"place_id"`
+	CityName         string   `json:"city_name"`
+	Name             string   `json:"name"`
+	Address          string   `json:"address"`
+	Lat              float64  `json:"lat"`
+	Lng              float64  `json:"lng"`
+	LocationType     []string `json:"location_type"`
+	AvgUserRating    float32  `json:"avg_user_rating"`
+	NumberOfRatings  int      `json:"no_user_rating"`
+	GmapsURL         string   `json:"gmaps_url"`
+	PhotoReferenceID string   `json:"photo_id"`
+}
+
+// Filter defines the specific places to filter out.
+type Filter struct {
+	Keyword   string
+	Radius    uint
+	pageToken string
 }
