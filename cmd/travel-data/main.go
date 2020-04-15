@@ -24,6 +24,7 @@ import (
 		Finish tests for data, places.
 		Running in Kind with Ready checks
 		Working with Circle CI
+		traval-data binary gets git information as well.
 
 	Place Store
 		Establish the relationship by creating an edge with the city node.
