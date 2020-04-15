@@ -14,7 +14,7 @@ import (
 )
 
 type store struct {
-	dgraph *dgo.Dgraph
+	*dgo.Dgraph
 }
 
 // Weather will add the specified Place into the database.
@@ -54,7 +54,7 @@ func (s *store) Weather(ctx context.Context, cityID string, w weather.Weather) e
 			},
 		},
 	}
-	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
+	if _, err := s.NewTxn().Do(ctx, &req); err != nil {
 		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
 	}
 
@@ -98,7 +98,7 @@ func (s *store) Place(ctx context.Context, cityID string, place places.Place) er
 			},
 		},
 	}
-	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
+	if _, err := s.NewTxn().Do(ctx, &req); err != nil {
 		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
 	}
 
@@ -141,7 +141,7 @@ func (s *store) Advisory(ctx context.Context, cityID string, a advisory.Advisory
 			},
 		},
 	}
-	if _, err := s.dgraph.NewTxn().Do(ctx, &req); err != nil {
+	if _, err := s.NewTxn().Do(ctx, &req); err != nil {
 		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
 	}
 

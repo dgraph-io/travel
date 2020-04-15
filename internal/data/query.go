@@ -8,7 +8,7 @@ import (
 )
 
 type query struct {
-	graphql *graphql.GraphQL
+	*graphql.GraphQL
 }
 
 // Schema return the defined schema from the database.
@@ -21,7 +21,7 @@ func (q *query) Schema(ctx context.Context) ([]Schema, error) {
 	var result struct {
 		Schema []Schema
 	}
-	if err := q.graphql.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
+	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
 		return nil, errors.Wrap(err, query)
 	}
 

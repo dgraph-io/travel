@@ -12,7 +12,7 @@ import (
 )
 
 type validate struct {
-	dgraph *dgo.Dgraph
+	*dgo.Dgraph
 }
 
 // Schema is used to identify if a schema exists. If the schema
@@ -34,7 +34,7 @@ func (v *validate) Schema(ctx context.Context) error {
 	}
 
 	// Perform that operation.
-	if err := v.dgraph.Alter(ctx, op); err != nil {
+	if err := v.Alter(ctx, op); err != nil {
 		return errors.Wrapf(err, "op[%+v]", op)
 	}
 
@@ -68,7 +68,7 @@ func (v *validate) City(ctx context.Context, city places.City) (string, error) {
 			},
 		},
 	}
-	result, err := v.dgraph.NewTxn().Do(ctx, &req)
+	result, err := v.NewTxn().Do(ctx, &req)
 	if err != nil {
 		return "", errors.Wrapf(err, "req[%+v]", &req)
 	}

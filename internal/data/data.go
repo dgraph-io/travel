@@ -48,14 +48,14 @@ func New(dbHost string, apiHost string) (*Data, error) {
 		},
 	}
 
-	// construct a graphql value.
+	// Construct a graphql value for making queries.
 	graphql := graphql.New(apiHost, &client)
 
 	// Construct a data value for use.
 	data := Data{
-		Query:    query{graphql: graphql},
-		Store:    store{dgraph: dgraph},
-		Validate: validate{dgraph: dgraph},
+		Query:    query{GraphQL: graphql},
+		Store:    store{Dgraph: dgraph},
+		Validate: validate{Dgraph: dgraph},
 	}
 
 	return &data, nil
