@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -18,33 +19,41 @@ func (err *Error) Error() string {
 	return "graphql: " + err.Message
 }
 
+// These commands represents the set of know graphql commands.
+const (
+	CmdAlter  = "alter"
+	CmdMutate = "mutate"
+	CmdQuery  = "query"
+)
+
 // GraphQL represents a system that can accept a graphql query.
 type GraphQL struct {
-	host   string
+	url    string
 	client *http.Client
 }
 
 // New constructs a GraphQL for use to making queries agains a
-// specified host.
-func New(host string, client *http.Client) *GraphQL {
+// specified host. The apiHost is just the IP:Port of the
+// Dgraph API endpoint.
+func New(apiHost string, client *http.Client) *GraphQL {
 	return &GraphQL{
-		host:   host,
+		url:    "http://" + apiHost + "/",
 		client: client,
 	}
 }
 
 // Query performs a basic query against the configured server.
-func (g *GraphQL) Query(ctx context.Context, queryString string, response interface{}) error {
-	return g.query(ctx, queryString, nil, response)
+func (g *GraphQL) Query(ctx context.Context, command string, queryString string, response interface{}) error {
+	return g.query(ctx, command, queryString, nil, response)
 }
 
 // QueryWithVars performs a query against the configured server with variable substituion.
-func (g *GraphQL) QueryWithVars(ctx context.Context, queryString string, queryVars map[string]interface{}, response interface{}) error {
-	return g.query(ctx, queryString, queryVars, response)
+func (g *GraphQL) QueryWithVars(ctx context.Context, command string, queryString string, queryVars map[string]interface{}, response interface{}) error {
+	return g.query(ctx, command, queryString, queryVars, response)
 }
 
 // Query performs a query against the configured server.
-func (g *GraphQL) query(ctx context.Context, queryString string, queryVars map[string]interface{}, response interface{}) error {
+func (g *GraphQL) query(ctx context.Context, command string, queryString string, queryVars map[string]interface{}, response interface{}) error {
 
 	// Prepare the request for the HTTP call.
 	var body bytes.Buffer
@@ -56,13 +65,13 @@ func (g *GraphQL) query(ctx context.Context, queryString string, queryVars map[s
 		Variables: queryVars,
 	}
 	if err := json.NewEncoder(&body).Encode(request); err != nil {
-		return err
+		return fmt.Errorf("encoding error : %w", err)
 	}
 
-	// Cosntruct a request for the call.
-	req, err := http.NewRequest(http.MethodPost, g.host, &body)
+	// Construct a request for the call.
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, g.url+command, &body)
 	if err != nil {
-		return err
+		return fmt.Errorf("create request error : %w", err)
 	}
 
 	// Prepare the header variables.
@@ -71,17 +80,16 @@ func (g *GraphQL) query(ctx context.Context, queryString string, queryVars map[s
 	req.Header.Set("Accept", "application/json")
 
 	// Make the call to the DB server.
-	req = req.WithContext(ctx)
 	resp, err := g.client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("perform request error : %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Pull the result from the server.
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, resp.Body); err != nil {
-		return err
+	// Pull the entire result from the server.
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("copy error : %w", err)
 	}
 
 	// Define the structure of a result.
@@ -94,13 +102,13 @@ func (g *GraphQL) query(ctx context.Context, queryString string, queryVars map[s
 	gr := result{
 		Data: response,
 	}
-	if err := json.NewDecoder(&buf).Decode(&gr); err != nil {
-		return err
+	if err := json.Unmarshal(data, &gr); err != nil {
+		return fmt.Errorf("decoding error : %w : %s", err, string(data))
 	}
 
 	// If there is an error, just return the first one.
 	if len(gr.Errors) > 0 {
-		return &gr.Errors[0]
+		return fmt.Errorf("operation error : %w", &gr.Errors[0])
 	}
 
 	return nil

@@ -17,11 +17,11 @@ import (
 // so the correct error code is returned.
 var ErrFailed = errors.New("feed failed")
 
-// Keys represents the set of keys needed for the different API's
-// that are used to retrieve data.
-type Keys struct {
-	MapKey     string
-	WeatherKey string
+// Dgraph represents the IP and Ports we need to talk to the
+// server for the different functions we need to perform.
+type Dgraph struct {
+	DBHost  string
+	APIHost string
 }
 
 // Search represents a city and its coordinates. All fields must be
@@ -35,12 +35,19 @@ type Search struct {
 	Radius      uint
 }
 
+// Keys represents the set of keys needed for the different API's
+// that are used to retrieve data.
+type Keys struct {
+	MapKey     string
+	WeatherKey string
+}
+
 // Work retrieves and stores the feed data for this API.
-func Work(log *log.Logger, search Search, keys Keys, dbHost string) error {
+func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	ctx := context.Background()
 
 	// Construct a Data value for working with the database.
-	data, err := data.New(dbHost)
+	data, err := data.New(dgraph.DBHost, dgraph.APIHost)
 	if err != nil {
 		log.Printf("feed : Work : New Data : ERROR : %+v", err)
 		return ErrFailed

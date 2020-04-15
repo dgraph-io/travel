@@ -58,8 +58,8 @@ func TestReadiness(t *testing.T) {
 	}
 }
 
-// TestValidateSchema validates the schema can be validated in Dgraph.
-func TestValidateSchema(t *testing.T) {
+// TestSchema validates the schema can be validated in Dgraph.
+func TestSchema(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}
@@ -71,7 +71,7 @@ func TestValidateSchema(t *testing.T) {
 	{
 		t.Log("\tWhen handling a city schema.")
 		{
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
 			err := data.Readiness(ctx, apiHost, 500*time.Millisecond)
@@ -80,7 +80,7 @@ func TestValidateSchema(t *testing.T) {
 			}
 			t.Logf("\t%s\tShould be able to to see Dgraph is ready.", tests.Success)
 
-			data, err := data.New(dbHost)
+			data, err := data.New(dbHost, apiHost)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to connect to Dgraph : %v", tests.Failed, err)
 			}
@@ -90,6 +90,21 @@ func TestValidateSchema(t *testing.T) {
 				t.Fatalf("\t%s\tShould be able to perform the schema operation : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to perform the schema operation.", tests.Success)
+
+			schema, err := data.Query.Schema(ctx)
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to query for the schema : %v", tests.Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to query for the schema.", tests.Success)
+
+			const predicates = 9
+			if len(schema) != predicates {
+				t.Log("\t\tGot:", len(schema))
+				t.Log("\t\tExp:", predicates)
+				t.Errorf("\t%s\tShould be able to see %d predicates in the schema : %v", tests.Failed, predicates, err)
+			} else {
+				t.Logf("\t%s\tShould be able to see %d predicates in the schema.", tests.Success, predicates)
+			}
 		}
 	}
 }

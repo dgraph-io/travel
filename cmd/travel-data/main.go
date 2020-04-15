@@ -14,27 +14,31 @@ import (
 /*
 	General
 		We are only storing 1 result of places at this time.
-		Finish Flight feed.
 		Decide on UI, Ratel or some CLI tooling.
-		Need to apply proper times on the Client.Do calls in the feeds.
-		Review the use of foriegn key kinds of relationship.
+		May not want to use the default Client in the Advisory/Weather feeds.
 
 	Building/Testing
 		Write integration tests.
-		Finish tests for data, places.
 		Running in Kind with Ready checks
 		Working with Circle CI
 		traval-data binary gets git information as well.
 
-	Place Store
+	Data
+		Do more to validate the Schema by checking actual predicate values.
+		Review the use of foriegn key kinds of relationship.
+		Write more tests.
+
+	Place Feed
 		Establish the relationship by creating an edge with the city node.
 		Validate upserts are working.
+		Write more tests.
 
-	Advisory Store
+	Advisory Feed
 		Establish the relationship by creating an edge with the city node.
 		Validate upserts are working.
+		Write more tests.
 
-	Weather Store
+	Weather Feed
 		Validate upserts are working.
 		Just connect the weather node with city node via an edge.
 		Instead, check whether the City node has it's weather information available
@@ -42,6 +46,11 @@ import (
 			is more than 24 hours.
 		We need to flip the feed fetching. First find whether the weather info
 			exists and its not outdated and then go fetch from the Feed only if required.
+		Write more tests.
+
+	Flight Feed
+		Incorporate this feed into the data.
+		Write more tests.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
@@ -79,8 +88,9 @@ func run() error {
 			MapsKey    string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
 			WeatherKey string `conf:"default:b2302a48062dc1da72430c612557498d"`
 		}
-		DB struct {
-			Host string `conf:"default:localhost:9080"`
+		Dgraph struct {
+			DBHost  string `conf:"default:localhost:9080"`
+			APIHost string `conf:"default:localhost:8080"`
 		}
 	}
 
@@ -112,6 +122,11 @@ func run() error {
 	// =========================================================================
 	// Process the feed
 
+	dgraph := feed.Dgraph{
+		DBHost:  cfg.Dgraph.DBHost,
+		APIHost: cfg.Dgraph.APIHost,
+	}
+
 	search := feed.Search{
 		CountryCode: cfg.City.CountryCode,
 		CityName:    cfg.City.Name,
@@ -126,7 +141,7 @@ func run() error {
 		WeatherKey: cfg.APIKeys.WeatherKey,
 	}
 
-	if err := feed.Work(log, search, keys, cfg.DB.Host); err != nil {
+	if err := feed.Work(log, dgraph, search, keys); err != nil {
 		return err
 	}
 

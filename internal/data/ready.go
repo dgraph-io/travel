@@ -33,7 +33,7 @@ func Readiness(ctx context.Context, apiHost string, retryInterval time.Duration)
 		select {
 		case <-ctx.Done():
 			t.Stop()
-			return ctx.Err()
+			return errors.Wrap(ctx.Err(), "timed out")
 		case <-t.C:
 		}
 	}

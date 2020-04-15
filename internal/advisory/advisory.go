@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, countryCode string) (Advisory, error) {
 
-	// Construct a request.
-	req, err := http.NewRequest(http.MethodGet, "https://www.travel-advisory.info/api", nil)
+	// Construct a request to perform the advisory search.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://www.travel-advisory.info/api", nil)
 	if err != nil {
-		return Advisory{}, err
+		return Advisory{}, errors.Wrap(err, "new request")
 	}
 
 	// Apply the country code to the request.
