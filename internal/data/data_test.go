@@ -19,23 +19,26 @@ func TestReadiness(t *testing.T) {
 	defer teardown()
 
 	tt := []struct {
-		Name     string
-		Duration time.Duration
-		Success  bool
+		name       string
+		retryDelay time.Duration
+		timeout    time.Duration
+		success    bool
 	}{
-		{"timeout", time.Second, false},
-		{"ready", 5 * time.Second, true},
+		{"timeout", 500 * time.Millisecond, time.Second, false},
+		{"ready", 500 * time.Millisecond, 5 * time.Second, true},
 	}
 
 	t.Log("Given the need to be able to validate the database is ready.")
 	{
 		for _, test := range tt {
 			tf := func(t *testing.T) {
-				t.Logf("\tWhen waiting up to %v for the database to be ready.", test.Duration)
+				t.Logf("\tWhen waiting up to %v for the database to be ready.", test.timeout)
 				{
-					err := data.Readiness(apiHost, test.Duration)
+					ctx, cancel := context.WithTimeout(context.Background(), test.timeout)
+					defer cancel()
 
-					switch test.Success {
+					err := data.Readiness(ctx, apiHost, test.retryDelay)
+					switch test.success {
 					case true:
 						if err != nil {
 							t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %v", tests.Failed, err)
@@ -50,7 +53,7 @@ func TestReadiness(t *testing.T) {
 					}
 				}
 			}
-			t.Run(test.Name, tf)
+			t.Run(test.name, tf)
 		}
 	}
 }
@@ -68,7 +71,10 @@ func TestValidateSchema(t *testing.T) {
 	{
 		t.Log("\tWhen handling a city schema.")
 		{
-			err := data.Readiness(apiHost, 10*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			err := data.Readiness(ctx, apiHost, 500*time.Millisecond)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %v", tests.Failed, err)
 			}
@@ -80,7 +86,7 @@ func TestValidateSchema(t *testing.T) {
 			}
 			t.Logf("\t%s\tShould be able to connect to Dgraph.", tests.Success)
 
-			if err := data.Validate.Schema(context.Background()); err != nil {
+			if err := data.Validate.Schema(ctx); err != nil {
 				t.Fatalf("\t%s\tShould be able to perform the schema operation : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to perform the schema operation.", tests.Success)
