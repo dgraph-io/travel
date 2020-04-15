@@ -11,14 +11,16 @@ import (
 )
 
 // Readiness checks if Dgraph is ready to receive requests. It will attempt
-// to check the server for readiness over the specified amount of rety
-// duration.
+// to check the server for readiness every 1/2 second through out the
+// specified amount of rety delay.
 func Readiness(apiHost string, retryDelay time.Duration) error {
 
-	// We will only attempt the ready call five times. Once right away and
-	// then we will respect the retryDelay provided.
-	const attempts = 5
-	delay := retryDelay / attempts
+	// Minimal wait between attempts will be 1/2 second.
+	delay := 500 * time.Millisecond
+
+	// Calculate the total number of attempts we need to satisfy
+	// the retry delay.
+	attempts := int(retryDelay) / int(delay)
 
 	// We will try until the retryDelay time has exipired.
 	for i := 1; i <= attempts; i++ {
