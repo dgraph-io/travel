@@ -6,10 +6,10 @@ import (
 	"io"
 	"log"
 
+	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/places"
 	"github.com/dgraph-io/travel/internal/weather"
-	"github.com/dgraph-io/travel/internal/advisory"
 	"googlemaps.github.io/maps"
 )
 
