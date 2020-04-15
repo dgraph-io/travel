@@ -13,8 +13,8 @@ import (
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weather, error) {
 
-	// Construct a request.
-	req, err := http.NewRequest(http.MethodGet, "http://api.openweathermap.org/data/2.5/weather", nil)
+	// Construct a request to perform the weather search.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://api.openweathermap.org/data/2.5/weather", nil)
 	if err != nil {
 		return Weather{}, errors.Wrap(err, "new request")
 	}
