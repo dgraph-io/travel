@@ -28,6 +28,7 @@ import (
 
 	Advisory Store
 		Establish the relationship by creating an edge with the city node.
+		Pass the country code as a configuration.
 
 	Weather Store
 		Just connect the weather node with city node via an edge.
