@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// TestValidate validates the schema can be validated in Dgraph.
+// TestValidate validates all the support that provides data validation.
 func TestValidate(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
