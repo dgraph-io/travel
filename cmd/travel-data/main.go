@@ -12,10 +12,16 @@ import (
 
 // TODO
 /*
+	Bugs
+		AvgUserRating is being saved as a float32. I have validated the JSON has
+			a floating point number (4.5) but on the query I am getting back (4).
+			Look at store_test.go storePlace test.
+
 	General
 		We are only storing 1 result of places at this time.
 		Decide on UI, Ratel or some CLI tooling.
 		May not want to use the default Client in the Advisory/Weather feeds.
+		Review all comments for necessity.
 
 	Building/Testing
 		Write integration tests.
@@ -24,6 +30,7 @@ import (
 		traval-data binary gets git information as well.
 
 	Data
+		Add schema predicates for weather and advisory.
 		Do more to validate the Schema by checking actual predicate values.
 		Review the use of foriegn key kinds of relationship.
 		Write more tests.

@@ -28,7 +28,6 @@ func (v *validate) Schema(ctx context.Context) error {
 			city_name: string @index(trigram, hash) @upsert .
 			place_id: string @index(hash) @upsert .
 			weather_id: int @index(int) @upsert .
-			weather: [uid] .
 			places: [uid] .
 		`,
 	}

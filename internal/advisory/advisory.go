@@ -67,7 +67,7 @@ type Advisory struct {
 	Score       float64 `json:"advisory_score"`
 	LastUpdated string  `json:"advisory_last_updated"`
 	Message     string  `json:"advisory_message"`
-	Source      string  `json:"temp_min"`
+	Source      string  `json:"source"`
 }
 
 // result represents the result of the weather query.
