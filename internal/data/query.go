@@ -11,6 +11,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Schema represents information per predicate set in the schema.
+type Schema struct {
+	Predicate string   `json:"predicate"`
+	Type      string   `json:"type"`
+	Index     bool     `json:"index"`
+	Tokenizer []string `json:"tokenizer"`
+	Upsert    bool     `json:"upsert"`
+}
+
 type query struct {
 	*graphql.GraphQL
 }
@@ -22,7 +31,7 @@ func (q *query) Schema(ctx context.Context) ([]Schema, error) {
 	var result struct {
 		Schema []Schema
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
+	if err := q.Query(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, query)
 	}
 
@@ -43,7 +52,7 @@ func (q *query) City(ctx context.Context, cityID string) (places.City, error) {
 	var result struct {
 		City []places.City
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
+	if err := q.Query(ctx, query, &result); err != nil {
 		return places.City{}, errors.Wrap(err, query)
 	}
 
@@ -76,7 +85,7 @@ func (q *query) Advisory(ctx context.Context, cityID string) (advisory.Advisory,
 			Advisory advisory.Advisory
 		}
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
+	if err := q.Query(ctx, query, &result); err != nil {
 		return advisory.Advisory{}, errors.Wrap(err, query)
 	}
 
@@ -116,7 +125,7 @@ func (q *query) Weather(ctx context.Context, cityID string) (weather.Weather, er
 			Weather weather.Weather
 		}
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
+	if err := q.Query(ctx, query, &result); err != nil {
 		return weather.Weather{}, errors.Wrap(err, query)
 	}
 
@@ -153,7 +162,7 @@ func (q *query) Places(ctx context.Context, cityID string) ([]places.Place, erro
 			Places []places.Place
 		}
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
+	if err := q.Query(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, query)
 	}
 
@@ -162,13 +171,4 @@ func (q *query) Places(ctx context.Context, cityID string) ([]places.Place, erro
 	}
 
 	return result.City[0].Places, nil
-}
-
-// Schema represents information per predicate set in the schema.
-type Schema struct {
-	Predicate string   `json:"predicate"`
-	Type      string   `json:"type"`
-	Index     bool     `json:"index"`
-	Tokenizer []string `json:"tokenizer"`
-	Upsert    bool     `json:"upsert"`
 }

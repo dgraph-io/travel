@@ -35,30 +35,20 @@ func validateSchema(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			err := data.Readiness(ctx, apiHost, 500*time.Millisecond)
-			if err != nil {
-				t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %v", tests.Failed, err)
-			}
-			t.Logf("\t%s\tShould be able to to see Dgraph is ready.", tests.Success)
+			db := ready(t, ctx, dbHost, apiHost)
 
-			data, err := data.New(dbHost, apiHost)
-			if err != nil {
-				t.Fatalf("\t%s\tShould be able to connect to Dgraph : %v", tests.Failed, err)
-			}
-			t.Logf("\t%s\tShould be able to connect to Dgraph.", tests.Success)
-
-			if err := data.Validate.Schema(ctx); err != nil {
+			if err := db.Validate.Schema(ctx); err != nil {
 				t.Fatalf("\t%s\tShould be able to perform the schema operation : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to perform the schema operation.", tests.Success)
 
-			schema, err := data.Query.Schema(ctx)
+			schema, err := db.Query.Schema(ctx)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to query for the schema : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to query for the schema.", tests.Success)
 
-			const predicates = 9
+			const predicates = 5
 			if len(schema) != predicates {
 				t.Log("\t\tGot:", len(schema))
 				t.Log("\t\tExp:", predicates)
@@ -66,6 +56,19 @@ func validateSchema(t *testing.T) {
 			} else {
 				t.Logf("\t%s\tShould be able to see %d predicates in the schema.", tests.Success, predicates)
 			}
+
+			expSchema := []data.Schema{
+				{"City.lat", "float", false, nil, false},
+				{"City.lng", "float", false, nil, false},
+				{"City.name", "string", true, []string{"term"}, false},
+				{"dgraph.graphql.schema", "string", false, nil, false},
+				{"dgraph.type", "string", true, []string{"exact"}, false},
+			}
+
+			if diff := cmp.Diff(schema, expSchema); diff != "" {
+				t.Fatalf("\t%s\tShould get back the expected schema. Diff:\n%s", tests.Failed, diff)
+			}
+			t.Logf("\t%s\tShould get back the expected schema.", tests.Success)
 		}
 	}
 }
@@ -89,9 +92,8 @@ func validateCity(t *testing.T) {
 	}
 }
 
-// addCity is a support test help function to consolidate the adding of
-// a city since so many data tests need this functionality.
-func addCity(t *testing.T, ctx context.Context, dbHost string, apiHost string) (*data.Data, string) {
+// ready provides support for making sure the database is ready to be used.
+func ready(t *testing.T, ctx context.Context, dbHost string, apiHost string) *data.DB {
 	t.Helper()
 
 	err := data.Readiness(ctx, apiHost, 500*time.Millisecond)
@@ -100,13 +102,23 @@ func addCity(t *testing.T, ctx context.Context, dbHost string, apiHost string) (
 	}
 	t.Logf("\t%s\tShould be able to to see Dgraph is ready.", tests.Success)
 
-	data, err := data.New(dbHost, apiHost)
+	db, err := data.NewDB(dbHost, apiHost)
 	if err != nil {
 		t.Fatalf("\t%s\tShould be able to connect to Dgraph : %v", tests.Failed, err)
 	}
 	t.Logf("\t%s\tShould be able to connect to Dgraph.", tests.Success)
 
-	if err := data.Validate.Schema(ctx); err != nil {
+	return db
+}
+
+// addCity is a support test help function to consolidate the adding of
+// a city since so many data tests need this functionality.
+func addCity(t *testing.T, ctx context.Context, dbHost string, apiHost string) (*data.DB, string) {
+	t.Helper()
+
+	db := ready(t, ctx, dbHost, apiHost)
+
+	if err := db.Validate.Schema(ctx); err != nil {
 		t.Fatalf("\t%s\tShould be able to perform the schema operation : %v", tests.Failed, err)
 	}
 	t.Logf("\t%s\tShould be able to perform the schema operation.", tests.Success)
@@ -116,13 +128,13 @@ func addCity(t *testing.T, ctx context.Context, dbHost string, apiHost string) (
 		Lat:  -33.865143,
 		Lng:  151.209900,
 	}
-	cityID, err := data.Validate.City(ctx, cityAdd)
+	cityID, err := db.Validate.City(ctx, cityAdd)
 	if err != nil {
 		t.Fatalf("\t%s\tShould be able to add a city : %v", tests.Failed, err)
 	}
 	t.Logf("\t%s\tShould be able to add a city.", tests.Success)
 
-	city, err := data.Query.City(ctx, cityID)
+	city, err := db.Query.City(ctx, cityID)
 	if err != nil {
 		t.Fatalf("\t%s\tShould be able to query for the city : %v", tests.Failed, err)
 	}
@@ -133,5 +145,5 @@ func addCity(t *testing.T, ctx context.Context, dbHost string, apiHost string) (
 	}
 	t.Logf("\t%s\tShould get back the same city.", tests.Success)
 
-	return data, cityID
+	return db, cityID
 }

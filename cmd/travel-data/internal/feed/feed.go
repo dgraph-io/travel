@@ -47,14 +47,14 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	ctx := context.Background()
 
 	// Construct a Data value for working with the database.
-	data, err := data.New(dgraph.DBHost, dgraph.APIHost)
+	db, err := data.NewDB(dgraph.DBHost, dgraph.APIHost)
 	if err != nil {
 		log.Printf("feed : Work : New Data : ERROR : %+v", err)
 		return ErrFailed
 	}
 
 	// Validate the schema in the database before we start.
-	if err := data.Validate.Schema(ctx); err != nil {
+	if err := db.Validate.Schema(ctx); err != nil {
 		log.Printf("feed : Work : ValidateSchema : ERROR : %+v", err)
 		return ErrFailed
 	}
@@ -75,7 +75,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	}
 
 	// Validate this city is in the database or add it.
-	cityID, err := data.Validate.City(ctx, city)
+	cityID, err := db.Validate.City(ctx, city)
 	if err != nil {
 		log.Printf("feed : Work : ValidateCity : ERROR : %+v", err)
 		return ErrFailed
@@ -92,7 +92,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	log.Printf("feed : Work : Search Weather : Result : %+v", weather)
 
 	// Store the weather for the specified city.
-	if err := data.Store.Weather(ctx, cityID, weather); err != nil {
+	if err := db.Store.Weather(ctx, cityID, weather); err != nil {
 		log.Printf("feed : Work : Store Weather : ERROR : %+v", err)
 		return ErrFailed
 	}
@@ -106,7 +106,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	log.Printf("feed : Work : Search Advisory : Result : %+v", advisory)
 
 	// Store the travel advisory information.
-	if err := data.Store.Advisory(ctx, cityID, advisory); err != nil {
+	if err := db.Store.Advisory(ctx, cityID, advisory); err != nil {
 		log.Print("feed : Work : Store Weather : ERROR : ", err)
 		return ErrFailed
 	}
@@ -134,7 +134,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 		// Store each individual place in the database.
 		log.Printf("feed : Work : Store : Adding %d Places", len(places))
 		for _, place := range places {
-			if err := data.Store.Place(ctx, cityID, place); err != nil {
+			if err := db.Store.Place(ctx, cityID, place); err != nil {
 				log.Printf("feed : Work : Store Place : ERROR : %v : %+v", place, err)
 				continue
 			}

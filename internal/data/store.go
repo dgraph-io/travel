@@ -9,11 +9,13 @@ import (
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/places"
+	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/dgraph-io/travel/internal/weather"
 	"github.com/pkg/errors"
 )
 
 type store struct {
+	GraphQL *graphql.GraphQL
 	*dgo.Dgraph
 }
 

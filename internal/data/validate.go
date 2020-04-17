@@ -8,10 +8,12 @@ import (
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/dgraph-io/travel/internal/places"
+	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/pkg/errors"
 )
 
 type validate struct {
+	GraphQL *graphql.GraphQL
 	*dgo.Dgraph
 }
 
@@ -21,20 +23,27 @@ func (v *validate) Schema(ctx context.Context) error {
 
 	// Define a dgraph schema operation for validating and
 	// creating a schema.
-	op := &api.Operation{
-		Schema: `
-			lat: float .
-			lng: float .
-			city_name: string @index(trigram, hash) @upsert .
-			place_id: string @index(hash) @upsert .
-			weather_id: int @index(int) @upsert .
-			places: [uid] .
-		`,
-	}
+	// op := &api.Operation{
+	// 	Schema: `
+	// 		lat: float .
+	// 		lng: float .
+	// 		city_name: string @index(trigram, hash) @upsert .
+	// 		place_id: string @index(hash) @upsert .
+	// 		weather_id: int @index(int) @upsert .
+	// 		places: [uid] .
+	// 	`,
+	// }
 
-	// Perform that operation.
-	if err := v.Alter(ctx, op); err != nil {
-		return errors.Wrapf(err, "op[%+v]", op)
+	schema := `type City {
+		id: ID!
+		name: String @search(by: [term])
+		lat: Float!
+		lng: Float!
+	}`
+
+	result := make(map[string]interface{})
+	if err := v.GraphQL.Schema(ctx, schema, &result); err != nil {
+		return errors.Wrap(err, schema)
 	}
 
 	return nil

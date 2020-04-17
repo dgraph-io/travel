@@ -12,16 +12,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Data provides support for storing data inside of DGraph.
-type Data struct {
+// DB provides support for storing data inside of DGraph.
+type DB struct {
 	Query    query
 	Validate validate
 	Store    store
 }
 
-// New constructs a data value for use to store data inside
+// NewDB constructs a data value for use to store data inside
 // of the Dgraph database.
-func New(dbHost string, apiHost string) (*Data, error) {
+func NewDB(dbHost string, apiHost string) (*DB, error) {
 
 	// Dial up an grpc connection to dgraph and construct
 	// a dgraph client.
@@ -52,11 +52,11 @@ func New(dbHost string, apiHost string) (*Data, error) {
 	graphql := graphql.New(apiHost, &client)
 
 	// Construct a data value for use.
-	data := Data{
+	db := DB{
 		Query:    query{GraphQL: graphql},
-		Store:    store{Dgraph: dgraph},
-		Validate: validate{Dgraph: dgraph},
+		Store:    store{GraphQL: graphql, Dgraph: dgraph},
+		Validate: validate{GraphQL: graphql, Dgraph: dgraph},
 	}
 
-	return &data, nil
+	return &db, nil
 }
