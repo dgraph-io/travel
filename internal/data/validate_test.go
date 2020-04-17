@@ -48,9 +48,7 @@ func validateSchema(t *testing.T) {
 			}
 			t.Logf("\t%s\tShould be able to query for the schema.", tests.Success)
 
-			// t.Logf("******************>\n%+v\n", schema)
 			_, goSchema := data.GrapQLSchema()
-
 			if len(schema) != len(goSchema) {
 				t.Log("\t\tGot:", len(schema))
 				t.Log("\t\tExp:", len(goSchema))

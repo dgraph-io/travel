@@ -10,6 +10,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Weather contains the weather data points captured from the API.
+type Weather struct {
+	ID            int     `json:"weather_id"`
+	CityName      string  `json:"city_name"`
+	Visibility    string  `json:"visibility"`
+	Desc          string  `json:"description"`
+	Temp          float64 `json:"temp"`
+	FeelsLike     float64 `json:"feels_like"`
+	MinTemp       float64 `json:"temp_min"`
+	MaxTemp       float64 `json:"temp_max"`
+	Pressure      int     `json:"pressure"`
+	Humidity      int     `json:"humidity"`
+	WindSpeed     float64 `json:"wind_speed"`
+	WindDirection int     `json:"wind_direction"`
+	Sunrise       int     `json:"sunrise"`
+	Sunset        int     `json:"sunset"`
+}
+
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weather, error) {
 
@@ -66,24 +84,6 @@ func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weath
 	}
 
 	return weather, nil
-}
-
-// Weather contains the weather data points captured from the API.
-type Weather struct {
-	ID            int     `json:"weather_id"`
-	CityName      string  `json:"city_name"`
-	Visibility    string  `json:"visibility"`
-	Desc          string  `json:"description"`
-	Temp          float64 `json:"temp"`
-	FeelsLike     float64 `json:"feels_like"`
-	MinTemp       float64 `json:"temp_min"`
-	MaxTemp       float64 `json:"temp_max"`
-	Pressure      int     `json:"pressure"`
-	Humidity      int     `json:"humidity"`
-	WindSpeed     float64 `json:"wind_speed"`
-	WindDirection int     `json:"wind_direction"`
-	Sunrise       int     `json:"sunrise"`
-	Sunset        int     `json:"sunset"`
 }
 
 // result represents the result of the weather query.
