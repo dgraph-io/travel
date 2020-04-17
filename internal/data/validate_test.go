@@ -48,24 +48,18 @@ func validateSchema(t *testing.T) {
 			}
 			t.Logf("\t%s\tShould be able to query for the schema.", tests.Success)
 
-			const predicates = 5
-			if len(schema) != predicates {
+			// t.Logf("******************>\n%+v\n", schema)
+			_, goSchema := data.GrapQLSchema()
+
+			if len(schema) != len(goSchema) {
 				t.Log("\t\tGot:", len(schema))
-				t.Log("\t\tExp:", predicates)
-				t.Errorf("\t%s\tShould be able to see %d predicates in the schema : %v", tests.Failed, predicates, err)
+				t.Log("\t\tExp:", len(goSchema))
+				t.Errorf("\t%s\tShould be able to see %d predicates in the schema : %v", tests.Failed, len(goSchema), err)
 			} else {
-				t.Logf("\t%s\tShould be able to see %d predicates in the schema.", tests.Success, predicates)
+				t.Logf("\t%s\tShould be able to see %d predicates in the schema.", tests.Success, len(goSchema))
 			}
 
-			expSchema := []data.Schema{
-				{"City.lat", "float", false, nil, false},
-				{"City.lng", "float", false, nil, false},
-				{"City.name", "string", true, []string{"term"}, false},
-				{"dgraph.graphql.schema", "string", false, nil, false},
-				{"dgraph.type", "string", true, []string{"exact"}, false},
-			}
-
-			if diff := cmp.Diff(schema, expSchema); diff != "" {
+			if diff := cmp.Diff(schema, goSchema); diff != "" {
 				t.Fatalf("\t%s\tShould get back the expected schema. Diff:\n%s", tests.Failed, diff)
 			}
 			t.Logf("\t%s\tShould get back the expected schema.", tests.Success)

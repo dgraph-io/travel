@@ -11,15 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Schema represents information per predicate set in the schema.
-type Schema struct {
-	Predicate string   `json:"predicate"`
-	Type      string   `json:"type"`
-	Index     bool     `json:"index"`
-	Tokenizer []string `json:"tokenizer"`
-	Upsert    bool     `json:"upsert"`
-}
-
 type query struct {
 	*graphql.GraphQL
 }

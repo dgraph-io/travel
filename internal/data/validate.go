@@ -34,12 +34,7 @@ func (v *validate) Schema(ctx context.Context) error {
 	// 	`,
 	// }
 
-	schema := `type City {
-		id: ID!
-		name: String @search(by: [term])
-		lat: Float!
-		lng: Float!
-	}`
+	schema, _ := GrapQLSchema()
 
 	result := make(map[string]interface{})
 	if err := v.GraphQL.Schema(ctx, schema, &result); err != nil {
