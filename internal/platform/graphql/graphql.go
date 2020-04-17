@@ -13,10 +13,10 @@ import (
 
 // These commands represents the set of know graphql commands.
 const (
-	CmdAlter  = "alter"
-	CmdMutate = "mutate"
-	CmdSchema = "admin/schema"
-	CmdQuery  = "query"
+	cmdAlter  = "alter"
+	cmdMutate = "graphql"
+	cmdSchema = "admin/schema"
+	cmdQuery  = "query"
 )
 
 // GraphQL represents a system that can accept a graphql query.
@@ -35,14 +35,24 @@ func New(apiHost string, client *http.Client) *GraphQL {
 	}
 }
 
-// Schema performs a schema operation against the configured server.
-func (g *GraphQL) Schema(ctx context.Context, schemaString string, response interface{}) error {
+// Mutate performs a mutation operation against the configured server.
+func (g *GraphQL) Mutate(ctx context.Context, mutationString string, response interface{}) error {
+
+	// Place the schema string into a reader for processing.
+	reader := strings.NewReader(mutationString)
+
+	// Make the http call to the server.
+	return g.do(ctx, cmdMutate, reader, response)
+}
+
+// CreateSchema performs a schema operation against the configured server.
+func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, response interface{}) error {
 
 	// Place the schema string into a reader for processing.
 	reader := strings.NewReader(schemaString)
 
 	// Make the http call to the server.
-	return g.do(ctx, CmdSchema, reader, response)
+	return g.do(ctx, cmdSchema, reader, response)
 }
 
 // Query performs a basic query against the configured server.
@@ -67,7 +77,7 @@ func (g *GraphQL) QueryWithVars(ctx context.Context, queryString string, queryVa
 	}
 
 	// Make the http call to the server.
-	return g.do(ctx, CmdQuery, &body, response)
+	return g.do(ctx, cmdQuery, &body, response)
 }
 
 // Error represents an error that can be returned from a graphql server.
@@ -80,6 +90,7 @@ func (err *Error) Error() string {
 	return "graphql: " + err.Message
 }
 
+// do provides the mechanics of handling a GraphQL request and response.
 func (g *GraphQL) do(ctx context.Context, command string, reader io.Reader, response interface{}) error {
 
 	// Construct a request for the call.

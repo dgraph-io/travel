@@ -18,9 +18,29 @@ func TestStore(t *testing.T) {
 		t.SkipNow()
 	}
 
+	t.Run("city", storeCity)
 	t.Run("advisory", storeAdvisory)
 	t.Run("weather", storeWeather)
 	t.Run("place", storePlace)
+}
+
+// storeCity validates a city node can be stored in the database.
+func storeCity(t *testing.T) {
+	t.Helper()
+
+	dbHost, apiHost, teardown := tests.NewUnit(t)
+	defer teardown()
+
+	t.Log("Given the need to be able to validate storing a city.")
+	{
+		t.Log("\tWhen handling a city for Sydney.")
+		{
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			addCity(t, ctx, dbHost, apiHost)
+		}
+	}
 }
 
 // storeAdvisory validates an advisory node can be stored in the database.

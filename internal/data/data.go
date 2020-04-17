@@ -14,9 +14,9 @@ import (
 
 // DB provides support for storing data inside of DGraph.
 type DB struct {
-	Query    query
-	Validate validate
-	Store    store
+	Schema schema
+	Store  store
+	Query  query
 }
 
 // NewDB constructs a data value for use to store data inside
@@ -53,9 +53,9 @@ func NewDB(dbHost string, apiHost string) (*DB, error) {
 
 	// Construct a data value for use.
 	db := DB{
-		Query:    query{GraphQL: graphql},
-		Store:    store{GraphQL: graphql, Dgraph: dgraph},
-		Validate: validate{GraphQL: graphql, Dgraph: dgraph},
+		Schema: schema{graphql: graphql},
+		Store:  store{graphql: graphql, Dgraph: dgraph},
+		Query:  query{graphql: graphql},
 	}
 
 	return &db, nil

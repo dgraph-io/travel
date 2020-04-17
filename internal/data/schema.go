@@ -1,5 +1,12 @@
 package data
 
+import (
+	"context"
+
+	"github.com/dgraph-io/travel/internal/platform/graphql"
+	"github.com/pkg/errors"
+)
+
 // Maintaining alphabetical ordering since the database does this anyway.
 var gQLSchema = `
 type Advisory {
@@ -100,8 +107,8 @@ var goSchema = []Schema{
 	{"dgraph.type", "string", true, []string{"exact"}, false},
 }
 
-// GrapQLSchema is used to keep the guidelines set for access
-// a package level variable only in the file it is defined in.
+// GrapQLSchema is used to return the GraphQL schema and the
+// Go representation for testing purpose.
 func GrapQLSchema() (string, []Schema) {
 	return gQLSchema, goSchema
 }
@@ -113,4 +120,45 @@ type Schema struct {
 	Index     bool     `json:"index"`
 	Tokenizer []string `json:"tokenizer"`
 	Upsert    bool     `json:"upsert"`
+}
+
+type schema struct {
+	graphql *graphql.GraphQL
+}
+
+// Create is used to identify if a schema exists. If the schema
+// does not exist, then one is created.
+func (s *schema) Create(ctx context.Context) error {
+
+	// Perform a query to validate if the schema exists.
+	schema, err := s.Retrieve(ctx)
+	if err != nil {
+		return errors.Wrap(err, "validating schema")
+	}
+
+	// If a schema was returned, then report it exits.
+	if len(schema) > 0 {
+		return nil
+	}
+
+	// Add the schema since it doesn't exist yet.
+	if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
+		return errors.Wrap(err, gQLSchema)
+	}
+
+	return nil
+}
+
+// Retrieve returns the defined schema from the database.
+func (s *schema) Retrieve(ctx context.Context) ([]Schema, error) {
+	query := "schema {}"
+
+	var result struct {
+		Schema []Schema
+	}
+	if err := s.graphql.Query(ctx, query, &result); err != nil {
+		return nil, errors.Wrap(err, query)
+	}
+
+	return result.Schema, nil
 }

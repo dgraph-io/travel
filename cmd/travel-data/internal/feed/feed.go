@@ -53,8 +53,8 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 		return ErrFailed
 	}
 
-	// Validate the schema in the database before we start.
-	if err := db.Validate.Schema(ctx); err != nil {
+	// Create the schema in the database before we start.
+	if err := db.Schema.Create(ctx); err != nil {
 		log.Printf("feed : Work : ValidateSchema : ERROR : %+v", err)
 		return ErrFailed
 	}
@@ -75,7 +75,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	}
 
 	// Validate this city is in the database or add it.
-	cityID, err := db.Validate.City(ctx, city)
+	cityID, err := db.Store.City(ctx, city)
 	if err != nil {
 		log.Printf("feed : Work : ValidateCity : ERROR : %+v", err)
 		return ErrFailed
