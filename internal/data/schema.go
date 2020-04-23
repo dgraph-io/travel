@@ -5,6 +5,7 @@ import (
 
 	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/pkg/errors"
+	"log"
 )
 
 // Maintaining alphabetical ordering since the database does this anyway.
@@ -20,13 +21,12 @@ type Advisory {
 }
 
 type City {
-	id: ID!
-	advisory: Advisory
 	lat: Float!
 	lng: Float!
-	name: String @search(by: [term])
+	name: String! @id @search(by: [term])
 	places: [Place]
 	weather: Weather
+	advisory: Advisory
 }
 
 type Place {
@@ -129,13 +129,13 @@ type schema struct {
 // Create is used to identify if a schema exists. If the schema
 // does not exist, then one is created.
 func (s *schema) Create(ctx context.Context) error {
-
 	// Perform a query to validate if the schema exists.
 	schema, err := s.Retrieve(ctx)
 	if err != nil {
 		return errors.Wrap(err, "validating schema")
 	}
 
+	log.Printf("schema: Create: Retrieving schema: \n%v", schema)
 	// If a schema was returned, then report it exits.
 	if len(schema) > 0 {
 		return nil

@@ -19,9 +19,9 @@ func TestStore(t *testing.T) {
 	}
 
 	t.Run("city", storeCity)
-	t.Run("advisory", storeAdvisory)
-	t.Run("weather", storeWeather)
-	t.Run("place", storePlace)
+	//t.Run("advisory", storeAdvisory)
+	//t.Run("weather", storeWeather)
+	//t.Run("place", storePlace)
 }
 
 // storeCity validates a city node can be stored in the database.
@@ -38,7 +38,8 @@ func storeCity(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			addCity(t, ctx, dbHost, apiHost)
+			_,_ = addCity(t, ctx, dbHost, apiHost)
+			
 		}
 	}
 }
