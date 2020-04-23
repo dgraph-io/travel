@@ -23,8 +23,7 @@ type store struct {
 // City is used to identify if the specified city exists in
 // the database. If it doesn't, then the city is added to the database.
 // It will return a new City with the city ID from the database.
-func (s *store) City(ctx context.Context, city places.City) error {
-	// Convert the city value into json for the mutation call.
+func (s *store) City(ctx context.Context, city places.City) (string, error) {
 
 	// Define a graphql function to find the specified city by name.
 	mutation := fmt.Sprintf(`mutation{
@@ -53,16 +52,17 @@ func (s *store) City(ctx context.Context, city places.City) error {
 	log.Printf("*********> City: Store: Mutation: \n%s", mutation)
 	err := s.graphql.Mutate(ctx, mutation, result)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Printf("*********> City: Store: Result: \n%v", result)
 
 	if len(result.AddCity.City) == 0 {
 		err := errors.New("unable to add city, empty response from GraphQL mutation")
-		return err
+		return "", err
 	}
-	return nil
+
+	return "", nil
 }
 
 // Advisory will add the specified Advisory into the database.

@@ -47,7 +47,7 @@ func addCity(t *testing.T, ctx context.Context, testID int, dbHost string, apiHo
 		Lat:  -33.865143,
 		Lng:  151.209900,
 	}
-	err := db.Store.City(ctx, cityAdd)
+	_, err := db.Store.City(ctx, cityAdd)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city : %v", tests.Failed, testID, err)
 	}
