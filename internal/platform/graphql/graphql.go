@@ -35,16 +35,6 @@ func New(apiHost string, client *http.Client) *GraphQL {
 	}
 }
 
-// Mutate performs a mutation operation against the configured server.
-func (g *GraphQL) Mutate(ctx context.Context, mutationString string, response interface{}) error {
-
-	// Place the schema string into a reader for processing.
-	reader := strings.NewReader(mutationString)
-
-	// Make the http call to the server.
-	return g.do(ctx, cmdMutate, reader, response)
-}
-
 // CreateSchema performs a schema operation against the configured server.
 func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, response interface{}) error {
 
@@ -53,6 +43,11 @@ func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, respons
 
 	// Make the http call to the server.
 	return g.do(ctx, cmdSchema, reader, response)
+}
+
+// Mutate performs a mutation operation against the configured server.
+func (g *GraphQL) Mutate(ctx context.Context, mutationString string, response interface{}) error {
+	return g.QueryWithVars(ctx, mutationString, nil, response)
 }
 
 // Query performs a basic query against the configured server.

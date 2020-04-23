@@ -3,8 +3,6 @@ package data
 import (
 	"context"
 
-	"log"
-
 	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/pkg/errors"
 )
@@ -136,7 +134,6 @@ func (s *schema) Create(ctx context.Context) error {
 		return errors.Wrap(err, "validating schema")
 	}
 
-	log.Printf("schema: Create: Retrieving schema: \n%v", schema)
 	// If a schema was returned, then report it exits.
 	if len(schema) > 0 {
 		return nil
