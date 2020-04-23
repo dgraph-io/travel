@@ -50,13 +50,13 @@ func (s *store) City(ctx context.Context, city places.City) error {
 		} `json:"addCity"`
 	}
 
-	log.Printf("City: Store: Mutation: \n%s", mutation)
+	log.Printf("*********> City: Store: Mutation: \n%s", mutation)
 	err := s.graphql.Mutate(ctx, mutation, result)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("City: Store: Result: \n%v", result)
+	log.Printf("*********> City: Store: Result: \n%v", result)
 
 	if len(result.AddCity.City) == 0 {
 		err := errors.New("unable to add city, empty response from GraphQL mutation")
