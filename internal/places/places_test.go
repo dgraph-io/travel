@@ -18,14 +18,15 @@ const (
 func TestSearch(t *testing.T) {
 	t.Log("Given the need to retreve places.")
 	{
-		t.Log("\tWhen handling a single city.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling a single city.", testID)
 		{
 			apiKey := "AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"
 			client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to create a map client : %v", failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to create a map client : %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to create a map client.", success)
+			t.Logf("\t%s\tTest %d:\tShould be able to create a map client.", success, testID)
 
 			city := places.City{
 				Name: "Sydney",
@@ -42,23 +43,23 @@ func TestSearch(t *testing.T) {
 			for i := 0; i < 2; i++ {
 				places, err := city.Search(context.Background(), client, &filter)
 				if err != nil {
-					t.Fatalf("\t%s\tShould be able to search for places : %v", failed, err)
+					t.Fatalf("\t%s\tTest %d:\tShould be able to search for places : %v", failed, testID, err)
 				}
-				t.Logf("\t%s\tShould be able to search for places.", success)
+				t.Logf("\t%s\tTest %d:\tShould be able to search for places.", success, testID)
 
 				exp := 20
 				if len(places) != 20 {
-					t.Errorf("\t%s\t\tShould get a full page of places : %v", failed, err)
-					t.Log("\t\tGot:", len(places))
-					t.Log("\t\tExp:", exp)
+					t.Errorf("\t%s\tTest %d:\tShould get a full page of places : %v", failed, testID, err)
+					t.Logf("\t\tTest %d:\tGot: %v", testID, len(places))
+					t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				} else {
-					t.Logf("\t%s\t\tShould get a full page of places.", success)
+					t.Logf("\t%s\tTest %d:\tShould get a full page of places.", success, testID)
 				}
 
 				if savePlace == places[0].Name {
-					t.Errorf("\t%s\t\tShould get different places per page : %v", failed, err)
+					t.Errorf("\t%s\tTest %d:\tShould get different places per page : %v", failed, testID, err)
 				} else {
-					t.Logf("\t%s\t\tShould get different places per page.", success)
+					t.Logf("\t%s\tTest %d:\tShould get different places per page.", success, testID)
 				}
 				savePlace = places[0].Name
 			}

@@ -18,21 +18,23 @@ func TestReadiness(t *testing.T) {
 	_, apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
-	tt := []struct {
+	type tableTest struct {
 		name       string
 		retryDelay time.Duration
 		timeout    time.Duration
 		success    bool
-	}{
+	}
+
+	tt := []tableTest{
 		{"timeout", 500 * time.Millisecond, time.Second, false},
 		{"ready", 500 * time.Millisecond, 5 * time.Second, true},
 	}
 
 	t.Log("Given the need to be able to validate the database is ready.")
 	{
-		for _, test := range tt {
+		for testID, test := range tt {
 			tf := func(t *testing.T) {
-				t.Logf("\tWhen waiting up to %v for the database to be ready.", test.timeout)
+				t.Logf("\tTest %d:\tWhen waiting up to %v for the database to be ready.", testID, test.timeout)
 				{
 					ctx, cancel := context.WithTimeout(context.Background(), test.timeout)
 					defer cancel()
@@ -41,15 +43,15 @@ func TestReadiness(t *testing.T) {
 					switch test.success {
 					case true:
 						if err != nil {
-							t.Fatalf("\t%s\tShould be able to see Dgraph is ready : %v", tests.Failed, err)
+							t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready : %v", tests.Failed, testID, err)
 						}
-						t.Logf("\t%s\tShould be able to see Dgraph is ready.", tests.Success)
+						t.Logf("\t%s\tTest %d:\tShould be able to see Dgraph is ready.", tests.Success, testID)
 
 					case false:
 						if err == nil {
-							t.Fatalf("\t%s\tShould be able to see Dgraph is Not ready : %v", tests.Failed, err)
+							t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is Not ready.", tests.Failed, testID)
 						}
-						t.Logf("\t%s\tShould be able to see Dgraph is Not ready.", tests.Success)
+						t.Logf("\t%s\tTest %d:\tShould be able to see Dgraph is Not ready.", tests.Success, testID)
 					}
 				}
 			}
