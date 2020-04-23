@@ -13,10 +13,10 @@ import (
 
 // These commands represents the set of know graphql commands.
 const (
-	cmdAlter  = "alter"
-	cmdMutate = "graphql"
-	cmdSchema = "admin/schema"
-	cmdQuery  = "query"
+	cmdAlter   = "alter"
+	cmdSchema  = "admin/schema"
+	cmdQuery   = "graphql"
+	cmdQueryPM = "query"
 )
 
 // GraphQL represents a system that can accept a graphql query.
@@ -47,16 +47,21 @@ func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, respons
 
 // Mutate performs a mutation operation against the configured server.
 func (g *GraphQL) Mutate(ctx context.Context, mutationString string, response interface{}) error {
-	return g.QueryWithVars(ctx, mutationString, nil, response)
+	return g.QueryWithVars(ctx, cmdQuery, mutationString, nil, response)
 }
 
-// Query performs a basic query against the configured server.
+// Query performs a GraphQL query against the configured server.
 func (g *GraphQL) Query(ctx context.Context, queryString string, response interface{}) error {
-	return g.QueryWithVars(ctx, queryString, nil, response)
+	return g.QueryWithVars(ctx, cmdQuery, queryString, nil, response)
+}
+
+// QueryPM performs a GraphQL+- query against the configured server.
+func (g *GraphQL) QueryPM(ctx context.Context, queryString string, response interface{}) error {
+	return g.QueryWithVars(ctx, cmdQueryPM, queryString, nil, response)
 }
 
 // QueryWithVars performs a query against the configured server with variable substituion.
-func (g *GraphQL) QueryWithVars(ctx context.Context, queryString string, queryVars map[string]interface{}, response interface{}) error {
+func (g *GraphQL) QueryWithVars(ctx context.Context, command string, queryString string, queryVars map[string]interface{}, response interface{}) error {
 
 	// Prepare the request for the HTTP call.
 	var body bytes.Buffer
@@ -72,7 +77,7 @@ func (g *GraphQL) QueryWithVars(ctx context.Context, queryString string, queryVa
 	}
 
 	// Make the http call to the server.
-	return g.do(ctx, cmdQuery, &body, response)
+	return g.do(ctx, command, &body, response)
 }
 
 // Error represents an error that can be returned from a graphql server.

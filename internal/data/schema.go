@@ -128,6 +128,7 @@ type schema struct {
 // Create is used to identify if a schema exists. If the schema
 // does not exist, then one is created.
 func (s *schema) Create(ctx context.Context) error {
+
 	// Perform a query to validate if the schema exists.
 	schema, err := s.Retrieve(ctx)
 	if err != nil {
@@ -154,7 +155,7 @@ func (s *schema) Retrieve(ctx context.Context) ([]Schema, error) {
 	var result struct {
 		Schema []Schema
 	}
-	if err := s.graphql.Query(ctx, query, &result); err != nil {
+	if err := s.graphql.QueryPM(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, query)
 	}
 

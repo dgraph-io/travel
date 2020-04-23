@@ -29,7 +29,7 @@ func (q *query) City(ctx context.Context, cityID string) (places.City, error) {
 	var result struct {
 		City []places.City
 	}
-	if err := q.graphql.Query(ctx, query, &result); err != nil {
+	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
 		return places.City{}, errors.Wrap(err, query)
 	}
 
@@ -62,7 +62,7 @@ func (q *query) Advisory(ctx context.Context, cityID string) (advisory.Advisory,
 			Advisory advisory.Advisory
 		}
 	}
-	if err := q.graphql.Query(ctx, query, &result); err != nil {
+	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
 		return advisory.Advisory{}, errors.Wrap(err, query)
 	}
 
@@ -102,7 +102,7 @@ func (q *query) Weather(ctx context.Context, cityID string) (weather.Weather, er
 			Weather weather.Weather
 		}
 	}
-	if err := q.graphql.Query(ctx, query, &result); err != nil {
+	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
 		return weather.Weather{}, errors.Wrap(err, query)
 	}
 
@@ -139,7 +139,7 @@ func (q *query) Places(ctx context.Context, cityID string) ([]places.Place, erro
 			Places []places.Place
 		}
 	}
-	if err := q.graphql.Query(ctx, query, &result); err != nil {
+	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, query)
 	}
 
