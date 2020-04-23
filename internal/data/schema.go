@@ -3,9 +3,10 @@ package data
 import (
 	"context"
 
+	"log"
+
 	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/pkg/errors"
-	"log"
 )
 
 // Maintaining alphabetical ordering since the database does this anyway.
@@ -21,12 +22,12 @@ type Advisory {
 }
 
 type City {
+	advisory: Advisory
 	lat: Float!
 	lng: Float!
 	name: String! @id @search(by: [term])
 	places: [Place]
 	weather: Weather
-	advisory: Advisory
 }
 
 type Place {
@@ -47,7 +48,6 @@ type Weather {
 	id: ID!
 	city_name: String!
 	description: String
-	visibility: String
 	feels_like: Float
 	humidity: Int
 	pressure: Int
@@ -56,6 +56,7 @@ type Weather {
 	temp: Float
 	temp_min: Float
 	temp_max: Float
+	visibility: String
 	wind_direction: Int
 	wind_speed: Float
 }`
@@ -73,7 +74,7 @@ var goSchema = []Schema{
 	{"City.advisory", "uid", false, nil, false},
 	{"City.lat", "float", false, nil, false},
 	{"City.lng", "float", false, nil, false},
-	{"City.name", "string", true, []string{"term"}, false},
+	{"City.name", "string", true, []string{"term", "hash"}, true},
 	{"City.places", "uid", false, nil, false},
 	{"City.weather", "uid", false, nil, false},
 

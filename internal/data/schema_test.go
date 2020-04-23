@@ -39,7 +39,7 @@ func TestSchema(t *testing.T) {
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the schema : %v", tests.Failed, testID, err)
 			}
-			t.Logf("TestSchema: Retrieved schema: \n%v", schema)
+			// t.Logf("TestSchema: Retrieved schema: \n%v", schema)
 			t.Logf("\t%s\tShould be able to query for the schema.", tests.Success)
 
 			_, goSchema := data.GrapQLSchema()
