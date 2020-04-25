@@ -14,7 +14,7 @@ type City {
 	advisory: Advisory
 	lat: Float!
 	lng: Float!
-	name: String! @id @search(by: [term])
+	name: String! @search(by: [term])
 	places: [Place]
 	weather: Weather
 }

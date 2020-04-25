@@ -117,6 +117,8 @@ func (g *GraphQL) do(ctx context.Context, command string, reader io.Reader, resp
 		return fmt.Errorf("copy error : %w", err)
 	}
 
+	fmt.Println("**** WILL REMOVE ****>", string(data))
+
 	// Define the structure of a result.
 	type result struct {
 		Data   interface{}

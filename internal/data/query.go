@@ -18,26 +18,28 @@ type query struct {
 // City returns the specified city from the database by the city id.
 func (q *query) City(ctx context.Context, cityID string) (places.City, error) {
 	query := fmt.Sprintf(`
-{
-	city(func: uid(%s)) {
-		city_name
+query {
+	getCity(id: %q) {
+		name
 		lat
 		lng
 	}
 }`, cityID)
 
 	var result struct {
-		City []places.City
+		GetCity struct {
+			places.City
+		} `json:"getCity"`
 	}
-	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
 		return places.City{}, errors.Wrap(err, query)
 	}
 
-	if len(result.City) == 0 {
+	if result.GetCity.City.Name == "" {
 		return places.City{}, errors.Wrap(errors.New("no city found"), query)
 	}
 
-	return result.City[0], nil
+	return result.GetCity.City, nil
 }
 
 // Advisory returns the specified advisory from the database by the city id.
