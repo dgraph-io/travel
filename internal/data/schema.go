@@ -20,6 +20,7 @@ type Advisory {
 }
 
 type City {
+	id: ID!
 	advisory: Advisory
 	lat: Float!
 	lng: Float!
