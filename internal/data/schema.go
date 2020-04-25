@@ -9,16 +9,6 @@ import (
 
 // Maintaining alphabetical ordering since the database does this anyway.
 var gQLSchema = `
-type Advisory {
-	continent: String!
-	country: String!
-	country_code: String!
-	last_updated: String
-	message: String
-	score: Float!
-	source: String
-}
-
 type City {
 	id: ID!
 	advisory: Advisory
@@ -27,6 +17,16 @@ type City {
 	name: String! @id @search(by: [term])
 	places: [Place]
 	weather: Weather
+}
+
+type Advisory {
+	continent: String!
+	country: String!
+	country_code: String!
+	last_updated: String
+	message: String
+	score: Float!
+	source: String
 }
 
 type Place {
@@ -44,7 +44,6 @@ type Place {
 }
 
 type Weather {
-	id: ID!
 	city_name: String!
 	description: String
 	feels_like: Float
