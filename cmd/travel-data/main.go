@@ -12,6 +12,12 @@ import (
 
 // TODO
 /*
+	GraphQL
+		Remove the need to say mutation {} and query {}
+		Remove extra logging in the graphql package
+		Not sure having the city type in places is good.
+		Not sure if data shouldn't have its own type system.
+
 	Bugs
 		AvgUserRating is being saved as a float32. I have validated the JSON has
 			a floating point number (4.5) but on the query I am getting back (4).
