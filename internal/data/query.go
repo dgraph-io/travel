@@ -12,163 +12,125 @@ import (
 )
 
 type query struct {
-	*graphql.GraphQL
-}
-
-// Schema returns the defined schema from the database.
-func (q *query) Schema(ctx context.Context) ([]Schema, error) {
-	query := "schema {}"
-
-	var result struct {
-		Schema []Schema
-	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
-		return nil, errors.Wrap(err, query)
-	}
-
-	return result.Schema, nil
+	graphql *graphql.GraphQL
 }
 
 // City returns the specified city from the database by the city id.
 func (q *query) City(ctx context.Context, cityID string) (places.City, error) {
 	query := fmt.Sprintf(`
-{
-	city(func: uid(%s)) {
-		city_name
+query {
+	getCity(id: %q) {
+		name
 		lat
 		lng
 	}
 }`, cityID)
 
 	var result struct {
-		City []places.City
+		GetCity struct {
+			places.City
+		} `json:"getCity"`
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
-		return places.City{}, errors.Wrap(err, query)
-	}
-
-	if len(result.City) == 0 {
-		return places.City{}, errors.Wrap(errors.New("no city found"), query)
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return places.City{}, errors.Wrap(err, "query failed")
 	}
 
-	return result.City[0], nil
+	return result.GetCity.City, nil
 }
 
 // Advisory returns the specified advisory from the database by the city id.
 func (q *query) Advisory(ctx context.Context, cityID string) (advisory.Advisory, error) {
 	query := fmt.Sprintf(`
-{
-	city(func: uid(%s)) {
+query {
+	getCity(id: %q) {
 		advisory {
+			continent
 			country
 			country_code
-			continent
-			advisory_score
-			advisory_last_updated
-			advisory_message
+			last_updated
+			message
+			score
 			source
 		}
 	}
 }`, cityID)
 
 	var result struct {
-		City []struct {
-			Advisory advisory.Advisory
-		}
+		GetCity struct {
+			Advisory advisory.Advisory `json:"advisory"`
+		} `json:"getCity"`
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
-		return advisory.Advisory{}, errors.Wrap(err, query)
-	}
-
-	if len(result.City) == 0 {
-		return advisory.Advisory{}, errors.Wrap(errors.New("no advisory found"), query)
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return advisory.Advisory{}, errors.Wrap(err, "query failed")
 	}
 
-	return result.City[0].Advisory, nil
+	return result.GetCity.Advisory, nil
 }
 
 // Weather returns the specified weather from the database by the city id.
 func (q *query) Weather(ctx context.Context, cityID string) (weather.Weather, error) {
 	query := fmt.Sprintf(`
-{
-	city(func: uid(%s)) {
+query {
+	getCity(id: %q) {
 		weather {
-			weather_id
 			city_name
-			visibility
 			description
-			temp
 			feels_like
-			temp_min
-			temp_max
-			pressure
 			humidity
-			wind_speed
-			wind_direction
+			pressure
 			sunrise
 			sunset
+			temp
+			temp_min
+			temp_max
+			visibility
+			wind_direction
+			wind_speed
 		}
 	}
 }`, cityID)
 
 	var result struct {
-		City []struct {
-			Weather weather.Weather
-		}
+		GetCity struct {
+			Weather weather.Weather `json:"weather"`
+		} `json:"getCity"`
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
-		return weather.Weather{}, errors.Wrap(err, query)
-	}
-
-	if len(result.City) == 0 {
-		return weather.Weather{}, errors.Wrap(errors.New("no weather found"), query)
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return weather.Weather{}, errors.Wrap(err, "query failed")
 	}
 
-	return result.City[0].Weather, nil
+	return result.GetCity.Weather, nil
 }
 
 // Places returns the collection of palces from the database by the city id.
 func (q *query) Places(ctx context.Context, cityID string) ([]places.Place, error) {
 	query := fmt.Sprintf(`
-{
-	city(func: uid(%s)) {
+query {
+	getCity(id: %q) {
 		places {
-			place_id
-			city_name
-			name
-			address
-			lat
-			lng
-			location_type
-			avg_user_rating
-			no_user_rating
-			gmaps_url
+			address,
+			avg_user_rating,
+			city_name,
+			gmaps_url,
+			lat,
+			lng,
+			location_type,
+			name,
+			no_user_rating,
+			place_id,
 			photo_id
 		}
 	}
 }`, cityID)
 
 	var result struct {
-		City []struct {
-			Places []places.Place
-		}
+		GetCity struct {
+			Places []places.Place `json:"places"`
+		} `json:"getCity"`
 	}
-	if err := q.Query(ctx, graphql.CmdQuery, query, &result); err != nil {
-		return nil, errors.Wrap(err, query)
-	}
-
-	if len(result.City) == 0 {
-		return nil, errors.Wrap(errors.New("no places found"), query)
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return nil, errors.Wrap(err, "query failed")
 	}
 
-	return result.City[0].Places, nil
-}
-
-// Schema represents information per predicate set in the schema.
-type Schema struct {
-	Predicate string   `json:"predicate"`
-	Type      string   `json:"type"`
-	Index     bool     `json:"index"`
-	Tokenizer []string `json:"tokenizer"`
-	Upsert    bool     `json:"upsert"`
+	return result.GetCity.Places, nil
 }

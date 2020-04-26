@@ -15,7 +15,7 @@ import (
 // total amount of time Readiness will wait to validate the DB is healthy.
 func Readiness(ctx context.Context, apiHost string, retryInterval time.Duration) error {
 
-	// We will try until the context timeout has exipired.
+	// We will try until the context timeout has expired.
 	for {
 
 		// If there is no error, then report health.

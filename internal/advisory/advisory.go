@@ -9,6 +9,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Advisory contains the travel advisory result captured for a city. When
+// the advisory score is below 4 out of 5, it's not considered safe to travel.
+type Advisory struct {
+	Country     string  `json:"country"`
+	CountryCode string  `json:"country_code"`
+	Continent   string  `json:"continent"`
+	Score       float64 `json:"score"`
+	LastUpdated string  `json:"last_updated"`
+	Message     string  `json:"message"`
+	Source      string  `json:"source"`
+}
+
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, countryCode string) (Advisory, error) {
 
@@ -56,18 +68,6 @@ func Search(ctx context.Context, countryCode string) (Advisory, error) {
 	}
 
 	return advisory, nil
-}
-
-// Advisory contains the travel advisory result captured for a city. When
-// the advisory score is below 4 out of 5, it's not considered safe to travel.
-type Advisory struct {
-	Country     string  `json:"country"`
-	CountryCode string  `json:"country_code"`
-	Continent   string  `json:"continent"`
-	Score       float64 `json:"advisory_score"`
-	LastUpdated string  `json:"advisory_last_updated"`
-	Message     string  `json:"advisory_message"`
-	Source      string  `json:"source"`
 }
 
 // result represents the result of the weather query.

@@ -18,26 +18,48 @@ func TestStore(t *testing.T) {
 		t.SkipNow()
 	}
 
+	t.Run("city", storeCity)
 	t.Run("advisory", storeAdvisory)
 	t.Run("weather", storeWeather)
-	t.Run("place", storePlace)
+	t.Run("places", storePlaces)
+}
+
+// storeCity validates a city node can be stored in the database.
+func storeCity(t *testing.T) {
+	t.Helper()
+
+	apiHost, teardown := tests.NewUnit(t)
+	defer teardown()
+
+	t.Log("Given the need to be able to validate storing a city.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling a city for Sydney.", testID)
+		{
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			addCity(t, ctx, testID, apiHost)
+		}
+	}
 }
 
 // storeAdvisory validates an advisory node can be stored in the database.
 func storeAdvisory(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to be able to validate storing an advisory.")
 	{
-		t.Log("\tWhen handling an advisory for sydney.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling an advisory for sydney.", testID)
 		{
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, dbHost, apiHost)
+			data, cityID := addCity(t, ctx, 0, apiHost)
 
 			addAdvisory := advisory.Advisory{
 				Country:     "Australia",
@@ -50,20 +72,20 @@ func storeAdvisory(t *testing.T) {
 			}
 
 			if err := data.Store.Advisory(ctx, cityID, addAdvisory); err != nil {
-				t.Fatalf("\t%s\tShould be able to save an advisory node in Dgraph : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph: %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to save an advisory node in Dgraph.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph.", tests.Success, testID)
 
 			advisory, err := data.Query.Advisory(ctx, cityID)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to query for the advisory : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to query for the advisory.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to query for the advisory.", tests.Success, testID)
 
 			if diff := cmp.Diff(addAdvisory, advisory); diff != "" {
-				t.Fatalf("\t%s\tShould get back the same advisory. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same advisory. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get back the same advisory.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get back the same advisory.", tests.Success, testID)
 		}
 	}
 }
@@ -72,20 +94,20 @@ func storeAdvisory(t *testing.T) {
 func storeWeather(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to be able to validate storing weather.")
 	{
-		t.Log("\tWhen handling weather for sydney.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling weather for sydney.", testID)
 		{
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, dbHost, apiHost)
+			data, cityID := addCity(t, ctx, 0, apiHost)
 
 			addWeather := weather.Weather{
-				ID:            1001,
 				CityName:      "Sydney",
 				Visibility:    "clear",
 				Desc:          "going to be a great day",
@@ -102,47 +124,42 @@ func storeWeather(t *testing.T) {
 			}
 
 			if err := data.Store.Weather(ctx, cityID, addWeather); err != nil {
-				t.Fatalf("\t%s\tShould be able to save a weather node in Dgraph : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph: %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to save a weather node in Dgraph.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph.", tests.Success, testID)
 
 			weather, err := data.Query.Weather(ctx, cityID)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to query for the weather : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to query for the weather.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to query for the weather.", tests.Success, testID)
 
 			if diff := cmp.Diff(addWeather, weather); diff != "" {
-				t.Fatalf("\t%s\tShould get back the same weather. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same weather. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get back the same weather.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get back the same weather.", tests.Success, testID)
 		}
 	}
 }
 
-// storePlace validates a place node can be stored in the database.
-func storePlace(t *testing.T) {
+// storePlaces validates a place node can be stored in the database.
+func storePlaces(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, _ := tests.NewUnit(t)
-	// defer teardown()
+	apiHost, teardown := tests.NewUnit(t)
+	defer teardown()
 
 	t.Log("Given the need to be able to validate storing a place.")
 	{
-		t.Log("\tWhen handling a place for sydney.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling a place for sydney.", testID)
 		{
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, dbHost, apiHost)
+			data, cityID := addCity(t, ctx, 0, apiHost)
 
-			/*
-					BUG!!!
-				 	****** IN *****>  {"place_id":"65432","city_name":"sydney","name":"Karthic Coffee","address":"634 Ventura Blvd","lat":-33.865198,"lng":151.209945,"location_type":["resturant"],"avg_user_rating":4.5,"no_user_rating":876,"gmaps_url":"","photo_id":""}
-				 	****** OUT *****> {"place_id":"65432","city_name":"sydney","name":"Karthic Coffee","address":"634 Ventura Blvd","lat":-33.865198,"lng":151.209945,"location_type":["resturant"],"avg_user_rating":4,"no_user_rating":876,"gmaps_url":"","photo_id":""}
-			*/
-
-			addPlaces := []places.Place{
+			places := []places.Place{
 				{
 					PlaceID:          "12345",
 					CityName:         "sydney",
@@ -171,24 +188,22 @@ func storePlace(t *testing.T) {
 				},
 			}
 
-			for _, place := range addPlaces {
-				if err := data.Store.Place(ctx, cityID, place); err != nil {
-					t.Fatalf("\t%s\tShould be able to save place %q node in Dgraph : %v", tests.Failed, place.Name, err)
-				}
-				t.Logf("\t%s\tShould be able to save place %q node in Dgraph.", tests.Success, place.Name)
+			if err := data.Store.Places(ctx, cityID, places); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to save places in Dgraph: %v", tests.Failed, testID, err)
 			}
+			t.Logf("\t%s\tTest %d:\tShould be able to save places in Dgraph.", tests.Success, testID)
 
 			places, err := data.Query.Places(ctx, cityID)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to query for the places : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the places: %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to query for the places.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to query for the places.", tests.Success, testID)
 
-			for i, place := range addPlaces {
+			for i, place := range places {
 				if diff := cmp.Diff(places[i], place); diff != "" {
-					t.Fatalf("\t%s\tShould get back the same place for %q. Diff:\n%s", tests.Failed, place.Name, diff)
+					t.Fatalf("\t%s\tTest %d:\tShould get back the same place for %q. Diff:\n%s", tests.Failed, testID, place.Name, diff)
 				}
-				t.Logf("\t%s\tShould get back the same place for %q.", tests.Success, place.Name)
+				t.Logf("\t%s\tTest %d:\tShould get back the same place for %q.", tests.Success, testID, place.Name)
 			}
 		}
 	}

@@ -5,31 +5,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dgraph-io/dgo/v2"
-	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/dgraph-io/travel/internal/platform/graphql"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
 )
 
-// Data provides support for storing data inside of DGraph.
-type Data struct {
-	Query    query
-	Validate validate
-	Store    store
+// DB provides support for storing data inside of DGraph.
+type DB struct {
+	Schema schema
+	Store  store
+	Query  query
 }
 
-// New constructs a data value for use to store data inside
+// NewDB constructs a data value for use to store data inside
 // of the Dgraph database.
-func New(dbHost string, apiHost string) (*Data, error) {
-
-	// Dial up an grpc connection to dgraph and construct
-	// a dgraph client.
-	conn, err := grpc.Dial(dbHost, grpc.WithInsecure())
-	if err != nil {
-		return nil, errors.Wrapf(err, "dbHost[%s]", dbHost)
-	}
-	dgraph := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+func NewDB(apiHost string) (*DB, error) {
 
 	// Construct a client for graphql calls.
 	client := http.Client{
@@ -52,11 +40,11 @@ func New(dbHost string, apiHost string) (*Data, error) {
 	graphql := graphql.New(apiHost, &client)
 
 	// Construct a data value for use.
-	data := Data{
-		Query:    query{GraphQL: graphql},
-		Store:    store{Dgraph: dgraph},
-		Validate: validate{Dgraph: dgraph},
+	db := DB{
+		Schema: schema{graphql: graphql},
+		Store:  store{graphql: graphql},
+		Query:  query{graphql: graphql},
 	}
 
-	return &data, nil
+	return &db, nil
 }

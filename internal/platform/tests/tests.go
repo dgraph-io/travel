@@ -12,7 +12,7 @@ const (
 
 // NewUnit creates a test value with necessary application state to run
 // database tests. It will return the host to use to connect to the database.
-func NewUnit(t *testing.T) (dbHost string, apiHost string, teardown func()) {
+func NewUnit(t *testing.T) (apiHost string, teardown func()) {
 	t.Helper()
 
 	// Start a container instance with dgraph running.
@@ -26,5 +26,5 @@ func NewUnit(t *testing.T) (dbHost string, apiHost string, teardown func()) {
 		StopContainer(t, c)
 	}
 
-	return c.DBHost, c.APIHost, teardown
+	return c.APIHost, teardown
 }

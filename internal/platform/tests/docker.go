@@ -10,7 +10,6 @@ import (
 // Container tracks information about a docker container started for tests.
 type Container struct {
 	ID      string
-	DBHost  string
 	APIHost string
 }
 
@@ -38,10 +37,6 @@ func StartContainer(t *testing.T) *Container {
 	var doc []struct {
 		NetworkSettings struct {
 			Ports struct {
-				TCP9080 []struct {
-					HostIP   string `json:"HostIp"`
-					HostPort string `json:"HostPort"`
-				} `json:"9080/tcp"`
 				TCP8080 []struct {
 					HostIP   string `json:"HostIp"`
 					HostPort string `json:"HostPort"`
@@ -53,16 +48,14 @@ func StartContainer(t *testing.T) *Container {
 		t.Fatalf("could not decode json: %v", err)
 	}
 
-	dbNet := doc[0].NetworkSettings.Ports.TCP9080[0]
 	apiNet := doc[0].NetworkSettings.Ports.TCP8080[0]
 
 	c := Container{
 		ID:      id,
-		DBHost:  dbNet.HostIP + ":" + dbNet.HostPort,
 		APIHost: apiNet.HostIP + ":" + apiNet.HostPort,
 	}
 
-	t.Log("DB Host[", c.DBHost, "]  API Host[", c.APIHost, "]")
+	t.Log("API Host[", c.APIHost, "]")
 
 	return &c
 }
