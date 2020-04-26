@@ -2,11 +2,10 @@ package data
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/dgraph-io/dgo/v2"
-	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/places"
 	"github.com/dgraph-io/travel/internal/platform/graphql"
@@ -62,10 +61,10 @@ mutation {
 }
 
 // Advisory will add the specified Advisory into the database.
-func (s *store) Advisory(ctx context.Context, cityID string, adv advisory.Advisory) error {
+func (s *store) Advisory(ctx context.Context, cityID string, advisory advisory.Advisory) error {
 
 	// Define a document that represents the advisory.
-	advisory := fmt.Sprintf(`
+	doc := fmt.Sprintf(`
 {
 	continent: %q,
 	country: %q,
@@ -75,8 +74,8 @@ func (s *store) Advisory(ctx context.Context, cityID string, adv advisory.Adviso
 	score: %f,
 	source: %q
 }`,
-		adv.Continent, adv.Country, adv.CountryCode,
-		adv.LastUpdated, adv.Message, adv.Score, adv.Source)
+		advisory.Continent, advisory.Country, advisory.CountryCode,
+		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source)
 
 	// Define a graphql mutation to update the city in the database with
 	// the advisory. On success we want to return the ID for the city.
@@ -95,7 +94,7 @@ mutation {
 			id
 		}
 	}
-}`, cityID, advisory[1:])
+}`, cityID, doc[1:])
 
 	// Data structure to parse the result of the mutation.
 	var result struct {
@@ -124,88 +123,145 @@ mutation {
 }
 
 // Weather will add the specified Place into the database.
-func (s *store) Weather(ctx context.Context, cityID string, w weather.Weather) error {
+func (s *store) Weather(ctx context.Context, cityID string, weather weather.Weather) error {
 
-	// Add the city id to the weather node.
-	db := struct {
-		CityID string `json:"city_id"`
-		weather.Weather
-	}{
-		CityID:  cityID,
-		Weather: w,
-	}
+	// Define a document that represents the weather.
+	doc := fmt.Sprintf(`
+{
+	city_name: %q,
+	description: %q,
+	feels_like: %f,
+	humidity: %d,
+	pressure: %d,
+	sunrise: %d,
+	sunset: %d,
+	temp: %f,
+	temp_min: %f,
+	temp_max: %f,
+	visibility: %q,
+	wind_direction: %d,
+	wind_speed: %f
+}`,
+		weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
+		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
+		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
+		weather.WindSpeed)
 
-	// Convert the data to store into json for the mutation call.
-	data, err := json.Marshal(db)
-	if err != nil {
-		return errors.Wrapf(err, "db[%+v]", db)
-	}
-
-	// Define a graphql function to find the weather by its unique id. The
-	// cityID will be the unique id for the weather.
-	query := fmt.Sprintf(`{ findWeather(func: eq(weather_id, %d)) { id as uid } }`, w.ID)
-
-	//  Define a mutation by connecting the weather to the city with the
-	// `weather` relationship.
-	mutation := fmt.Sprintf(`{ "uid": "%s", "weather" : %s }`, cityID, string(data))
-
-	// Define and execute a request to add the city if it doesn't exist yet.
-	req := api.Request{
-		CommitNow: true,
-		Query:     query,
-		Mutations: []*api.Mutation{
-			{
-				Cond:    `@if(eq(len(id), 0))`,
-				SetJson: []byte(mutation),
-			},
+	// Define a graphql mutation to update the city in the database with
+	// the advisory. On success we want to return the ID for the city.
+	mutation := fmt.Sprintf(`
+mutation {
+	updateCity(input: {
+		filter: {
+		  id: [%q]
 		},
+		set: {
+			weather: %s
+		}
+	})
+	{
+		city {
+			id
+		}
 	}
-	if _, err := s.NewTxn().Do(ctx, &req); err != nil {
-		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
+}`, cityID, doc[1:])
+
+	// Data structure to parse the result of the mutation.
+	var result struct {
+		UpdCity struct {
+			City []struct {
+				ID string `json:"id"`
+			} `json:"city"`
+		} `json:"updateCity"`
+	}
+
+	// Perform the mutation.
+	err := s.graphql.Mutate(ctx, mutation[1:], &result)
+	if err != nil {
+		return err
+	}
+
+	// Validate we got back the city id.
+	if len(result.UpdCity.City) != 1 {
+		return errors.New("unable to update city, no city id returned")
+	}
+	if result.UpdCity.City[0].ID != cityID {
+		return errors.New("unable to update city, invalid city id returned")
 	}
 
 	return nil
 }
 
-// Place will add the specified Place into the database.
-func (s *store) Place(ctx context.Context, cityID string, place places.Place) error {
+// Places will add the specified Place into the database.
+func (s *store) Places(ctx context.Context, cityID string, places []places.Place) error {
 
-	// Add the city id to the place node.
-	db := struct {
-		CityID string `json:"city_id"`
-		places.Place
-	}{
-		CityID: cityID,
-		Place:  place,
+	// Define a collection that represents the places.
+	var b strings.Builder
+	b.WriteString("[")
+	for _, place := range places {
+		for i := range place.LocationType {
+			place.LocationType[i] = fmt.Sprintf(`"%s"`, place.LocationType[i])
+		}
+		b.WriteString(fmt.Sprintf(`
+{
+	address: %q,
+	avg_user_rating: %f,
+	city_name: %q,
+	gmaps_url: %q,
+	lat: %f,
+	lng: %f,
+	location_type: [%q],
+	name: %q,
+	no_user_rating: %d,
+	place_id: %q,
+	photo_id: %q
+}`,
+			place.Address, place.AvgUserRating, place.CityName, place.GmapsURL,
+			place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
+			place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID))
 	}
+	b.WriteString("]")
 
-	// Convert the data to store into json for the mutation call.
-	data, err := json.Marshal(db)
-	if err != nil {
-		return errors.Wrapf(err, "db[%+v]", db)
-	}
-
-	// Define a graphql function to find a place by its unique id. The
-	// GooglePlaceID will be the unique id for the place.
-	query := fmt.Sprintf(`{ findPlace(func: eq(place_id, %s)) { id as uid } }`, place.PlaceID)
-
-	//  Define a mutation by connecting the place to the city with the
-	// `places` relationship.
-	mutation := fmt.Sprintf(`{ "uid": "%s", "places" : %s }`, cityID, string(data))
-
-	// Define and execute a request to add the city if it doesn't exist yet.
-	req := api.Request{
-		CommitNow: true,
-		Query:     query,
-		Mutations: []*api.Mutation{
-			{
-				Cond:    `@if(eq(len(id), 0))`,
-				SetJson: []byte(mutation),
-			},
+	// Define a graphql mutation to update the city in the database with
+	// the advisory. On success we want to return the ID for the city.
+	mutation := fmt.Sprintf(`
+mutation {
+	updateCity(input: {
+		filter: {
+		  id: [%q]
 		},
+		set: {
+			places: %s
+		}
+	})
+	{
+		city {
+			id
+		}
 	}
-	if _, err := s.NewTxn().Do(ctx, &req); err != nil {
-		return errors.Wrapf(err, "req[%+v] query[%s] mut[%s]", &req, query, mutation)
+}`, cityID, b.String())
+
+	// Data structure to parse the result of the mutation.
+	var result struct {
+		UpdCity struct {
+			City []struct {
+				ID string `json:"id"`
+			} `json:"city"`
+		} `json:"updateCity"`
+	}
+
+	// Perform the mutation.
+	err := s.graphql.Mutate(ctx, mutation[1:], &result)
+	if err != nil {
+		return err
+	}
+
+	// Validate we got back the city id.
+	if len(result.UpdCity.City) != 1 {
+		return errors.New("unable to update city, no city id returned")
+	}
+	if result.UpdCity.City[0].ID != cityID {
+		return errors.New("unable to update city, invalid city id returned")
 	}
 
 	return nil

@@ -12,7 +12,6 @@ import (
 
 // Weather contains the weather data points captured from the API.
 type Weather struct {
-	ID            int     `json:"weather_id"`
 	CityName      string  `json:"city_name"`
 	Visibility    string  `json:"visibility"`
 	Desc          string  `json:"description"`
@@ -67,7 +66,6 @@ func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weath
 	// Convert the result to a Weather value so we can
 	// use our own tags for JSON marshaling.
 	weather := Weather{
-		ID:            res.ID,
 		CityName:      res.Name,
 		Visibility:    res.Sky[0].Visibility,
 		Desc:          res.Sky[0].Description,

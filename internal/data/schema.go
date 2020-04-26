@@ -39,7 +39,7 @@ type Place {
 	location_type: [String]
 	name: String!
 	no_user_rating: Int
-	place_id: Int!
+	place_id: String!
 	photo_id: String
 }
 
@@ -58,6 +58,11 @@ type Weather {
 	wind_direction: Int
 	wind_speed: Float
 }`
+
+/*
+curl -H "Content-Type: application/json" http://localhost:8080/admin -XPOST
+-d $'{"query": "query { getGQLSchema { generatedSchema } }"}
+*/
 
 // The schema is returned by the database in alphabetical order.
 var goSchema = []Schema{

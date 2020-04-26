@@ -21,7 +21,7 @@ func TestStore(t *testing.T) {
 	t.Run("city", storeCity)
 	t.Run("advisory", storeAdvisory)
 	t.Run("weather", storeWeather)
-	t.Run("place", storePlace)
+	t.Run("places", storePlaces)
 }
 
 // storeCity validates a city node can be stored in the database.
@@ -108,7 +108,6 @@ func storeWeather(t *testing.T) {
 			data, cityID := addCity(t, ctx, 0, dbHost, apiHost)
 
 			addWeather := weather.Weather{
-				ID:            1001,
 				CityName:      "Sydney",
 				Visibility:    "clear",
 				Desc:          "going to be a great day",
@@ -143,8 +142,8 @@ func storeWeather(t *testing.T) {
 	}
 }
 
-// storePlace validates a place node can be stored in the database.
-func storePlace(t *testing.T) {
+// storePlaces validates a place node can be stored in the database.
+func storePlaces(t *testing.T) {
 	t.Helper()
 
 	dbHost, apiHost, teardown := tests.NewUnit(t)
@@ -160,13 +159,7 @@ func storePlace(t *testing.T) {
 
 			data, cityID := addCity(t, ctx, 0, dbHost, apiHost)
 
-			/*
-					BUG!!!
-				 	****** IN *****>  {"place_id":"65432","city_name":"sydney","name":"Karthic Coffee","address":"634 Ventura Blvd","lat":-33.865198,"lng":151.209945,"location_type":["resturant"],"avg_user_rating":4.5,"no_user_rating":876,"gmaps_url":"","photo_id":""}
-				 	****** OUT *****> {"place_id":"65432","city_name":"sydney","name":"Karthic Coffee","address":"634 Ventura Blvd","lat":-33.865198,"lng":151.209945,"location_type":["resturant"],"avg_user_rating":4,"no_user_rating":876,"gmaps_url":"","photo_id":""}
-			*/
-
-			addPlaces := []places.Place{
+			places := []places.Place{
 				{
 					PlaceID:          "12345",
 					CityName:         "sydney",
@@ -195,12 +188,10 @@ func storePlace(t *testing.T) {
 				},
 			}
 
-			for _, place := range addPlaces {
-				if err := data.Store.Place(ctx, cityID, place); err != nil {
-					t.Fatalf("\t%s\tTest %d:\tShould be able to save place %q node in Dgraph: %v", tests.Failed, testID, place.Name, err)
-				}
-				t.Logf("\t%s\tTest %d:\tShould be able to save place %q node in Dgraph.", tests.Success, testID, place.Name)
+			if err := data.Store.Places(ctx, cityID, places); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to save places in Dgraph: %v", tests.Failed, testID, err)
 			}
+			t.Logf("\t%s\tTest %d:\tShould be able to save places in Dgraph.", tests.Success, testID)
 
 			places, err := data.Query.Places(ctx, cityID)
 			if err != nil {
@@ -208,7 +199,7 @@ func storePlace(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to query for the places.", tests.Success, testID)
 
-			for i, place := range addPlaces {
+			for i, place := range places {
 				if diff := cmp.Diff(places[i], place); diff != "" {
 					t.Fatalf("\t%s\tTest %d:\tShould get back the same place for %q. Diff:\n%s", tests.Failed, testID, place.Name, diff)
 				}
