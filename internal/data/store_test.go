@@ -72,13 +72,13 @@ func storeAdvisory(t *testing.T) {
 			}
 
 			if err := data.Store.Advisory(ctx, cityID, addAdvisory); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph : %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph.", tests.Success, testID)
 
 			advisory, err := data.Query.Advisory(ctx, cityID)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory : %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to query for the advisory.", tests.Success, testID)
 
@@ -125,13 +125,13 @@ func storeWeather(t *testing.T) {
 			}
 
 			if err := data.Store.Weather(ctx, cityID, addWeather); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph : %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph.", tests.Success, testID)
 
 			weather, err := data.Query.Weather(ctx, cityID)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather : %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to query for the weather.", tests.Success, testID)
 
@@ -197,14 +197,14 @@ func storePlace(t *testing.T) {
 
 			for _, place := range addPlaces {
 				if err := data.Store.Place(ctx, cityID, place); err != nil {
-					t.Fatalf("\t%s\tTest %d:\tShould be able to save place %q node in Dgraph : %v", tests.Failed, testID, place.Name, err)
+					t.Fatalf("\t%s\tTest %d:\tShould be able to save place %q node in Dgraph: %v", tests.Failed, testID, place.Name, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to save place %q node in Dgraph.", tests.Success, testID, place.Name)
 			}
 
 			places, err := data.Query.Places(ctx, cityID)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the places : %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the places: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to query for the places.", tests.Success, testID)
 

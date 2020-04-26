@@ -32,11 +32,7 @@ query {
 		} `json:"getCity"`
 	}
 	if err := q.graphql.Query(ctx, query, &result); err != nil {
-		return places.City{}, errors.Wrap(err, query)
-	}
-
-	if result.GetCity.City.Name == "" {
-		return places.City{}, errors.Wrap(errors.New("no city found"), query)
+		return places.City{}, errors.Wrap(err, "query failed")
 	}
 
 	return result.GetCity.City, nil
@@ -45,34 +41,32 @@ query {
 // Advisory returns the specified advisory from the database by the city id.
 func (q *query) Advisory(ctx context.Context, cityID string) (advisory.Advisory, error) {
 	query := fmt.Sprintf(`
-{
-	city(func: uid(%s)) {
+query {
+	getCity(id: %q) {
 		advisory {
+			continent
 			country
 			country_code
-			continent
-			advisory_score
-			advisory_last_updated
-			advisory_message
+			last_updated
+			message
+			score
 			source
 		}
 	}
 }`, cityID)
 
 	var result struct {
-		City []struct {
-			Advisory advisory.Advisory
-		}
+		GetCity struct {
+			Advisory struct {
+				advisory.Advisory
+			} `json:"advisory"`
+		} `json:"getCity"`
 	}
-	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
-		return advisory.Advisory{}, errors.Wrap(err, query)
-	}
-
-	if len(result.City) == 0 {
-		return advisory.Advisory{}, errors.Wrap(errors.New("no advisory found"), query)
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return advisory.Advisory{}, errors.Wrap(err, "query failed")
 	}
 
-	return result.City[0].Advisory, nil
+	return result.GetCity.Advisory.Advisory, nil
 }
 
 // Weather returns the specified weather from the database by the city id.
@@ -105,11 +99,11 @@ func (q *query) Weather(ctx context.Context, cityID string) (weather.Weather, er
 		}
 	}
 	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
-		return weather.Weather{}, errors.Wrap(err, query)
+		return weather.Weather{}, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.City) == 0 {
-		return weather.Weather{}, errors.Wrap(errors.New("no weather found"), query)
+		return weather.Weather{}, errors.Wrap(errors.New("no weather found"), "query failed")
 	}
 
 	return result.City[0].Weather, nil
@@ -142,11 +136,11 @@ func (q *query) Places(ctx context.Context, cityID string) ([]places.Place, erro
 		}
 	}
 	if err := q.graphql.QueryPM(ctx, query, &result); err != nil {
-		return nil, errors.Wrap(err, query)
+		return nil, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.City) == 0 {
-		return nil, errors.Wrap(errors.New("no places found"), query)
+		return nil, errors.Wrap(errors.New("no places found"), "query failed")
 	}
 
 	return result.City[0].Places, nil

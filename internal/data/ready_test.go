@@ -43,7 +43,7 @@ func TestReadiness(t *testing.T) {
 					switch test.success {
 					case true:
 						if err != nil {
-							t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready : %v", tests.Failed, testID, err)
+							t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready: %v", tests.Failed, testID, err)
 						}
 						t.Logf("\t%s\tTest %d:\tShould be able to see Dgraph is ready.", tests.Success, testID)
 

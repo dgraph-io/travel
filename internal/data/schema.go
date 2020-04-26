@@ -141,8 +141,8 @@ func (s *schema) Create(ctx context.Context) error {
 	}
 
 	// Add the schema since it doesn't exist yet.
-	if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
-		return errors.Wrap(err, gQLSchema)
+	if err := s.graphql.CreateSchema(ctx, gQLSchema[1:], nil); err != nil {
+		return errors.Wrap(err, "creating schema")
 	}
 
 	return nil
