@@ -28,7 +28,7 @@ func TestStore(t *testing.T) {
 func storeCity(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to be able to validate storing a city.")
@@ -39,7 +39,7 @@ func storeCity(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			addCity(t, ctx, testID, dbHost, apiHost)
+			addCity(t, ctx, testID, apiHost)
 		}
 	}
 }
@@ -48,7 +48,7 @@ func storeCity(t *testing.T) {
 func storeAdvisory(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to be able to validate storing an advisory.")
@@ -59,7 +59,7 @@ func storeAdvisory(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, 0, dbHost, apiHost)
+			data, cityID := addCity(t, ctx, 0, apiHost)
 
 			addAdvisory := advisory.Advisory{
 				Country:     "Australia",
@@ -94,7 +94,7 @@ func storeAdvisory(t *testing.T) {
 func storeWeather(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to be able to validate storing weather.")
@@ -105,7 +105,7 @@ func storeWeather(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, 0, dbHost, apiHost)
+			data, cityID := addCity(t, ctx, 0, apiHost)
 
 			addWeather := weather.Weather{
 				CityName:      "Sydney",
@@ -146,7 +146,7 @@ func storeWeather(t *testing.T) {
 func storePlaces(t *testing.T) {
 	t.Helper()
 
-	dbHost, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to be able to validate storing a place.")
@@ -157,7 +157,7 @@ func storePlaces(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, 0, dbHost, apiHost)
+			data, cityID := addCity(t, ctx, 0, apiHost)
 
 			places := []places.Place{
 				{

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/places"
 	"github.com/dgraph-io/travel/internal/platform/graphql"
@@ -15,7 +14,6 @@ import (
 
 type store struct {
 	graphql *graphql.GraphQL
-	*dgo.Dgraph
 }
 
 // City is used to identify if the specified city exists in

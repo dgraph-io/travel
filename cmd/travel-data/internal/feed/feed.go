@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"time"
 
 	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/data"
@@ -46,16 +47,25 @@ type Keys struct {
 func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	ctx := context.Background()
 
+	// Make sure the database is ready.
+	log.Println("feed : Work : Readiness")
+	err := data.Readiness(ctx, dgraph.APIHost, 5*time.Second)
+	if err != nil {
+		log.Printf("feed : Work : Readiness : ERROR : %+v", err)
+		return ErrFailed
+	}
+
 	// Construct a Data value for working with the database.
-	db, err := data.NewDB(dgraph.DBHost, dgraph.APIHost)
+	db, err := data.NewDB(dgraph.APIHost)
 	if err != nil {
 		log.Printf("feed : Work : New Data : ERROR : %+v", err)
 		return ErrFailed
 	}
 
 	// Create the schema in the database before we start.
+	log.Println("feed : Work : Create Schema")
 	if err := db.Schema.Create(ctx); err != nil {
-		log.Printf("feed : Work : ValidateSchema : ERROR : %+v", err)
+		log.Printf("feed : Work : Create Schema : ERROR : %+v", err)
 		return ErrFailed
 	}
 
@@ -75,9 +85,10 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	}
 
 	// Validate this city is in the database or add it.
+	log.Printf("feed : Work : Store City : %+v", city)
 	cityID, err := db.Store.City(ctx, city)
 	if err != nil {
-		log.Printf("feed : Work : ValidateCity : ERROR : %+v", err)
+		log.Printf("feed : Work : Store City : ERROR : %+v", err)
 		return ErrFailed
 	}
 
@@ -131,15 +142,13 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 		}
 		log.Printf("feed : Work : Search Places : Result\n%+v", places)
 
-		// Store each individual place in the database.
+		// Store the places in the database.
 		log.Printf("feed : Work : Store : Adding %d Places", len(places))
-		for _, place := range places {
-			if err := db.Store.Place(ctx, cityID, place); err != nil {
-				log.Printf("feed : Work : Store Place : ERROR : %v : %+v", place, err)
-				continue
-			}
-			log.Printf("feed : Work : Store Place : Success : %+v", place)
+		if err := db.Store.Places(ctx, cityID, places); err != nil {
+			log.Printf("feed : Work : Store Place : ERROR : %v : %+v", places, err)
+			continue
 		}
+		log.Printf("feed : Work : Store Place : Success : %+v", places)
 
 		// If this was the last result, we are done.
 		if errRet == io.EOF {

@@ -15,7 +15,7 @@ func TestReadiness(t *testing.T) {
 		t.SkipNow()
 	}
 
-	_, apiHost, teardown := tests.NewUnit(t)
+	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	type tableTest struct {
