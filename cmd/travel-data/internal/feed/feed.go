@@ -7,10 +7,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/dgraph-io/travel/internal/advisory"
 	"github.com/dgraph-io/travel/internal/data"
-	"github.com/dgraph-io/travel/internal/places"
-	"github.com/dgraph-io/travel/internal/weather"
+	"github.com/dgraph-io/travel/internal/feeds/advisory"
+	"github.com/dgraph-io/travel/internal/feeds/places"
+	"github.com/dgraph-io/travel/internal/feeds/weather"
 	"googlemaps.github.io/maps"
 )
 

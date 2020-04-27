@@ -17,6 +17,7 @@ import (
 		Decide on UI, Ratel or some CLI tooling.
 		May not want to use the default Client in the Advisory/Weather feeds.
 		Review all comments for necessity.
+		Tests for advisory and weather.
 
 	Building/Testing
 		Write integration tests.

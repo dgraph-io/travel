@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dgraph-io/travel/internal/advisory"
-	"github.com/dgraph-io/travel/internal/places"
+	"github.com/dgraph-io/travel/internal/feeds/advisory"
+	"github.com/dgraph-io/travel/internal/feeds/places"
+	"github.com/dgraph-io/travel/internal/feeds/weather"
 	"github.com/dgraph-io/travel/internal/platform/graphql"
-	"github.com/dgraph-io/travel/internal/weather"
 	"github.com/pkg/errors"
 )
 
