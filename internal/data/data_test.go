@@ -15,7 +15,7 @@ import (
 func ready(t *testing.T, ctx context.Context, testID int, apiHost string) *data.DB {
 	t.Helper()
 
-	err := data.Readiness(ctx, apiHost, 500*time.Millisecond)
+	err := data.Readiness(ctx, apiHost, time.Second)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready: %v", tests.Failed, testID, err)
 	}

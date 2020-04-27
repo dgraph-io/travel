@@ -17,6 +17,7 @@ import (
 		Remove extra logging in the graphql package
 		Not sure having the city type in places is good.
 		Not sure if data shouldn't have its own type system.
+		Minimize the code in the data package.
 
 	Bugs
 		AvgUserRating is being saved as a float32. I have validated the JSON has
