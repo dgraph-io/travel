@@ -32,6 +32,11 @@ func TestSchema(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to perform the schema operation: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to perform the schema operation.", tests.Success, testID)
+
+			if err := db.Schema.Validate(ctx); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to see the schema matches: %v", tests.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to see the schema matches.", tests.Success, testID)
 		}
 	}
 }

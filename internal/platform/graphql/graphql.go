@@ -13,6 +13,7 @@ import (
 
 // These commands represents the set of know graphql commands.
 const (
+	cmdAdmin   = "admin"
 	cmdSchema  = "admin/schema"
 	cmdQuery   = "graphql"
 	cmdQueryPM = "query"
@@ -38,6 +39,12 @@ func New(apiHost string, client *http.Client) *GraphQL {
 func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, response interface{}) error {
 	r := strings.NewReader(schemaString)
 	return g.do(ctx, cmdSchema, r, response)
+}
+
+// QuerySchema performs a schema query operation against the configured server.
+func (g *GraphQL) QuerySchema(ctx context.Context, response interface{}) error {
+	query := `query { getGQLSchema { schema }}`
+	return g.QueryWithVars(ctx, cmdAdmin, query, nil, response)
 }
 
 // Mutate performs a mutation operation against the configured server.

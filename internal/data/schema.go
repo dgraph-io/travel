@@ -2,12 +2,17 @@ package data
 
 import (
 	"context"
+	"encoding/json"
+	"regexp"
+	"strings"
 
 	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/pkg/errors"
 )
 
-// Maintaining alphabetical ordering since the database does this anyway.
+// This is the schema for the application. This could be kept in a file
+// and maintained for wider use. In these cases I would use gogenerate
+// to hardcode the contents into the binary.
 var gQLSchema = `
 type City {
 	id: ID!
@@ -59,19 +64,63 @@ type Weather {
 	wind_speed: Float
 }`
 
-/*
-curl -H "Content-Type: application/json" http://localhost:8080/admin -XPOST
--d $'{"query": "query { getGQLSchema { generatedSchema } }"}
-*/
-
 type schema struct {
 	graphql *graphql.GraphQL
 }
 
 // Create is used create the schema in the database.
 func (s *schema) Create(ctx context.Context) error {
+	got, err := s.Query(ctx)
+	if err != nil {
+		return errors.Wrap(err, "creating schema")
+	}
+
+	if got != `{"getGQLSchema":null}` {
+		return errors.New("schema already exists")
+	}
+
 	if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
 		return errors.Wrap(err, "creating schema")
 	}
+	return nil
+}
+
+// Query returns the current schema in graphql format.
+func (s *schema) Query(ctx context.Context) (string, error) {
+	result := make(map[string]interface{})
+	if err := s.graphql.QuerySchema(ctx, &result); err != nil {
+		return "", errors.Wrap(err, "validate schema")
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		return "", errors.Wrap(err, "validate schema")
+	}
+
+	return string(data), nil
+}
+
+// Validate compares the schema in the database with what is
+// defined for the application.
+func (s *schema) Validate(ctx context.Context) error {
+	got, err := s.Query(ctx)
+	if err != nil {
+		return errors.Wrap(err, "validate schema")
+	}
+
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		return errors.Wrap(err, "validate schema")
+	}
+
+	exp := reg.ReplaceAllString(gQLSchema, "")
+	got = strings.ReplaceAll(got[27:], "\\n", "")
+	got = strings.ReplaceAll(got, "\\t", "")
+	got = reg.ReplaceAllString(got, "")
+
+	if exp != got {
+		return errors.New("invalid schema")
+	}
+
 	return nil
 }

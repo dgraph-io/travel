@@ -17,11 +17,6 @@ import (
 		Decide on UI, Ratel or some CLI tooling.
 		Tests for advisory and weather.
 
-	Schema
-		Move the schema to a file during the build embed contents into the binary.
-		Test what happens when the schema is added twice
-		Do more to validate the Schema by checking actual predicate values.
-
 	Building/Testing
 		Write integration tests.
 		Running in Kind with Ready checks
