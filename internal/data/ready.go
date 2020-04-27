@@ -41,31 +41,24 @@ func Readiness(ctx context.Context, apiHost string, retryInterval time.Duration)
 
 // checkDB attempts to validate if the database is ready.
 func checkDB(ctx context.Context, apiHost string) error {
-
-	// The actual call to the database should happen within 100 milliseconds.
 	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancel()
 
-	// Construct a request to perform the health call.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+apiHost+"/health", nil)
 	if err != nil {
 		return err
 	}
 
-	// Perform the health check.
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	// Check the status code to see if we bother to check
-	// the response.
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%s", resp.Status)
 	}
 
-	// Capture the response and decode.
 	var result []struct {
 		Status string
 	}

@@ -15,9 +15,12 @@ import (
 	General
 		We are only storing 1 result of places at this time.
 		Decide on UI, Ratel or some CLI tooling.
-		May not want to use the default Client in the Advisory/Weather feeds.
-		Review all comments for necessity.
 		Tests for advisory and weather.
+
+	Schema
+		Move the schema to a file during the build embed contents into the binary.
+		Test what happens when the schema is added twice
+		Do more to validate the Schema by checking actual predicate values.
 
 	Building/Testing
 		Write integration tests.
@@ -26,7 +29,6 @@ import (
 		traval-data binary gets git information as well.
 
 	Data
-		Do more to validate the Schema by checking actual predicate values.
 		Validate upserts are working.
 */
 
@@ -86,7 +88,6 @@ func run() error {
 	// =========================================================================
 	// App Starting
 
-	// Print the build version for our logs. Also expose it under /debug/vars.
 	log.Printf("main : Started : Application initializing : version %q", build)
 	defer log.Println("main : Completed")
 

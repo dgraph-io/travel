@@ -30,20 +30,17 @@ type Weather struct {
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weather, error) {
 
-	// Construct a request to perform the weather search.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://api.openweathermap.org/data/2.5/weather", nil)
 	if err != nil {
 		return Weather{}, errors.Wrap(err, "new request")
 	}
 
-	// Apply the apiKey, lat and lng to the request.
 	q := req.URL.Query()
 	q.Add("appid", apiKey)
 	q.Add("lat", fmt.Sprintf("%f", lat))
 	q.Add("lon", fmt.Sprintf("%f", lng))
 	req.URL.RawQuery = q.Encode()
 
-	// Execute the request.
 	var client http.Client
 	resp, err := client.Do(req)
 	if err != nil {
@@ -51,20 +48,16 @@ func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weath
 	}
 	defer resp.Body.Close()
 
-	// Read the entire JSON response into memory.
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return Weather{}, errors.Wrap(err, "readall")
 	}
 
-	// Unmarshal the JSON into a Weather value.
 	var res result
 	if err := json.Unmarshal(data, &res); err != nil {
 		return Weather{}, errors.Wrapf(err, "unmarshal[%s]", string(data))
 	}
 
-	// Convert the result to a Weather value so we can
-	// use our own tags for JSON marshaling.
 	weather := Weather{
 		CityName:      res.Name,
 		Visibility:    res.Sky[0].Visibility,
