@@ -35,8 +35,7 @@ mutation {
 	}
 }`, city.Name, city.Lat, city.Lng)
 
-	// addCity will return the new city id if the function
-	// does not fail.
+	// addCity will return the new city id if the function does not fail.
 	return addCity(ctx, s.graphql, mutation)
 }
 
@@ -178,8 +177,6 @@ func marshalPlaces(ctx context.Context, places []places.Place) string {
 
 // addCity perform the actual graphql call against the database.
 func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (string, error) {
-
-	// Construct a result value for the call.
 	var result struct {
 		AddCity struct {
 			City []struct {
@@ -188,12 +185,10 @@ func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (st
 		} `json:"addCity"`
 	}
 
-	// Perform the mutation.
 	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
 		return "", errors.Wrap(err, "failed to add city")
 	}
 
-	// Validate we got back the city id.
 	if len(result.AddCity.City) != 1 {
 		return "", errors.New("city id not returned")
 	}
@@ -203,8 +198,6 @@ func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (st
 
 // updCity perform the actual graphql call against the database.
 func updCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) error {
-
-	// Construct a result value for the call.
 	var result struct {
 		UpdCity struct {
 			City []struct {
@@ -213,13 +206,11 @@ func updCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) err
 		} `json:"updateCity"`
 	}
 
-	// Perform the mutation.
 	err := graphql.Mutate(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
 
-	// Validate we got back the city id.
 	if len(result.UpdCity.City) != 1 {
 		return errors.New("city id not returned")
 	}

@@ -23,19 +23,15 @@ type Advisory struct {
 
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, countryCode string) (Advisory, error) {
-
-	// Construct a request to perform the advisory search.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://www.travel-advisory.info/api", nil)
 	if err != nil {
 		return Advisory{}, errors.Wrap(err, "new request")
 	}
 
-	// Apply the country code to the request.
 	q := req.URL.Query()
 	q.Add("countrycode", countryCode)
 	req.URL.RawQuery = q.Encode()
 
-	// Execute the request.
 	var client http.Client
 	resp, err := client.Do(req)
 	if err != nil {
@@ -43,20 +39,16 @@ func Search(ctx context.Context, countryCode string) (Advisory, error) {
 	}
 	defer resp.Body.Close()
 
-	// Read the entire JSON response into memory.
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return Advisory{}, err
 	}
 
-	// Unmarshal the JSON into a Advisory value.
 	var res result
 	if err := json.Unmarshal(data, &res); err != nil {
 		return Advisory{}, err
 	}
 
-	// Convert the result to a Advisory value so we can
-	// use our own tags for JSON marshaling.
 	advisory := Advisory{
 		Country:     res.Data.AU.Name,
 		CountryCode: res.Data.AU.IsoAlpha2,

@@ -36,6 +36,7 @@ type Filter struct {
 // City represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type City struct {
+	ID   string  `json:"-"`
 	Name string  `json:"name"`
 	Lat  float64 `json:"lat"`
 	Lng  float64 `json:"lng"`
@@ -56,8 +57,6 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 	// is happening at a pace too fast for the API.
 	var resp maps.PlacesSearchResponse
 	for i := 0; i < 3; i++ {
-
-		// Construct the search request value for the call.
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
 				Lat: city.Lat,
@@ -68,7 +67,6 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 			Radius:    filter.Radius,
 		}
 
-		// Perform the Google Places search.
 		var err error
 		resp, err = client.NearbySearch(ctx, &nsr)
 
@@ -87,14 +85,11 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 
 	var places []Place
 	for _, result := range resp.Results {
-
-		// Validate if a photo even exists for this place.
 		var photoReferenceID string
 		if len(result.Photos) == 0 {
 			photoReferenceID = result.Photos[0].PhotoReference
 		}
 
-		// Construct a place value based on search results.
 		place := Place{
 			PlaceID:          result.PlaceID,
 			CityName:         city.Name,
@@ -107,8 +102,6 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 			NumberOfRatings:  result.UserRatingsTotal,
 			PhotoReferenceID: photoReferenceID,
 		}
-
-		// Save the place in the collection of places.
 		places = append(places, place)
 	}
 

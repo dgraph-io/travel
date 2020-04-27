@@ -68,14 +68,10 @@ type schema struct {
 	graphql *graphql.GraphQL
 }
 
-// Create is used to identify if a schema exists. If the schema
-// does not exist, then one is created.
+// Create is used create the schema in the database.
 func (s *schema) Create(ctx context.Context) error {
-
-	// Add the schema since it doesn't exist yet.
-	if err := s.graphql.CreateSchema(ctx, gQLSchema[1:], nil); err != nil {
+	if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
 		return errors.Wrap(err, "creating schema")
 	}
-
 	return nil
 }
