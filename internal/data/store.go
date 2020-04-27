@@ -37,7 +37,7 @@ mutation {
 
 	// addCity will return the new city id if the function
 	// does not fail.
-	return addCity(ctx, s.graphql, mutation[1:])
+	return addCity(ctx, s.graphql, mutation)
 }
 
 // Advisory will add the specified Advisory into the database.
@@ -116,35 +116,8 @@ mutation {
 	return updCity(ctx, s.graphql, mutation)
 }
 
-// Places will add the specified Place into the database.
+// Places will add the specified Places into the database.
 func (s *store) Places(ctx context.Context, cityID string, places []places.Place) error {
-
-	// Define a collection that represents the places.
-	var b strings.Builder
-	b.WriteString("[")
-	for _, place := range places {
-		for i := range place.LocationType {
-			place.LocationType[i] = fmt.Sprintf(`"%s"`, place.LocationType[i])
-		}
-		b.WriteString(fmt.Sprintf(`
-{
-	address: %q,
-	avg_user_rating: %f,
-	city_name: %q,
-	gmaps_url: %q,
-	lat: %f,
-	lng: %f,
-	location_type: [%q],
-	name: %q,
-	no_user_rating: %d,
-	place_id: %q,
-	photo_id: %q
-}`,
-			place.Address, place.AvgUserRating, place.CityName, place.GmapsURL,
-			place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
-			place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID))
-	}
-	b.WriteString("]")
 
 	// Define a graphql mutation to update the city in the database with
 	// the places and return the database generated id for the city.
@@ -163,9 +136,44 @@ mutation {
 			id
 		}
 	}
-}`, cityID, b.String())
+}`, cityID, marshalPlaces(ctx, places))
 
 	return updCity(ctx, s.graphql, mutation)
+}
+
+// marshalPlaces takes a base graphql document and a collection of places
+// to generate a graphql collection of palces.
+func marshalPlaces(ctx context.Context, places []places.Place) string {
+
+	// Define a graphql document for a place.
+	doc := `
+{
+	address: %q,
+	avg_user_rating: %f,
+	city_name: %q,
+	gmaps_url: %q,
+	lat: %f,
+	lng: %f,
+	location_type: [%q],
+	name: %q,
+	no_user_rating: %d,
+	place_id: %q,
+	photo_id: %q
+}`
+
+	var b strings.Builder
+	b.WriteString("[")
+	for _, place := range places {
+		for i := range place.LocationType {
+			place.LocationType[i] = fmt.Sprintf(`"%s"`, place.LocationType[i])
+		}
+		b.WriteString(fmt.Sprintf(doc,
+			place.Address, place.AvgUserRating, place.CityName, place.GmapsURL,
+			place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
+			place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID))
+	}
+	b.WriteString("]")
+	return b.String()
 }
 
 // addCity perform the actual graphql call against the database.
