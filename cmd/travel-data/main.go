@@ -12,18 +12,6 @@ import (
 
 // TODO
 /*
-	GraphQL
-		Remove the need to say mutation {} and query {}
-		Remove extra logging in the graphql package
-		Not sure having the city type in places is good.
-		Not sure if data shouldn't have its own type system.
-		Minimize the code in the data package.
-
-	Bugs
-		AvgUserRating is being saved as a float32. I have validated the JSON has
-			a floating point number (4.5) but on the query I am getting back (4).
-			Look at store_test.go storePlace test.
-
 	General
 		We are only storing 1 result of places at this time.
 		Decide on UI, Ratel or some CLI tooling.
@@ -37,34 +25,8 @@ import (
 		traval-data binary gets git information as well.
 
 	Data
-		Add schema predicates for weather and advisory.
 		Do more to validate the Schema by checking actual predicate values.
-		Review the use of foriegn key kinds of relationship.
-		Write more tests.
-
-	Place Feed
-		Establish the relationship by creating an edge with the city node.
 		Validate upserts are working.
-		Write more tests.
-
-	Advisory Feed
-		Establish the relationship by creating an edge with the city node.
-		Validate upserts are working.
-		Write more tests.
-
-	Weather Feed
-		Validate upserts are working.
-		Just connect the weather node with city node via an edge.
-		Instead, check whether the City node has it's weather information available
-			via the `weather` edge. Also update the weather info if its last udpated time
-			is more than 24 hours.
-		We need to flip the feed fetching. First find whether the weather info
-			exists and its not outdated and then go fetch from the Feed only if required.
-		Write more tests.
-
-	Flight Feed
-		Incorporate this feed into the data.
-		Write more tests.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
