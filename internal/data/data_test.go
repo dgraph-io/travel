@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/internal/data"
-	"github.com/dgraph-io/travel/internal/places"
+	"github.com/dgraph-io/travel/internal/feeds/places"
 	"github.com/dgraph-io/travel/internal/platform/tests"
 	"github.com/google/go-cmp/cmp"
 )
