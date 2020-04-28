@@ -28,22 +28,16 @@ type Place struct {
 
 // Filter defines the specific places to filter out.
 type Filter struct {
+	Name      string  `json:"name"`
+	Lat       float64 `json:"lat"`
+	Lng       float64 `json:"lng"`
 	Keyword   string
 	Radius    uint
 	pageToken string
 }
 
-// City represents a city and its coordinates. All fields must be
-// populated for a Search to be successful.
-type City struct {
-	ID   string  `json:"id,omitempty"`
-	Name string  `json:"name"`
-	Lat  float64 `json:"lat"`
-	Lng  float64 `json:"lng"`
-}
-
 // Search finds places for the specified search criteria.
-func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filter) ([]Place, error) {
+func Search(ctx context.Context, client *maps.Client, filter Filter) ([]Place, error) {
 
 	// If this call is not looking for page 1, we need to pace
 	// the searches out. We are using three seconds.
@@ -59,8 +53,8 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 	for i := 0; i < 3; i++ {
 		nsr := maps.NearbySearchRequest{
 			Location: &maps.LatLng{
-				Lat: city.Lat,
-				Lng: city.Lng,
+				Lat: filter.Lat,
+				Lng: filter.Lng,
 			},
 			Keyword:   filter.Keyword,
 			PageToken: filter.pageToken,
@@ -92,7 +86,7 @@ func (city *City) Search(ctx context.Context, client *maps.Client, filter *Filte
 
 		place := Place{
 			PlaceID:          result.PlaceID,
-			CityName:         city.Name,
+			CityName:         filter.Name,
 			Name:             result.Name,
 			Address:          result.FormattedAddress,
 			Lat:              result.Geometry.Location.Lat,

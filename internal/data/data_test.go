@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/internal/data"
-	"github.com/dgraph-io/travel/internal/feeds/places"
 	"github.com/dgraph-io/travel/internal/platform/tests"
 	"github.com/google/go-cmp/cmp"
 )
@@ -42,7 +41,7 @@ func addCity(t *testing.T, ctx context.Context, testID int, apiHost string) (*da
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
 
-	cityAdd := places.City{
+	cityAdd := data.City{
 		Name: "sydney",
 		Lat:  -33.865143,
 		Lng:  151.209900,

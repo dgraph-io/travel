@@ -89,15 +89,15 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 }
 
 // storeCity add the specified city into the database.
-func storeCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (places.City, error) {
-	city := places.City{
+func storeCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
+	city := data.City{
 		Name: name,
 		Lat:  lat,
 		Lng:  lng,
 	}
 	city, err := db.Store.City(ctx, city)
 	if err != nil {
-		return places.City{}, errors.Wrap(err, "storing city")
+		return data.City{}, errors.Wrap(err, "storing city")
 	}
 
 	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", city.ID, name, lat, lng)
@@ -114,7 +114,7 @@ func storeWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID stri
 
 	log.Printf("feed : Work : Search Weather : Result : %+v", weather)
 
-	if err := db.Store.Weather(ctx, cityID, weather); err != nil {
+	if err := db.Store.Weather(ctx, cityID, marshal.Weather(weather)); err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
 
@@ -130,7 +130,7 @@ func storeAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID str
 
 	log.Printf("feed : Work : Search Advisory : Result : %+v", advisory)
 
-	if err := db.Store.Advisory(ctx, cityID, advisory); err != nil {
+	if err := db.Store.Advisory(ctx, cityID, marshal.Advisory(advisory)); err != nil {
 		return errors.Wrap(err, "storing advisory")
 	}
 
@@ -138,13 +138,16 @@ func storeAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID str
 }
 
 // storePlaces pulls place information and stores it for the specified city.
-func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city places.City, apiKey string, keyword string, radius uint) error {
+func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.City, apiKey string, keyword string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
 	}
 
 	filter := places.Filter{
+		Name:    city.Name,
+		Lat:     city.Lat,
+		Lng:     city.Lng,
 		Keyword: keyword,
 		Radius:  radius,
 	}
@@ -153,7 +156,7 @@ func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city places.
 	// For now we will test with 40 places.
 	for i := 0; i < 2; i++ {
 
-		places, errRet := city.Search(ctx, client, &filter)
+		places, errRet := places.Search(ctx, client, filter)
 		if errRet != nil && errRet != io.EOF {
 			return errors.Wrap(err, "searching places")
 		}
@@ -162,7 +165,7 @@ func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city places.
 			log.Printf("feed : Work : Search Places : %s", place.Name)
 		}
 
-		if err := db.Store.Places(ctx, city.ID, places); err != nil {
+		if err := db.Store.Places(ctx, city.ID, marshal.Places(places)); err != nil {
 			return errors.Wrap(err, "storing places")
 		}
 
