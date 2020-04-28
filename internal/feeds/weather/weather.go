@@ -29,7 +29,6 @@ type Weather struct {
 
 // Search can locate weather for a given latitude and longitude.
 func Search(ctx context.Context, apiKey string, lat float64, lng float64) (Weather, error) {
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://api.openweathermap.org/data/2.5/weather", nil)
 	if err != nil {
 		return Weather{}, errors.Wrap(err, "new request")

@@ -63,7 +63,6 @@ func run() error {
 			WeatherKey string `conf:"default:b2302a48062dc1da72430c612557498d"`
 		}
 		Dgraph struct {
-			DBHost  string `conf:"default:localhost:9080"`
 			APIHost string `conf:"default:localhost:8080"`
 		}
 	}
@@ -96,7 +95,6 @@ func run() error {
 	// Process the feed
 
 	dgraph := feed.Dgraph{
-		DBHost:  cfg.Dgraph.DBHost,
 		APIHost: cfg.Dgraph.APIHost,
 	}
 

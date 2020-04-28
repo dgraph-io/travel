@@ -5,9 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/travel/internal/feeds/advisory"
-	"github.com/dgraph-io/travel/internal/feeds/places"
-	"github.com/dgraph-io/travel/internal/feeds/weather"
+	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/platform/tests"
 	"github.com/google/go-cmp/cmp"
 )
@@ -59,9 +57,9 @@ func storeAdvisory(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, 0, apiHost)
+			db, cityID := addCity(t, ctx, 0, apiHost)
 
-			addAdvisory := advisory.Advisory{
+			addAdvisory := data.Advisory{
 				Country:     "Australia",
 				CountryCode: "AU",
 				Continent:   "Australia",
@@ -71,12 +69,12 @@ func storeAdvisory(t *testing.T) {
 				Source:      "friendly neighborhood community engineers",
 			}
 
-			if err := data.Store.Advisory(ctx, cityID, addAdvisory); err != nil {
+			if err := db.Store.Advisory(ctx, cityID, addAdvisory); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph.", tests.Success, testID)
 
-			advisory, err := data.Query.Advisory(ctx, cityID)
+			advisory, err := db.Query.Advisory(ctx, cityID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 			}
@@ -105,9 +103,9 @@ func storeWeather(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, 0, apiHost)
+			db, cityID := addCity(t, ctx, 0, apiHost)
 
-			addWeather := weather.Weather{
+			addWeather := data.Weather{
 				CityName:      "Sydney",
 				Visibility:    "clear",
 				Desc:          "going to be a great day",
@@ -123,12 +121,12 @@ func storeWeather(t *testing.T) {
 				Sunset:        10009945,
 			}
 
-			if err := data.Store.Weather(ctx, cityID, addWeather); err != nil {
+			if err := db.Store.Weather(ctx, cityID, addWeather); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph.", tests.Success, testID)
 
-			weather, err := data.Query.Weather(ctx, cityID)
+			weather, err := db.Query.Weather(ctx, cityID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 			}
@@ -157,9 +155,9 @@ func storePlaces(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			data, cityID := addCity(t, ctx, 0, apiHost)
+			db, cityID := addCity(t, ctx, 0, apiHost)
 
-			places := []places.Place{
+			places := []data.Place{
 				{
 					PlaceID:          "12345",
 					CityName:         "sydney",
@@ -188,12 +186,12 @@ func storePlaces(t *testing.T) {
 				},
 			}
 
-			if err := data.Store.Places(ctx, cityID, places); err != nil {
+			if err := db.Store.Places(ctx, cityID, places); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to save places in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save places in Dgraph.", tests.Success, testID)
 
-			places, err := data.Query.Places(ctx, cityID)
+			places, err := db.Query.Places(ctx, cityID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to query for the places: %v", tests.Failed, testID, err)
 			}

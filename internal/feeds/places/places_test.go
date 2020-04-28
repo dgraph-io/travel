@@ -28,20 +28,17 @@ func TestSearch(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a map client.", success, testID)
 
-			city := places.City{
-				Name: "Sydney",
-				Lat:  -33.865143,
-				Lng:  151.209900,
-			}
-
 			filter := places.Filter{
+				Name:    "Sydney",
+				Lat:     -33.865143,
+				Lng:     151.209900,
 				Keyword: "hotels",
 				Radius:  5000,
 			}
 
 			var savePlace string
 			for i := 0; i < 2; i++ {
-				places, err := city.Search(context.Background(), client, &filter)
+				places, err := places.Search(context.Background(), client, filter)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to search for places : %v", failed, testID, err)
 				}

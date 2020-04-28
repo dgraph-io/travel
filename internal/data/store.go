@@ -5,25 +5,31 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dgraph-io/travel/internal/feeds/advisory"
-	"github.com/dgraph-io/travel/internal/feeds/places"
-	"github.com/dgraph-io/travel/internal/feeds/weather"
 	"github.com/dgraph-io/travel/internal/platform/graphql"
 	"github.com/pkg/errors"
 )
 
 type store struct {
+	query   query
 	graphql *graphql.GraphQL
 }
 
-// City is used to identify if the specified city exists in
+// City first checks to validate the specified city doesn't exists in
 // the database. If it doesn't, then the city is added to the database.
 // It will return a new City with the city ID from the database.
-func (s *store) City(ctx context.Context, city places.City) (string, error) {
+func (s *store) City(ctx context.Context, city City) (City, error) {
 
-	// Define a graphql mutation to add the city to the database and return
-	// the database generated id for the city.
-	mutation := fmt.Sprintf(`
+	// Validate the city doesn't already exist.
+	exists, err := s.query.CityByName(ctx, city.Name)
+	if err != nil && err != ErrCityNotFound {
+		return City{}, errors.Wrap(err, "failed to create city")
+	}
+
+	if err == ErrCityNotFound {
+
+		// Define a graphql mutation to add the city to the database and return
+		// the database generated id for the city.
+		mutation := fmt.Sprintf(`
 mutation {
 	addCity(input: [
 		{name: %q, lat: %f, lng: %f}
@@ -35,12 +41,15 @@ mutation {
 	}
 }`, city.Name, city.Lat, city.Lng)
 
-	// addCity will return the new city id if the function does not fail.
-	return addCity(ctx, s.graphql, mutation)
+		// addCity will return the new city id if the function does not fail.
+		return addCity(ctx, s.graphql, mutation, city)
+	}
+
+	return exists, nil
 }
 
 // Advisory will add the specified Advisory into the database.
-func (s *store) Advisory(ctx context.Context, cityID string, advisory advisory.Advisory) error {
+func (s *store) Advisory(ctx context.Context, cityID string, advisory Advisory) error {
 
 	// Define a graphql mutation to update the city in the database with
 	// the advisory and return the database generated id for the city.
@@ -70,11 +79,11 @@ mutation {
 }`, cityID, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source)
 
-	return updCity(ctx, s.graphql, mutation)
+	return updateCity(ctx, s.graphql, mutation)
 }
 
 // Weather will add the specified Place into the database.
-func (s *store) Weather(ctx context.Context, cityID string, weather weather.Weather) error {
+func (s *store) Weather(ctx context.Context, cityID string, weather Weather) error {
 
 	// Define a graphql mutation to update the city in the database with
 	// the weather and return the database generated id for the city.
@@ -112,11 +121,11 @@ mutation {
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
 		weather.WindSpeed)
 
-	return updCity(ctx, s.graphql, mutation)
+	return updateCity(ctx, s.graphql, mutation)
 }
 
 // Places will add the specified Places into the database.
-func (s *store) Places(ctx context.Context, cityID string, places []places.Place) error {
+func (s *store) Places(ctx context.Context, cityID string, places []Place) error {
 
 	// Define a graphql mutation to update the city in the database with
 	// the places and return the database generated id for the city.
@@ -137,12 +146,12 @@ mutation {
 	}
 }`, cityID, marshalPlaces(ctx, places))
 
-	return updCity(ctx, s.graphql, mutation)
+	return updateCity(ctx, s.graphql, mutation)
 }
 
 // marshalPlaces takes a base graphql document and a collection of places
 // to generate a graphql collection of palces.
-func marshalPlaces(ctx context.Context, places []places.Place) string {
+func marshalPlaces(ctx context.Context, places []Place) string {
 
 	// Define a graphql document for a place.
 	doc := `
@@ -176,7 +185,7 @@ func marshalPlaces(ctx context.Context, places []places.Place) string {
 }
 
 // addCity perform the actual graphql call against the database.
-func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (string, error) {
+func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string, city City) (City, error) {
 	var result struct {
 		AddCity struct {
 			City []struct {
@@ -186,18 +195,20 @@ func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (st
 	}
 
 	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
-		return "", errors.Wrap(err, "failed to add city")
+		return City{}, errors.Wrap(err, "failed to add city")
 	}
 
 	if len(result.AddCity.City) != 1 {
-		return "", errors.New("city id not returned")
+		return City{}, errors.New("city id not returned")
 	}
 
-	return result.AddCity.City[0].ID, nil
+	city.ID = result.AddCity.City[0].ID
+
+	return city, nil
 }
 
-// updCity perform the actual graphql call against the database.
-func updCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) error {
+// updateCity perform the actual graphql call against the database.
+func updateCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) error {
 	var result struct {
 		UpdCity struct {
 			City []struct {
