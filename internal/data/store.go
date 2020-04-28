@@ -49,7 +49,7 @@ mutation {
 }
 
 // Advisory will add the specified Advisory into the database.
-func (s *store) Advisory(ctx context.Context, cityID string, advisory Advisory) error {
+func (s *store) Advisory(ctx context.Context, cityID string, advisory Advisory) (Advisory, error) {
 
 	// Define a graphql mutation to update the city in the database with
 	// the advisory and return the database generated id for the city.
@@ -73,17 +73,25 @@ mutation {
 	})
 	{
 		city {
-			id
+			advisory {
+				id
+			}
 		}
 	}
 }`, cityID, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source)
 
-	return updateCity(ctx, s.graphql, mutation)
+	id, err := updateCity(ctx, s.graphql, mutation)
+	if err != nil {
+		return Advisory{}, errors.Wrap(err, "failed to add advisory")
+	}
+
+	advisory.ID = id
+	return advisory, nil
 }
 
 // Weather will add the specified Place into the database.
-func (s *store) Weather(ctx context.Context, cityID string, weather Weather) error {
+func (s *store) Weather(ctx context.Context, cityID string, weather Weather) (Weather, error) {
 
 	// Define a graphql mutation to update the city in the database with
 	// the weather and return the database generated id for the city.
@@ -113,7 +121,9 @@ mutation {
 	})
 	{
 		city {
-			id
+			weather {
+				id
+			}
 		}
 	}
 }`, cityID, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
@@ -121,7 +131,13 @@ mutation {
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
 		weather.WindSpeed)
 
-	return updateCity(ctx, s.graphql, mutation)
+	id, err := updateCity(ctx, s.graphql, mutation)
+	if err != nil {
+		return Weather{}, errors.Wrap(err, "failed to add weather")
+	}
+
+	weather.ID = id
+	return weather, nil
 }
 
 // Places will add the specified Places into the database.
@@ -146,7 +162,11 @@ mutation {
 	}
 }`, cityID, marshalPlaces(ctx, places))
 
-	return updateCity(ctx, s.graphql, mutation)
+	if _, err := updateCity(ctx, s.graphql, mutation); err != nil {
+		return errors.Wrap(err, "failed to add places")
+	}
+
+	return nil
 }
 
 // marshalPlaces takes a base graphql document and a collection of places
@@ -208,23 +228,36 @@ func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string, cit
 }
 
 // updateCity perform the actual graphql call against the database.
-func updateCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) error {
+func updateCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (string, error) {
 	var result struct {
 		UpdCity struct {
 			City []struct {
-				ID string `json:"id"`
+				Advisory struct {
+					ID string `json:"id"`
+				} `json:"advisory"`
+				Weather struct {
+					ID string `json:"id"`
+				} `json:"weather"`
 			} `json:"city"`
 		} `json:"updateCity"`
 	}
 
 	err := graphql.Mutate(ctx, mutation, &result)
 	if err != nil {
-		return errors.Wrap(err, "failed to update city")
+		return "", errors.Wrap(err, "failed to update city")
 	}
 
 	if len(result.UpdCity.City) != 1 {
-		return errors.New("city id not returned")
+		return "", errors.New("no data returned")
 	}
 
-	return nil
+	if result.UpdCity.City[0].Advisory.ID != "" {
+		return result.UpdCity.City[0].Advisory.ID, nil
+	}
+
+	if result.UpdCity.City[0].Weather.ID != "" {
+		return result.UpdCity.City[0].Weather.ID, nil
+	}
+
+	return "", nil
 }

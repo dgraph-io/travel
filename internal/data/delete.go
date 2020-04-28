@@ -1,7 +1,11 @@
 package data
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/dgraph-io/travel/internal/platform/graphql"
+	"github.com/pkg/errors"
 )
 
 type delete struct {
@@ -9,36 +13,36 @@ type delete struct {
 	graphql *graphql.GraphQL
 }
 
-// // Advisory will delete the current Advisory from the database.
-// func (d *delete) Advisory(ctx context.Context) error {
+// Advisory will delete the current Advisory from the database.
+func (d *delete) Advisory(ctx context.Context, cityID string) error {
 
-// 	// Define a graphql mutation to update the city in the database with
-// 	// the advisory and return the database generated id for the city.
-// 	mutation := fmt.Sprintf(`
-// mutation {
-// 	updateCity(input: {
-// 		filter: {
-// 		  id: [%q]
-// 		},
-// 		set: {
-// 			advisory: {
-// 				continent: %q,
-// 				country: %q,
-// 				country_code: %q,
-// 				last_updated: %q,
-// 				message: %q,
-// 				score: %f,
-// 				source: %q
-// 			}
-// 		}
-// 	})
-// 	{
-// 		city {
-// 			id
-// 		}
-// 	}
-// }`, cityID, advisory.Continent, advisory.Country, advisory.CountryCode,
-// 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source)
+	// Get the current advisory for the city.
+	advisory, err := d.query.Advisory(ctx, cityID)
+	if err != nil {
+		return errors.Wrap(err, "delete advisory")
+	}
 
-// 	return updCity(ctx, s.graphql, mutation)
-// }
+	// Define a graphql mutation to delete the advisory in the database
+	// for the specified city.
+	mutation := fmt.Sprintf(`
+mutation {
+	deleteAdvisory(filter: { id: [%q] }) {
+		msg,
+		numUids,
+	}
+}`, advisory.ID)
+
+	var result struct {
+		Msg     string
+		NumUids int
+	}
+	if err := d.graphql.Mutate(ctx, mutation, &result); err != nil {
+		return errors.Wrap(err, "failed to delete advisory")
+	}
+
+	if result.NumUids != 1 {
+		return errors.Wrap(err, "failed to delete advisory")
+	}
+
+	return nil
+}

@@ -69,7 +69,8 @@ func storeAdvisory(t *testing.T) {
 				Source:      "friendly neighborhood community engineers",
 			}
 
-			if err := db.Store.Advisory(ctx, cityID, addAdvisory); err != nil {
+			addAdvisory, err := db.Store.Advisory(ctx, cityID, addAdvisory)
+			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save an advisory node in Dgraph.", tests.Success, testID)
@@ -121,7 +122,8 @@ func storeWeather(t *testing.T) {
 				Sunset:        10009945,
 			}
 
-			if err := db.Store.Weather(ctx, cityID, addWeather); err != nil {
+			addWeather, err := db.Store.Weather(ctx, cityID, addWeather)
+			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph: %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to save a weather node in Dgraph.", tests.Success, testID)

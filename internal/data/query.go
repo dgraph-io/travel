@@ -77,6 +77,7 @@ func (q *query) Advisory(ctx context.Context, cityID string) (Advisory, error) {
 query {
 	getCity(id: %q) {
 		advisory {
+			id
 			continent
 			country
 			country_code
@@ -106,6 +107,7 @@ func (q *query) Weather(ctx context.Context, cityID string) (Weather, error) {
 query {
 	getCity(id: %q) {
 		weather {
+			id
 			city_name
 			description
 			feels_like
@@ -141,6 +143,7 @@ func (q *query) Places(ctx context.Context, cityID string) ([]Place, error) {
 query {
 	getCity(id: %q) {
 		places {
+			id
 			address,
 			avg_user_rating,
 			city_name,
