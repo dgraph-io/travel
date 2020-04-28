@@ -19,12 +19,13 @@ type City {
 	advisory: Advisory
 	lat: Float!
 	lng: Float!
-	name: String! @search(by: [term])
+	name: String! @search(by: [exact])
 	places: [Place]
 	weather: Weather
 }
 
 type Advisory {
+	id: ID!
 	continent: String!
 	country: String!
 	country_code: String!
@@ -35,6 +36,7 @@ type Advisory {
 }
 
 type Place {
+	id: ID!
 	address: String
 	avg_user_rating: Float
 	city_name: String!
@@ -42,13 +44,14 @@ type Place {
 	lat: Float!
 	lng: Float!
 	location_type: [String]
-	name: String!
+	name: String! @search(by: [term])
 	no_user_rating: Int
 	place_id: String!
 	photo_id: String
 }
 
 type Weather {
+	id: ID!
 	city_name: String!
 	description: String
 	feels_like: Float

@@ -17,7 +17,12 @@ input AddAdvisoryInput {
 }
 
 type AddAdvisoryPayload {
-  advisory(order: AdvisoryOrder, first: Int, offset: Int): [Advisory]
+  advisory(
+    filter: AdvisoryFilter
+    order: AdvisoryOrder
+    first: Int
+    offset: Int
+  ): [Advisory]
   numUids: Int
 }
 
@@ -50,7 +55,12 @@ input AddPlaceInput {
 }
 
 type AddPlacePayload {
-  place(order: PlaceOrder, first: Int, offset: Int): [Place]
+  place(
+    filter: PlaceFilter
+    order: PlaceOrder
+    first: Int
+    offset: Int
+  ): [Place]
   numUids: Int
 }
 
@@ -71,11 +81,17 @@ input AddWeatherInput {
 }
 
 type AddWeatherPayload {
-  weather(order: WeatherOrder, first: Int, offset: Int): [Weather]
+  weather(
+    filter: WeatherFilter
+    order: WeatherOrder
+    first: Int
+    offset: Int
+  ): [Weather]
   numUids: Int
 }
 
 type Advisory {
+  id: ID!
   continent: String!
   country: String!
   country_code: String!
@@ -83,6 +99,11 @@ type Advisory {
   message: String
   score: Float!
   source: String
+}
+
+input AdvisoryFilter {
+  id: [ID!]
+  not: AdvisoryFilter
 }
 
 input AdvisoryOrder {
@@ -101,7 +122,18 @@ enum AdvisoryOrderable {
   source
 }
 
+input AdvisoryPatch {
+  continent: String
+  country: String
+  country_code: String
+  last_updated: String
+  message: String
+  score: Float
+  source: String
+}
+
 input AdvisoryRef {
+  id: ID
   continent: String
   country: String
   country_code: String
@@ -113,17 +145,22 @@ input AdvisoryRef {
 
 type City {
   id: ID!
-  advisory: Advisory
+  advisory(filter: AdvisoryFilter): Advisory
   lat: Float!
   lng: Float!
   name: String!
-  places(order: PlaceOrder, first: Int, offset: Int): [Place]
-  weather: Weather
+  places(
+    filter: PlaceFilter
+    order: PlaceOrder
+    first: Int
+    offset: Int
+  ): [Place]
+  weather(filter: WeatherFilter): Weather
 }
 
 input CityFilter {
   id: [ID!]
-  name: StringTermFilter
+  name: StringExactFilter
   and: CityFilter
   or: CityFilter
   not: CityFilter
@@ -170,7 +207,22 @@ input DateTimeFilter {
   gt: DateTime
 }
 
+type DeleteAdvisoryPayload {
+  msg: String
+  numUids: Int
+}
+
 type DeleteCityPayload {
+  msg: String
+  numUids: Int
+}
+
+type DeletePlacePayload {
+  msg: String
+  numUids: Int
+}
+
+type DeleteWeatherPayload {
   msg: String
   numUids: Int
 }
@@ -212,11 +264,18 @@ type Mutation {
   updateCity(input: UpdateCityInput!): UpdateCityPayload
   deleteCity(filter: CityFilter!): DeleteCityPayload
   addAdvisory(input: [AddAdvisoryInput!]!): AddAdvisoryPayload
+  updateAdvisory(input: UpdateAdvisoryInput!): UpdateAdvisoryPayload
+  deleteAdvisory(filter: AdvisoryFilter!): DeleteAdvisoryPayload
   addPlace(input: [AddPlaceInput!]!): AddPlacePayload
+  updatePlace(input: UpdatePlaceInput!): UpdatePlacePayload
+  deletePlace(filter: PlaceFilter!): DeletePlacePayload
   addWeather(input: [AddWeatherInput!]!): AddWeatherPayload
+  updateWeather(input: UpdateWeatherInput!): UpdateWeatherPayload
+  deleteWeather(filter: WeatherFilter!): DeleteWeatherPayload
 }
 
 type Place {
+  id: ID!
   address: String
   avg_user_rating: Float
   city_name: String!
@@ -228,6 +287,14 @@ type Place {
   no_user_rating: Int
   place_id: String!
   photo_id: String
+}
+
+input PlaceFilter {
+  id: [ID!]
+  name: StringTermFilter
+  and: PlaceFilter
+  or: PlaceFilter
+  not: PlaceFilter
 }
 
 input PlaceOrder {
@@ -250,7 +317,22 @@ enum PlaceOrderable {
   photo_id
 }
 
+input PlacePatch {
+  address: String
+  avg_user_rating: Float
+  city_name: String
+  gmaps_url: String
+  lat: Float
+  lng: Float
+  location_type: [String]
+  name: String
+  no_user_rating: Int
+  place_id: String
+  photo_id: String
+}
+
 input PlaceRef {
+  id: ID
   address: String
   avg_user_rating: Float
   city_name: String
@@ -272,9 +354,27 @@ type Query {
     first: Int
     offset: Int
   ): [City]
-  queryAdvisory(order: AdvisoryOrder, first: Int, offset: Int): [Advisory]
-  queryPlace(order: PlaceOrder, first: Int, offset: Int): [Place]
-  queryWeather(order: WeatherOrder, first: Int, offset: Int): [Weather]
+  getAdvisory(id: ID!): Advisory
+  queryAdvisory(
+    filter: AdvisoryFilter
+    order: AdvisoryOrder
+    first: Int
+    offset: Int
+  ): [Advisory]
+  getPlace(id: ID!): Place
+  queryPlace(
+    filter: PlaceFilter
+    order: PlaceOrder
+    first: Int
+    offset: Int
+  ): [Place]
+  getWeather(id: ID!): Weather
+  queryWeather(
+    filter: WeatherFilter
+    order: WeatherOrder
+    first: Int
+    offset: Int
+  ): [Weather]
 }
 
 input StringExactFilter {
@@ -303,6 +403,22 @@ input StringTermFilter {
   anyofterms: String
 }
 
+input UpdateAdvisoryInput {
+  filter: AdvisoryFilter!
+  set: AdvisoryPatch
+  remove: AdvisoryPatch
+}
+
+type UpdateAdvisoryPayload {
+  advisory(
+    filter: AdvisoryFilter
+    order: AdvisoryOrder
+    first: Int
+    offset: Int
+  ): [Advisory]
+  numUids: Int
+}
+
 input UpdateCityInput {
   filter: CityFilter!
   set: CityPatch
@@ -314,7 +430,40 @@ type UpdateCityPayload {
   numUids: Int
 }
 
+input UpdatePlaceInput {
+  filter: PlaceFilter!
+  set: PlacePatch
+  remove: PlacePatch
+}
+
+type UpdatePlacePayload {
+  place(
+    filter: PlaceFilter
+    order: PlaceOrder
+    first: Int
+    offset: Int
+  ): [Place]
+  numUids: Int
+}
+
+input UpdateWeatherInput {
+  filter: WeatherFilter!
+  set: WeatherPatch
+  remove: WeatherPatch
+}
+
+type UpdateWeatherPayload {
+  weather(
+    filter: WeatherFilter
+    order: WeatherOrder
+    first: Int
+    offset: Int
+  ): [Weather]
+  numUids: Int
+}
+
 type Weather {
+  id: ID!
   city_name: String!
   description: String
   feels_like: Float
@@ -328,6 +477,11 @@ type Weather {
   visibility: String
   wind_direction: Int
   wind_speed: Float
+}
+
+input WeatherFilter {
+  id: [ID!]
+  not: WeatherFilter
 }
 
 input WeatherOrder {
@@ -352,7 +506,7 @@ enum WeatherOrderable {
   wind_speed
 }
 
-input WeatherRef {
+input WeatherPatch {
   city_name: String
   description: String
   feels_like: Float
@@ -368,3 +522,19 @@ input WeatherRef {
   wind_speed: Float
 }
 
+input WeatherRef {
+  id: ID
+  city_name: String
+  description: String
+  feels_like: Float
+  humidity: Int
+  pressure: Int
+  sunrise: Int
+  sunset: Int
+  temp: Float
+  temp_min: Float
+  temp_max: Float
+  visibility: String
+  wind_direction: Int
+  wind_speed: Float
+}

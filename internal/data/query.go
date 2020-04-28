@@ -50,7 +50,7 @@ query {
 func (q *query) CityByName(ctx context.Context, name string) (places.City, error) {
 	query := fmt.Sprintf(`
 query {
-	queryCity(filter: {	name: {	anyofterms: %q } }) {
+	queryCity(filter: {	name: {	eq: %q } }) {
 		id
 		name
 		lat

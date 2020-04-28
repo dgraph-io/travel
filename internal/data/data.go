@@ -12,6 +12,7 @@ import (
 type DB struct {
 	Schema schema
 	Store  store
+	Delete delete
 	Query  query
 }
 
@@ -43,6 +44,7 @@ func NewDB(apiHost string) (*DB, error) {
 	db := DB{
 		Schema: schema{graphql: graphql},
 		Store:  store{graphql: graphql, query: query{graphql: graphql}},
+		Delete: delete{graphql: graphql, query: query{graphql: graphql}},
 		Query:  query{graphql: graphql},
 	}
 
