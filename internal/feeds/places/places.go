@@ -36,7 +36,7 @@ type Filter struct {
 // City represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type City struct {
-	ID   string  `json:"-"`
+	ID   string  `json:"id,omitempty"`
 	Name string  `json:"name"`
 	Lat  float64 `json:"lat"`
 	Lng  float64 `json:"lng"`

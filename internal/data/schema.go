@@ -75,13 +75,17 @@ func (s *schema) Create(ctx context.Context) error {
 		return errors.Wrap(err, "creating schema")
 	}
 
-	if got != `{"getGQLSchema":null}` {
-		return errors.New("schema already exists")
+	switch {
+	case got == `{"getGQLSchema":null}`:
+		if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
+			return errors.Wrap(err, "creating schema")
+		}
+	default:
+		if err := s.Validate(ctx); err != nil {
+			return errors.Wrap(err, "creating schema")
+		}
 	}
 
-	if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
-		return errors.Wrap(err, "creating schema")
-	}
 	return nil
 }
 

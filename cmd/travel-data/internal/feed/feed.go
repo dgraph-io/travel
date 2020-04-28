@@ -96,15 +96,12 @@ func storeCity(ctx context.Context, log *log.Logger, db *data.DB, name string, l
 		Lat:  lat,
 		Lng:  lng,
 	}
-	cityID, err := db.Store.City(ctx, city)
+	city, err := db.Store.City(ctx, city)
 	if err != nil {
 		return places.City{}, errors.Wrap(err, "storing city")
 	}
 
-	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", cityID, name, lat, lng)
-
-	// Place the city id back into the city value.
-	city.ID = cityID
+	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", city.ID, name, lat, lng)
 
 	return city, nil
 }
@@ -154,14 +151,17 @@ func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city places.
 	}
 	log.Printf("feed : Work : Search Places : filter[%+v]", filter)
 
-	// For now we will test with 1 place.
-	for i := 0; i < 1; i++ {
+	// For now we will test with 40 places.
+	for i := 0; i < 2; i++ {
 
 		places, errRet := city.Search(ctx, client, &filter)
 		if errRet != nil && errRet != io.EOF {
 			return errors.Wrap(err, "searching places")
 		}
-		log.Printf("feed : Work : Search Places : Result\n%+v", places)
+
+		for _, place := range places {
+			log.Printf("feed : Work : Search Places : %s", place.Name)
+		}
 
 		if err := db.Store.Places(ctx, city.ID, places); err != nil {
 			return errors.Wrap(err, "storing places")

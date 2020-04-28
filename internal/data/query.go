@@ -11,6 +11,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrCityNotFound is returned when a city is not found.
+var ErrCityNotFound = errors.New("city not found")
+
 type query struct {
 	graphql *graphql.GraphQL
 }
@@ -20,6 +23,7 @@ func (q *query) City(ctx context.Context, cityID string) (places.City, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
+		id
 		name
 		lat
 		lng
@@ -35,7 +39,39 @@ query {
 		return places.City{}, errors.Wrap(err, "query failed")
 	}
 
+	if result.GetCity.City.ID == "" {
+		return places.City{}, ErrCityNotFound
+	}
+
 	return result.GetCity.City, nil
+}
+
+// CityByName returns the specified city from the database by the city name.
+func (q *query) CityByName(ctx context.Context, name string) (places.City, error) {
+	query := fmt.Sprintf(`
+query {
+	queryCity(filter: {	name: {	anyofterms: %q } }) {
+		id
+		name
+		lat
+		lng
+	}
+}`, name)
+
+	var result struct {
+		QueryCity []struct {
+			places.City
+		} `json:"queryCity"`
+	}
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return places.City{}, errors.Wrap(err, "query failed")
+	}
+
+	if len(result.QueryCity) != 1 {
+		return places.City{}, ErrCityNotFound
+	}
+
+	return result.QueryCity[0].City, nil
 }
 
 // Advisory returns the specified advisory from the database by the city id.

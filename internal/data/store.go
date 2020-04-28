@@ -13,17 +13,26 @@ import (
 )
 
 type store struct {
+	query   query
 	graphql *graphql.GraphQL
 }
 
-// City is used to identify if the specified city exists in
+// City first checks to validate the specified city doesn't exists in
 // the database. If it doesn't, then the city is added to the database.
 // It will return a new City with the city ID from the database.
-func (s *store) City(ctx context.Context, city places.City) (string, error) {
+func (s *store) City(ctx context.Context, city places.City) (places.City, error) {
 
-	// Define a graphql mutation to add the city to the database and return
-	// the database generated id for the city.
-	mutation := fmt.Sprintf(`
+	// Validate the city doesn't already exist.
+	exists, err := s.query.CityByName(ctx, city.Name)
+	if err != nil && err != ErrCityNotFound {
+		return places.City{}, errors.Wrap(err, "failed to create city")
+	}
+
+	if err == ErrCityNotFound {
+
+		// Define a graphql mutation to add the city to the database and return
+		// the database generated id for the city.
+		mutation := fmt.Sprintf(`
 mutation {
 	addCity(input: [
 		{name: %q, lat: %f, lng: %f}
@@ -35,8 +44,11 @@ mutation {
 	}
 }`, city.Name, city.Lat, city.Lng)
 
-	// addCity will return the new city id if the function does not fail.
-	return addCity(ctx, s.graphql, mutation)
+		// addCity will return the new city id if the function does not fail.
+		return addCity(ctx, s.graphql, mutation, city)
+	}
+
+	return exists, nil
 }
 
 // Advisory will add the specified Advisory into the database.
@@ -176,7 +188,7 @@ func marshalPlaces(ctx context.Context, places []places.Place) string {
 }
 
 // addCity perform the actual graphql call against the database.
-func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (string, error) {
+func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string, city places.City) (places.City, error) {
 	var result struct {
 		AddCity struct {
 			City []struct {
@@ -186,14 +198,16 @@ func addCity(ctx context.Context, graphql *graphql.GraphQL, mutation string) (st
 	}
 
 	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
-		return "", errors.Wrap(err, "failed to add city")
+		return places.City{}, errors.Wrap(err, "failed to add city")
 	}
 
 	if len(result.AddCity.City) != 1 {
-		return "", errors.New("city id not returned")
+		return places.City{}, errors.New("city id not returned")
 	}
 
-	return result.AddCity.City[0].ID, nil
+	city.ID = result.AddCity.City[0].ID
+
+	return city, nil
 }
 
 // updCity perform the actual graphql call against the database.

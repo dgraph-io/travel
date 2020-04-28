@@ -47,13 +47,13 @@ func addCity(t *testing.T, ctx context.Context, testID int, apiHost string) (*da
 		Lat:  -33.865143,
 		Lng:  151.209900,
 	}
-	cityID, err := db.Store.City(ctx, cityAdd)
+	cityAdd, err := db.Store.City(ctx, cityAdd)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city: %v", tests.Failed, testID, err)
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to add a city.", tests.Success, testID)
 
-	city, err := db.Query.City(ctx, cityID)
+	city, err := db.Query.City(ctx, cityAdd.ID)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to query for the city: %v", tests.Failed, testID, err)
 	}
@@ -64,5 +64,30 @@ func addCity(t *testing.T, ctx context.Context, testID int, apiHost string) (*da
 	}
 	t.Logf("\t%s\tTest %d:\tShould get back the same city.", tests.Success, testID)
 
-	return db, cityID
+	cityByName, err := db.Query.CityByName(ctx, cityAdd.Name)
+	if err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to query for the city by name: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to query for the city by name.", tests.Success, testID)
+
+	if diff := cmp.Diff(cityAdd, cityByName); diff != "" {
+		t.Fatalf("\t%s\tTest %d:\tShould get back the same city by name. Diff:\n%s", tests.Failed, testID, diff)
+	}
+	t.Logf("\t%s\tTest %d:\tShould get back the same city by name.", tests.Success, testID)
+
+	cityAdd.ID = ""
+	cityAdd, err = db.Store.City(ctx, cityAdd)
+	if err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to validate city exists: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to add to validate city exists.", tests.Success, testID)
+
+	if cityAdd.ID != cityByName.ID {
+		t.Errorf("\t\tGot: %s", cityAdd.ID)
+		t.Errorf("\t\tExp: %s", cityByName.ID)
+		t.Fatalf("\t%s\tTest %d:\tShould be able to get back the same city: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to add to get back the same city.", tests.Success, testID)
+
+	return db, cityAdd.ID
 }
