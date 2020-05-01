@@ -64,7 +64,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 		return ErrFailed
 	}
 
-	city, err := storeCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
+	city, err := addCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
 	if err != nil {
 		log.Printf("feed : Work : Store City : ERROR : %+v", err)
 		return ErrFailed
@@ -88,14 +88,14 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	return nil
 }
 
-// storeCity add the specified city into the database.
-func storeCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
+// addCity add the specified city into the database.
+func addCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
 	city := data.City{
 		Name: name,
 		Lat:  lat,
 		Lng:  lng,
 	}
-	city, err := db.Store.City(ctx, city)
+	city, err := db.Add.City(ctx, city)
 	if err != nil {
 		return data.City{}, errors.Wrap(err, "storing city")
 	}
@@ -114,7 +114,7 @@ func storeWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID stri
 
 	log.Printf("feed : Work : Search Weather : Result : %+v", weather)
 
-	if err := db.Store.Weather(ctx, cityID, marshal.Weather(weather)); err != nil {
+	if _, err := db.Add.Weather(ctx, cityID, marshal.Weather(weather)); err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
 
@@ -130,7 +130,7 @@ func storeAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID str
 
 	log.Printf("feed : Work : Search Advisory : Result : %+v", advisory)
 
-	if err := db.Store.Advisory(ctx, cityID, marshal.Advisory(advisory)); err != nil {
+	if _, err := db.Add.Advisory(ctx, cityID, marshal.Advisory(advisory)); err != nil {
 		return errors.Wrap(err, "storing advisory")
 	}
 
@@ -165,9 +165,9 @@ func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.Ci
 			log.Printf("feed : Work : Search Places : %s", place.Name)
 		}
 
-		if err := db.Store.Places(ctx, city.ID, marshal.Places(places)); err != nil {
-			return errors.Wrap(err, "storing places")
-		}
+		// if err := db.Store.Places(ctx, city.ID, marshal.Places(places)); err != nil {
+		// 	return errors.Wrap(err, "storing places")
+		// }
 
 		if errRet == io.EOF {
 			break
