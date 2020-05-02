@@ -44,7 +44,7 @@ type Place {
 	lat: Float!
 	lng: Float!
 	location_type: [String]
-	name: String! @search(by: [term])
+	name: String! @search(by: [exact])
 	no_user_rating: Int
 	place_id: String!
 	photo_id: String

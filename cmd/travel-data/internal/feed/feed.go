@@ -64,23 +64,23 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 		return ErrFailed
 	}
 
-	city, err := storeCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
+	city, err := addCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
 	if err != nil {
 		log.Printf("feed : Work : Store City : ERROR : %+v", err)
 		return ErrFailed
 	}
 
-	if err := storeWeather(ctx, log, db, city.ID, keys.WeatherKey, search.Lat, search.Lng); err != nil {
+	if err := replaceWeather(ctx, log, db, city.ID, keys.WeatherKey, search.Lat, search.Lng); err != nil {
 		log.Printf("feed : Work : Store Weather : ERROR : %+v", err)
 		return ErrFailed
 	}
 
-	if err := storeAdvisory(ctx, log, db, city.ID, search.CountryCode); err != nil {
+	if err := replaceAdvisory(ctx, log, db, city.ID, search.CountryCode); err != nil {
 		log.Printf("feed : Work : Store Advisory : ERROR : %+v", err)
 		return ErrFailed
 	}
 
-	if err := storePlaces(ctx, log, db, city, keys.MapKey, search.Keyword, search.Radius); err != nil {
+	if err := addPlaces(ctx, log, db, city, keys.MapKey, search.Keyword, search.Radius); err != nil {
 		log.Printf("feed : Work : Store Advisory : ERROR : %+v", err)
 		return ErrFailed
 	}
@@ -88,57 +88,58 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 	return nil
 }
 
-// storeCity add the specified city into the database.
-func storeCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
+// addCity add the specified city into the database.
+func addCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
 	city := data.City{
 		Name: name,
 		Lat:  lat,
 		Lng:  lng,
 	}
-	city, err := db.Store.City(ctx, city)
+	city, err := db.Mutate.AddCity(ctx, city)
 	if err != nil {
 		return data.City{}, errors.Wrap(err, "storing city")
 	}
 
-	log.Printf("feed : Work : Location : CityID[%s] Name[%s] Lat[%f] Lng[%f]", city.ID, name, lat, lng)
-
+	log.Printf("feed : Work : Added City : CityID[%s] Name[%s] Lat[%f] Lng[%f]", city.ID, name, lat, lng)
 	return city, nil
 }
 
-// storeWeather pulls weather information and stores it for the specified city.
-func storeWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID string, apiKey string, lat float64, lng float64) error {
+// replaceWeather pulls weather information and updates it for the specified city.
+func replaceWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID string, apiKey string, lat float64, lng float64) error {
 	weather, err := weather.Search(ctx, apiKey, lat, lng)
 	if err != nil {
 		return errors.Wrap(err, "searching weather")
 	}
 
-	log.Printf("feed : Work : Search Weather : Result : %+v", weather)
-
-	if err := db.Store.Weather(ctx, cityID, marshal.Weather(weather)); err != nil {
+	updWeather := marshal.Weather(weather)
+	updWeather, err = db.Mutate.ReplaceWeather(ctx, cityID, updWeather)
+	if err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
 
+	log.Printf("feed : Work : Replaced Weather : %s:%s\n", updWeather.ID, updWeather.Desc)
 	return nil
 }
 
-// storeAdvisory pulls advisory information and stores it for the specified city.
-func storeAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID string, countryCode string) error {
+// replaceAdvisory pulls advisory information and updates it for the specified city.
+func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID string, countryCode string) error {
 	advisory, err := advisory.Search(ctx, countryCode)
 	if err != nil {
 		return errors.Wrap(err, "searching advisory")
 	}
 
-	log.Printf("feed : Work : Search Advisory : Result : %+v", advisory)
-
-	if err := db.Store.Advisory(ctx, cityID, marshal.Advisory(advisory)); err != nil {
-		return errors.Wrap(err, "storing advisory")
+	updAdvisory := marshal.Advisory(advisory)
+	updAdvisory, err = db.Mutate.ReplaceAdvisory(ctx, cityID, updAdvisory)
+	if err != nil {
+		return errors.Wrap(err, "replacing advisory")
 	}
 
+	log.Printf("feed : Work : Replaced Advisory : %s:%s\n", updAdvisory.ID, updAdvisory.Message)
 	return nil
 }
 
-// storePlaces pulls place information and stores it for the specified city.
-func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.City, apiKey string, keyword string, radius uint) error {
+// addPlaces pulls place information and adds new places to the specified city.
+func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.City, apiKey string, keyword string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
@@ -155,18 +156,17 @@ func storePlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.Ci
 
 	// For now we will test with 40 places.
 	for i := 0; i < 2; i++ {
-
 		places, errRet := places.Search(ctx, client, filter)
 		if errRet != nil && errRet != io.EOF {
 			return errors.Wrap(err, "searching places")
 		}
 
 		for _, place := range places {
-			log.Printf("feed : Work : Search Places : %s", place.Name)
-		}
-
-		if err := db.Store.Places(ctx, city.ID, marshal.Places(places)); err != nil {
-			return errors.Wrap(err, "storing places")
+			place, err := db.Mutate.AddPlace(ctx, city.ID, marshal.Place(place))
+			if err != nil {
+				return errors.Wrapf(err, "adding place: %s", place.Name)
+			}
+			log.Printf("feed : Work : Added Place : %s:%s\n", place.ID, place.Name)
 		}
 
 		if errRet == io.EOF {

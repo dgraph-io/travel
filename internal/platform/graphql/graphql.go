@@ -113,6 +113,8 @@ func (g *GraphQL) do(ctx context.Context, command string, r io.Reader, response 
 		return fmt.Errorf("graphql op error: status code: %s", resp.Status)
 	}
 
+	// fmt.Println("*****graphql*******>\n", query.String(), "\n", string(data))
+
 	result := struct {
 		Data   interface{}
 		Errors []struct {

@@ -8,8 +8,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ErrCityNotFound is returned when a city is not found.
-var ErrCityNotFound = errors.New("city not found")
+// Not found errors.
+var (
+	ErrCityNotFound     = errors.New("city not found")
+	ErrPlaceNotFound    = errors.New("place not found")
+	ErrAdvisoryNotFound = errors.New("advisory not found")
+	ErrWeatherNotFound  = errors.New("weather not found")
+)
 
 type query struct {
 	graphql *graphql.GraphQL
@@ -47,7 +52,7 @@ query {
 func (q *query) CityByName(ctx context.Context, name string) (City, error) {
 	query := fmt.Sprintf(`
 query {
-	queryCity(filter: {	name: {	eq: %q } }) {
+	queryCity(filter: { name: { eq: %q } }) {
 		id
 		name
 		lat
@@ -77,6 +82,7 @@ func (q *query) Advisory(ctx context.Context, cityID string) (Advisory, error) {
 query {
 	getCity(id: %q) {
 		advisory {
+			id
 			continent
 			country
 			country_code
@@ -97,6 +103,10 @@ query {
 		return Advisory{}, errors.Wrap(err, "query failed")
 	}
 
+	if result.GetCity.Advisory.ID == "" {
+		return Advisory{}, ErrAdvisoryNotFound
+	}
+
 	return result.GetCity.Advisory, nil
 }
 
@@ -106,6 +116,7 @@ func (q *query) Weather(ctx context.Context, cityID string) (Weather, error) {
 query {
 	getCity(id: %q) {
 		weather {
+			id
 			city_name
 			description
 			feels_like
@@ -132,7 +143,84 @@ query {
 		return Weather{}, errors.Wrap(err, "query failed")
 	}
 
+	if result.GetCity.Weather.ID == "" {
+		return Weather{}, ErrWeatherNotFound
+	}
+
 	return result.GetCity.Weather, nil
+}
+
+// Place returns the collection of places from the database by the place id.
+func (q *query) Place(ctx context.Context, placeID string) (Place, error) {
+	query := fmt.Sprintf(`
+query {
+	getPlace(id: %q) {
+		id
+		address,
+		avg_user_rating,
+		city_name,
+		gmaps_url,
+		lat,
+		lng,
+		location_type,
+		name,
+		no_user_rating,
+		place_id,
+		photo_id
+	}
+}`, placeID)
+
+	var result struct {
+		GetPlace struct {
+			Place
+		} `json:"getPlace"`
+	}
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return Place{}, errors.Wrap(err, "query failed")
+	}
+
+	if result.GetPlace.Place.ID == "" {
+		return Place{}, ErrPlaceNotFound
+	}
+
+	return result.GetPlace.Place, nil
+}
+
+// PlaceByName returns the collection of places from the database
+// by the place name.
+func (q *query) PlaceByName(ctx context.Context, name string) (Place, error) {
+	query := fmt.Sprintf(`
+query {
+	queryPlace(filter: { name: { eq: %q } }) {
+		id
+		address,
+		avg_user_rating,
+		city_name,
+		gmaps_url,
+		lat,
+		lng,
+		location_type,
+		name,
+		no_user_rating,
+		place_id,
+		photo_id
+	}
+}`, name)
+
+	var result struct {
+		QueryPlace []struct {
+			Place
+		} `json:"queryPlace"`
+	}
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return Place{}, errors.Wrap(err, "query failed")
+	}
+
+	if len(result.QueryPlace) != 1 {
+		return Place{}, ErrPlaceNotFound
+	}
+
+	return result.QueryPlace[0].Place, nil
 }
 
 // Places returns the collection of palces from the database by the city id.
@@ -141,6 +229,7 @@ func (q *query) Places(ctx context.Context, cityID string) ([]Place, error) {
 query {
 	getCity(id: %q) {
 		places {
+			id
 			address,
 			avg_user_rating,
 			city_name,
