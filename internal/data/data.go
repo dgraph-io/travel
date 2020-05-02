@@ -11,8 +11,7 @@ import (
 // DB provides support for storing data inside of DGraph.
 type DB struct {
 	Schema schema
-	Add    add
-	Delete delete
+	Mutate mutate
 	Query  query
 }
 
@@ -43,8 +42,7 @@ func NewDB(apiHost string) (*DB, error) {
 	// Construct a data value for use.
 	db := DB{
 		Schema: schema{graphql: graphql},
-		Add:    add{graphql: graphql, query: query{graphql: graphql}},
-		Delete: delete{graphql: graphql, query: query{graphql: graphql}},
+		Mutate: mutate{graphql: graphql, query: query{graphql: graphql}},
 		Query:  query{graphql: graphql},
 	}
 

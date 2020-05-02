@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type _addPlace struct{}
+type _mutPlace struct{}
 
-var addPlace _addPlace
+var mutPlace _mutPlace
 
-func (_addPlace) exists(ctx context.Context, query query, place Place) bool {
+func (_mutPlace) exists(ctx context.Context, query query, place Place) bool {
 	_, err := query.PlaceByName(ctx, place.Name)
 	if err != nil {
 		return false
@@ -21,7 +21,7 @@ func (_addPlace) exists(ctx context.Context, query query, place Place) bool {
 	return true
 }
 
-func (_addPlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place) (Place, error) {
+func (_mutPlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place) (Place, error) {
 	if place.ID != "" {
 		return Place{}, errors.New("place contains id")
 	}
@@ -40,7 +40,7 @@ func (_addPlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place)
 		} `json:"addPlace"`
 	}
 
-	if err := graphql.Mutate(ctx, addPlace.marshalAdd(place), &result); err != nil {
+	if err := graphql.Mutate(ctx, mutPlace.marshalAdd(place), &result); err != nil {
 		return Place{}, errors.Wrap(err, "failed to add place")
 	}
 
@@ -52,12 +52,12 @@ func (_addPlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place)
 	return place, nil
 }
 
-func (_addPlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, place Place) error {
+func (_mutPlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, place Place) error {
 	if place.ID == "" {
 		return errors.New("place missing id")
 	}
 
-	err := graphql.Mutate(ctx, addPlace.marshalUpdCity(cityID, place), nil)
+	err := graphql.Mutate(ctx, mutPlace.marshalUpdCity(cityID, place), nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
@@ -65,7 +65,7 @@ func (_addPlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityI
 	return nil
 }
 
-func (_addPlace) marshalAdd(place Place) string {
+func (_mutPlace) marshalAdd(place Place) string {
 	return fmt.Sprintf(`
 mutation {
 	addPlace(input: [{
@@ -91,7 +91,7 @@ mutation {
 		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID)
 }
 
-func (_addPlace) marshalUpdCity(cityID string, place Place) string {
+func (_mutPlace) marshalUpdCity(cityID string, place Place) string {
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {

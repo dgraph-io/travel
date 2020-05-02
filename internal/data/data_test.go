@@ -40,7 +40,7 @@ func seedCity(t *testing.T, ctx context.Context, testID int, apiHost string, cit
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
 
-	cityAdd, err := db.Add.City(ctx, city)
+	cityAdd, err := db.Mutate.AddCity(ctx, city)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city: %v", tests.Failed, testID, err)
 	}

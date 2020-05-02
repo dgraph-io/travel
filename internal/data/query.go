@@ -10,8 +10,10 @@ import (
 
 // Not found errors.
 var (
-	ErrCityNotFound  = errors.New("city not found")
-	ErrPlaceNotFound = errors.New("place not found")
+	ErrCityNotFound     = errors.New("city not found")
+	ErrPlaceNotFound    = errors.New("place not found")
+	ErrAdvisoryNotFound = errors.New("advisory not found")
+	ErrWeatherNotFound  = errors.New("weather not found")
 )
 
 type query struct {
@@ -101,6 +103,10 @@ query {
 		return Advisory{}, errors.Wrap(err, "query failed")
 	}
 
+	if result.GetCity.Advisory.ID == "" {
+		return Advisory{}, ErrAdvisoryNotFound
+	}
+
 	return result.GetCity.Advisory, nil
 }
 
@@ -135,6 +141,10 @@ query {
 	}
 	if err := q.graphql.Query(ctx, query, &result); err != nil {
 		return Weather{}, errors.Wrap(err, "query failed")
+	}
+
+	if result.GetCity.Weather.ID == "" {
+		return Weather{}, ErrWeatherNotFound
 	}
 
 	return result.GetCity.Weather, nil

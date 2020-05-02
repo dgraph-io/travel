@@ -8,11 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type _addCity struct{}
+type _mutCity struct{}
 
-var addCity _addCity
+var mutCity _mutCity
 
-func (_addCity) exists(ctx context.Context, query query, city City) bool {
+func (_mutCity) exists(ctx context.Context, query query, city City) bool {
 	_, err := query.CityByName(ctx, city.Name)
 	if err != nil {
 		return false
@@ -20,7 +20,7 @@ func (_addCity) exists(ctx context.Context, query query, city City) bool {
 	return true
 }
 
-func (_addCity) add(ctx context.Context, graphql *graphql.GraphQL, city City) (City, error) {
+func (_mutCity) add(ctx context.Context, graphql *graphql.GraphQL, city City) (City, error) {
 	if city.ID != "" {
 		return City{}, errors.New("city contains id")
 	}
@@ -33,7 +33,7 @@ func (_addCity) add(ctx context.Context, graphql *graphql.GraphQL, city City) (C
 		} `json:"addCity"`
 	}
 
-	if err := graphql.Mutate(ctx, addCity.marshalAdd(city), &result); err != nil {
+	if err := graphql.Mutate(ctx, mutCity.marshalAdd(city), &result); err != nil {
 		return City{}, errors.Wrap(err, "failed to add city")
 	}
 
@@ -45,7 +45,7 @@ func (_addCity) add(ctx context.Context, graphql *graphql.GraphQL, city City) (C
 	return city, nil
 }
 
-func (_addCity) marshalAdd(city City) string {
+func (_mutCity) marshalAdd(city City) string {
 	return fmt.Sprintf(`
 	mutation {
 		addCity(input: [
