@@ -8,24 +8,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-type _mutWeather struct{}
+type mutateWeather struct {
+	marshal weatherMarshal
+}
 
-var mutWeather _mutWeather
+var mutWeather mutateWeather
 
-func (_mutWeather) add(ctx context.Context, graphql *graphql.GraphQL, weather Weather) (Weather, error) {
+func (mutateWeather) add(ctx context.Context, graphql *graphql.GraphQL, weather Weather) (Weather, error) {
 	if weather.ID != "" {
 		return Weather{}, errors.New("weather contains id")
 	}
 
-	var result struct {
-		AddWeather struct {
-			Weather []struct {
-				ID string `json:"id"`
-			} `json:"weather"`
-		} `json:"addWeather"`
-	}
-
-	if err := graphql.Mutate(ctx, mutWeather.marshalAdd(weather), &result); err != nil {
+	mutation, result := mutWeather.marshal.add(weather)
+	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
 		return Weather{}, errors.Wrap(err, "failed to add weather")
 	}
 
@@ -37,12 +32,13 @@ func (_mutWeather) add(ctx context.Context, graphql *graphql.GraphQL, weather We
 	return weather, nil
 }
 
-func (_mutWeather) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, weather Weather) error {
+func (mutateWeather) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, weather Weather) error {
 	if weather.ID == "" {
 		return errors.New("weather missing id")
 	}
 
-	err := graphql.Mutate(ctx, mutWeather.marshalUpdCity(cityID, weather), nil)
+	mutation, result := mutWeather.marshal.updCity(cityID, weather)
+	err := graphql.Mutate(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
@@ -50,19 +46,14 @@ func (_mutWeather) updateCity(ctx context.Context, graphql *graphql.GraphQL, cit
 	return nil
 }
 
-func (_mutWeather) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
+func (mutateWeather) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
 	weather, err := query.Weather(ctx, cityID)
 	if err != nil {
 		return err
 	}
 
-	var result struct {
-		DeleteWeather struct {
-			Msg     string
-			NumUids int
-		} `json:"deleteWeather"`
-	}
-	if err := graphql.Mutate(ctx, mutWeather.marshalDelete(weather.ID), &result); err != nil {
+	mutation, result := mutWeather.marshal.delete(weather.ID)
+	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
 
@@ -74,8 +65,11 @@ func (_mutWeather) delete(ctx context.Context, query query, graphql *graphql.Gra
 	return nil
 }
 
-func (_mutWeather) marshalAdd(weather Weather) string {
-	return fmt.Sprintf(`
+type weatherMarshal struct{}
+
+func (weatherMarshal) add(weather Weather) (string, weatherIDResult) {
+	var result weatherIDResult
+	mutation := fmt.Sprintf(`
 mutation {
 	addWeather(input: [{
 		city_name: %q,
@@ -92,18 +86,17 @@ mutation {
 		wind_direction: %d,
 		wind_speed: %f
 	}])
-	{
-		weather {
-			id
-		}
-	}
+	%s
 }`, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
 		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
-		weather.WindSpeed)
+		weather.WindSpeed, result.graphql())
+
+	return mutation, result
 }
 
-func (_mutWeather) marshalUpdCity(cityID string, weather Weather) string {
+func (weatherMarshal) updCity(cityID string, weather Weather) (string, cityIDResult) {
+	var result cityIDResult
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {
@@ -129,26 +122,52 @@ mutation {
 			}
 		}
 	})
-	{
-		city {
-			id
-		}
-	}
+	%s
 }`, cityID, weather.ID, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
 		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
-		weather.WindSpeed)
+		weather.WindSpeed, result.graphql())
 
-	return mutation
+	return mutation, result
 }
 
-func (_mutWeather) marshalDelete(weatherID string) string {
-	return fmt.Sprintf(`
+func (weatherMarshal) delete(weatherID string) (string, deleteWeatherResult) {
+	var result deleteWeatherResult
+	mutation := fmt.Sprintf(`
 mutation {
 	deleteWeather(filter: { id: [%q] })
-	{
+	%s
+}`, weatherID, result.graphql())
+
+	return mutation, result
+}
+
+type weatherIDResult struct {
+	AddWeather struct {
+		Weather []struct {
+			ID string `json:"id"`
+		} `json:"weather"`
+	} `json:"addWeather"`
+}
+
+func (weatherIDResult) graphql() string {
+	return `{
+		weather {
+			id
+		}
+	}`
+}
+
+type deleteWeatherResult struct {
+	DeleteWeather struct {
+		Msg     string
+		NumUids int
+	} `json:"deleteWeather"`
+}
+
+func (deleteWeatherResult) graphql() string {
+	return `{
 		msg,
 		numUids,
-	}
-}`, weatherID)
+	}`
 }
