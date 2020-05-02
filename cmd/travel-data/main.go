@@ -22,9 +22,6 @@ import (
 		Running in Kind with Ready checks
 		Working with Circle CI
 		traval-data binary gets git information as well.
-
-	Data
-		Validate upserts are working.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.

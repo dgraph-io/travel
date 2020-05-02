@@ -15,8 +15,7 @@ type mutateCity struct {
 var mutCity mutateCity
 
 func (mutateCity) exists(ctx context.Context, query query, city City) bool {
-	_, err := query.CityByName(ctx, city.Name)
-	if err != nil {
+	if _, err := query.CityByName(ctx, city.Name); err != nil {
 		return false
 	}
 	return true

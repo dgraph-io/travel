@@ -18,8 +18,6 @@ type DB struct {
 // NewDB constructs a data value for use to store data inside
 // of the Dgraph database.
 func NewDB(apiHost string) (*DB, error) {
-
-	// Construct a client for graphql calls.
 	client := http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -36,10 +34,8 @@ func NewDB(apiHost string) (*DB, error) {
 		},
 	}
 
-	// Construct a graphql value for making queries.
 	graphql := graphql.New(apiHost, &client)
 
-	// Construct a data value for use.
 	db := DB{
 		Schema: schema{graphql: graphql},
 		Mutate: mutate{graphql: graphql, query: query{graphql: graphql}},
