@@ -60,16 +60,16 @@ func (placeMarshal) add(place Place) (string, placeIDResult) {
 	mutation := fmt.Sprintf(`
 mutation {
 	addPlace(input: [{
-		address: %q,
-		avg_user_rating: %f,
-		city_name: %q,
-		gmaps_url: %q,
-		lat: %f,
-		lng: %f,
-		location_type: [%q],
-		name: %q,
-		no_user_rating: %d,
-		place_id: %q,
+		address: %q
+		avg_user_rating: %f
+		city_name: %q
+		gmaps_url: %q
+		lat: %f
+		lng: %f
+		location_type: [%q]
+		name: %q
+		no_user_rating: %d
+		place_id: %q
 		photo_id: %q
 	}])
 	%s
@@ -91,17 +91,17 @@ mutation {
 		},
 		set: {
 			places: [{
-				id: %q,
-				address: %q,
-				avg_user_rating: %f,
-				city_name: %q,
-				gmaps_url: %q,
-				lat: %f,
-				lng: %f,
-				location_type: [%q],
-				name: %q,
-				no_user_rating: %d,
-				place_id: %q,
+				id: %q
+				address: %q
+				avg_user_rating: %f
+				city_name: %q
+				gmaps_url: %q
+				lat: %f
+				lng: %f
+				location_type: [%q]
+				name: %q
+				no_user_rating: %d
+				place_id: %q
 				photo_id: %q
 			}]
 		}

@@ -155,17 +155,17 @@ func (q *query) Place(ctx context.Context, placeID string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getPlace(id: %q) {
-		id,
-		address,
-		avg_user_rating,
-		city_name,
-		gmaps_url,
-		lat,
-		lng,
-		location_type,
-		name,
-		no_user_rating,
-		place_id,
+		id
+		address
+		avg_user_rating
+		city_name
+		gmaps_url
+		lat
+		lng
+		location_type
+		name
+		no_user_rating
+		place_id
 		photo_id
 	}
 }`, placeID)
@@ -192,17 +192,17 @@ func (q *query) PlaceByName(ctx context.Context, name string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { name: { eq: %q } }) {
-		id,
-		address,
-		avg_user_rating,
-		city_name,
-		gmaps_url,
-		lat,
-		lng,
-		location_type,
-		name,
-		no_user_rating,
-		place_id,
+		id
+		address
+		avg_user_rating
+		city_name
+		gmaps_url
+		lat
+		lng
+		location_type
+		name
+		no_user_rating
+		place_id
 		photo_id
 	}
 }`, name)
@@ -229,17 +229,17 @@ func (q *query) Places(ctx context.Context, cityID string) ([]Place, error) {
 query {
 	getCity(id: %q) {
 		places {
-			id,
-			address,
-			avg_user_rating,
-			city_name,
-			gmaps_url,
-			lat,
-			lng,
-			location_type,
-			name,
-			no_user_rating,
-			place_id,
+			id
+			address
+			avg_user_rating
+			city_name
+			gmaps_url
+			lat
+			lng
+			location_type
+			name
+			no_user_rating
+			place_id
 			photo_id
 		}
 	}

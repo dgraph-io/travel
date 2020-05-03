@@ -72,18 +72,18 @@ func (weatherMarshal) add(weather Weather) (string, weatherIDResult) {
 	mutation := fmt.Sprintf(`
 mutation {
 	addWeather(input: [{
-		city_name: %q,
-		description: %q,
-		feels_like: %f,
-		humidity: %d,
-		pressure: %d,
-		sunrise: %d,
-		sunset: %d,
-		temp: %f,
-		temp_min: %f,
-		temp_max: %f,
-		visibility: %q,
-		wind_direction: %d,
+		city_name: %q
+		description: %q
+		feels_like: %f
+		humidity: %d
+		pressure: %d
+		sunrise: %d
+		sunset: %d
+		temp: %f
+		temp_min: %f
+		temp_max: %f
+		visibility: %q
+		wind_direction: %d
 		wind_speed: %f
 	}])
 	%s
@@ -105,19 +105,19 @@ mutation {
 		},
 		set: {
 			weather: {
-				id: %q,
-				city_name: %q,
-				description: %q,
-				feels_like: %f,
-				humidity: %d,
-				pressure: %d,
-				sunrise: %d,
-				sunset: %d,
-				temp: %f,
-				temp_min: %f,
-				temp_max: %f,
-				visibility: %q,
-				wind_direction: %d,
+				id: %q
+				city_name: %q
+				description: %q
+				feels_like: %f
+				humidity: %d
+				pressure: %d
+				sunrise: %d
+				sunset: %d
+				temp: %f
+				temp_min: %f
+				temp_max: %f
+				visibility: %q
+				wind_direction: %d
 				wind_speed: %f
 			}
 		}

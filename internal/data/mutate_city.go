@@ -38,9 +38,11 @@ func (cityMarshal) add(city City) (string, cityIDResult) {
 	var result cityIDResult
 	mutation := fmt.Sprintf(`
 	mutation {
-		addCity(input: [
-			{name: %q, lat: %f, lng: %f}
-		])
+		addCity(input: [{
+			name: %q
+			lat: %f
+			lng: %f
+		}])
 		%s
 	}`, city.Name, city.Lat, city.Lng, result.graphql())
 

@@ -72,12 +72,12 @@ func (advisoryMarshal) add(advisory Advisory) (string, advisoryIDResult) {
 	mutation := fmt.Sprintf(`
 mutation {
 	addAdvisory(input: [{
-		continent: %q,
-		country: %q,
-		country_code: %q,
-		last_updated: %q,
-		message: %q,
-		score: %f,
+		continent: %q
+		country: %q
+		country_code: %q
+		last_updated: %q
+		message: %q
+		score: %f
 		source: %q
 	}])
 	%s
@@ -98,13 +98,13 @@ mutation {
 		},
 		set: {
 			advisory: {
-				id: %q,
-				continent: %q,
-				country: %q,
-				country_code: %q,
-				last_updated: %q,
-				message: %q,
-				score: %f,
+				id: %q
+				continent: %q
+				country: %q
+				country_code: %q
+				last_updated: %q
+				message: %q
+				score: %f
 				source: %q
 			}
 		}
