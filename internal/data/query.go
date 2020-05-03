@@ -155,7 +155,7 @@ func (q *query) Place(ctx context.Context, placeID string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getPlace(id: %q) {
-		id
+		id,
 		address,
 		avg_user_rating,
 		city_name,
@@ -192,7 +192,7 @@ func (q *query) PlaceByName(ctx context.Context, name string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { name: { eq: %q } }) {
-		id
+		id,
 		address,
 		avg_user_rating,
 		city_name,
@@ -223,13 +223,13 @@ query {
 	return result.QueryPlace[0].Place, nil
 }
 
-// Places returns the collection of palces from the database by the city id.
+// Places returns the collection of places from the database by the city id.
 func (q *query) Places(ctx context.Context, cityID string) ([]Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
 		places {
-			id
+			id,
 			address,
 			avg_user_rating,
 			city_name,
