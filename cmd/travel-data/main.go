@@ -12,9 +12,6 @@ import (
 
 // TODO
 /*
-	General
-		Tests for advisory and weather.
-
 	UI
 		https://observablehq.com/@d3/force-directed-graph
 
