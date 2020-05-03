@@ -31,6 +31,11 @@ func ready(t *testing.T, ctx context.Context, testID int, apiHost string) *data.
 func seedCity(t *testing.T, ctx context.Context, testID int, apiHost string, city data.City) (*data.DB, data.City) {
 	db := ready(t, ctx, testID, apiHost)
 
+	if err := db.Mutate.DropAll(ctx); err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
+
 	if err := db.Schema.Create(ctx); err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
 	}

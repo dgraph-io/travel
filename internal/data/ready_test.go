@@ -16,7 +16,7 @@ func TestReadiness(t *testing.T) {
 	}
 
 	apiHost, teardown := tests.NewUnit(t)
-	defer teardown()
+	t.Cleanup(teardown)
 
 	type tableTest struct {
 		name       string

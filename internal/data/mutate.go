@@ -18,6 +18,22 @@ type mutate struct {
 	graphql *graphql.GraphQL
 }
 
+// DropAll will remove all the data from the database.
+func (m *mutate) DropAll(ctx context.Context) error {
+	var response struct {
+		Code    string
+		Message string
+	}
+	if err := m.graphql.DropAll(ctx, &response); err != nil {
+		return errors.Wrap(err, "drop failed")
+	}
+	if response.Code != "Success" {
+		return errors.New(response.Message)
+	}
+
+	return nil
+}
+
 // AddCity add a new city to the database. If the city already exists
 // this function will fail. It will return a new City value with the city
 // ID from the database.

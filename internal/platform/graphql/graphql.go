@@ -13,6 +13,7 @@ import (
 
 // These commands represents the set of know graphql commands.
 const (
+	cmdAlter   = "alter"
 	cmdAdmin   = "admin"
 	cmdSchema  = "admin/schema"
 	cmdQuery   = "graphql"
@@ -39,6 +40,13 @@ func New(apiHost string, client *http.Client) *GraphQL {
 func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, response interface{}) error {
 	r := strings.NewReader(schemaString)
 	return g.do(ctx, cmdSchema, r, response)
+}
+
+// DropAll perform an alter operatation against the configured server
+// to remove all the data and schema.
+func (g *GraphQL) DropAll(ctx context.Context, response interface{}) error {
+	r := strings.NewReader(`{"drop_all": true}`)
+	return g.do(ctx, cmdAlter, r, response)
 }
 
 // QuerySchema performs a schema query operation against the configured server.

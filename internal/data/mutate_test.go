@@ -10,11 +10,17 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var apiHost string
+
 // TestMutate validates all the mutation support in data.
 func TestMutate(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}
+
+	var teardown func()
+	apiHost, teardown = tests.NewUnit(t)
+	t.Cleanup(teardown)
 
 	t.Run("city", addCity)
 	t.Run("place", addPlace)
@@ -24,9 +30,6 @@ func TestMutate(t *testing.T) {
 
 // addCity validates a city node can be added to the database.
 func addCity(t *testing.T) {
-	apiHost, teardown := tests.NewUnit(t)
-	defer teardown()
-
 	t.Log("Given the need to be able to validate storing a city.")
 	{
 		testID := 0
@@ -76,9 +79,6 @@ func addCity(t *testing.T) {
 
 // addPlace validates a place can be added to the database.
 func addPlace(t *testing.T) {
-	apiHost, teardown := tests.NewUnit(t)
-	defer teardown()
-
 	t.Log("Given the need to be able to validate storing a place.")
 	{
 		testID := 0
@@ -172,9 +172,6 @@ func addPlace(t *testing.T) {
 
 // replaceAdvisory validates an advisory can be stored in the database.
 func replaceAdvisory(t *testing.T) {
-	apiHost, teardown := tests.NewUnit(t)
-	defer teardown()
-
 	t.Log("Given the need to be able to validate replacing an advisory.")
 	{
 		testID := 0
@@ -241,9 +238,6 @@ func replaceAdvisory(t *testing.T) {
 
 // replaceAdvisory validates weather can be stored in the database.
 func replaceWeather(t *testing.T) {
-	apiHost, teardown := tests.NewUnit(t)
-	defer teardown()
-
 	t.Log("Given the need to be able to validate storing weather.")
 	{
 		testID := 0

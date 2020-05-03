@@ -16,7 +16,7 @@ func TestSchema(t *testing.T) {
 	}
 
 	apiHost, teardown := tests.NewUnit(t)
-	defer teardown()
+	t.Cleanup(teardown)
 
 	t.Log("Given the need to be able to validate a schema.")
 	{
