@@ -42,8 +42,14 @@ type Keys struct {
 	WeatherKey string
 }
 
+// URL represents the set of url's needed for the different API's
+// that are used to retrieve data.
+type URL struct {
+	Advisory string
+}
+
 // Work retrieves and stores the feed data for this API.
-func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
+func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys, url URL) error {
 	ctx := context.Background()
 
 	log.Println("feed: Work: Wait for the database is ready ...")
@@ -75,7 +81,7 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 		return ErrFailed
 	}
 
-	if err := replaceAdvisory(ctx, log, db, city.ID, search.CountryCode); err != nil {
+	if err := replaceAdvisory(ctx, log, db, city.ID, url.Advisory, url.Advisory, search.CountryCode); err != nil {
 		log.Printf("feed: Work: Replace Advisory: ERROR: %v", err)
 		return ErrFailed
 	}
@@ -127,8 +133,8 @@ func replaceWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID st
 }
 
 // replaceAdvisory pulls advisory information and updates it for the specified city.
-func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID string, countryCode string) error {
-	advisory, err := advisory.Search(ctx, countryCode)
+func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID string, url string, countryCode string) error {
+	advisory, err := advisory.Search(ctx, url, countryCode)
 	if err != nil {
 		return errors.Wrap(err, "searching advisory")
 	}

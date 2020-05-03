@@ -63,6 +63,9 @@ func run() error {
 			MapsKey    string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
 			WeatherKey string `conf:"default:b2302a48062dc1da72430c612557498d"`
 		}
+		URL struct {
+			Advisory string `conf:"default:https://www.travel-advisory.info/api"`
+		}
 		Dgraph struct {
 			APIHost string `conf:"default:localhost:8080"`
 		}
@@ -113,7 +116,11 @@ func run() error {
 		WeatherKey: cfg.APIKeys.WeatherKey,
 	}
 
-	if err := feed.Work(log, dgraph, search, keys); err != nil {
+	url := feed.URL{
+		Advisory: cfg.URL.Advisory,
+	}
+
+	if err := feed.Work(log, dgraph, search, keys, url); err != nil {
 		return err
 	}
 

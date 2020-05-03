@@ -22,8 +22,8 @@ type Advisory struct {
 }
 
 // Search can locate weather for a given latitude and longitude.
-func Search(ctx context.Context, countryCode string) (Advisory, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://www.travel-advisory.info/api", nil)
+func Search(ctx context.Context, url string, countryCode string) (Advisory, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return Advisory{}, errors.Wrap(err, "new request")
 	}
