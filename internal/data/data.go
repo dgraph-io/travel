@@ -8,7 +8,7 @@ import (
 	"github.com/dgraph-io/travel/internal/platform/graphql"
 )
 
-// DB provides support for storing data inside of DGraph.
+// DB provides support for storing data inside of Dgraph.
 type DB struct {
 	Schema schema
 	Mutate mutate
