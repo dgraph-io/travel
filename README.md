@@ -1,6 +1,8 @@
 # Travel
 
-Copyright 2018, 2019, Dgraph
+[![CircleCI](https://circleci.com/gh/dgraph-io/travel.svg?style=svg)](https://circleci.com/gh/dgraph-io/trave)
+
+Copyright 2020 Dgraph
 contact@dgraph.io
 
 ## Licensing

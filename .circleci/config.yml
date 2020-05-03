@@ -1,0 +1,24 @@
+ version: 2
+ jobs:
+   build:
+     machine:
+       image: ubuntu-1604:201903-01
+     steps:
+       - checkout
+       - run:
+           name: Install Go 1.14.2
+           command: |
+               sudo rm -rf /usr/local/go
+               wget -O go.tgz https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz
+               sudo tar -C /usr/local -xzf go.tgz
+               rm go.tgz
+               which go
+               go version
+       - run:
+           name: Download the DB image used in tests
+           command: docker pull dgraph/standalone:v20.03.0
+       - run:
+           name: Run tests
+           command: |
+              cd internal/data
+              go test -v
