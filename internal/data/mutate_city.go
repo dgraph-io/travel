@@ -14,13 +14,6 @@ type mutateCity struct {
 
 var mutCity mutateCity
 
-func (mutateCity) exists(ctx context.Context, query query, city City) bool {
-	if _, err := query.CityByName(ctx, city.Name); err != nil {
-		return false
-	}
-	return true
-}
-
 func (mutateCity) add(ctx context.Context, graphql *graphql.GraphQL, city City) (City, error) {
 	if city.ID != "" {
 		return City{}, errors.New("city contains id")

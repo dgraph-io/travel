@@ -291,7 +291,7 @@ type Place {
 
 input PlaceFilter {
   id: [ID!]
-  name: StringTermFilter
+  name: StringExactFilter
   and: PlaceFilter
   or: PlaceFilter
   not: PlaceFilter

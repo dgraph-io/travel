@@ -15,13 +15,6 @@ type mutatePlace struct {
 
 var mutPlace mutatePlace
 
-func (mutatePlace) exists(ctx context.Context, query query, place Place) bool {
-	if _, err := query.PlaceByName(ctx, place.Name); err != nil {
-		return false
-	}
-	return true
-}
-
 func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place) (Place, error) {
 	if place.ID != "" {
 		return Place{}, errors.New("place contains id")

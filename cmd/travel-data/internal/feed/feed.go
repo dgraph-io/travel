@@ -66,22 +66,22 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 
 	city, err := addCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
 	if err != nil {
-		log.Printf("feed : Work : Store City : ERROR : %+v", err)
+		log.Printf("feed : Work : Add City : ERROR : %v", err)
 		return ErrFailed
 	}
 
 	if err := replaceWeather(ctx, log, db, city.ID, keys.WeatherKey, search.Lat, search.Lng); err != nil {
-		log.Printf("feed : Work : Store Weather : ERROR : %+v", err)
+		log.Printf("feed : Work : Replace Weather : ERROR : %v", err)
 		return ErrFailed
 	}
 
 	if err := replaceAdvisory(ctx, log, db, city.ID, search.CountryCode); err != nil {
-		log.Printf("feed : Work : Store Advisory : ERROR : %+v", err)
+		log.Printf("feed : Work : Replace Advisory : ERROR : %v", err)
 		return ErrFailed
 	}
 
 	if err := addPlaces(ctx, log, db, city, keys.MapKey, search.Keyword, search.Radius); err != nil {
-		log.Printf("feed : Work : Store Advisory : ERROR : %+v", err)
+		log.Printf("feed : Work : Add Place : ERROR : %v", err)
 		return ErrFailed
 	}
 
@@ -90,6 +90,11 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys) error {
 
 // addCity add the specified city into the database.
 func addCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
+	if city, err := db.Query.CityByName(ctx, name); err == nil {
+		log.Printf("feed : Work : City Exists : CityID[%s] Name[%s] Lat[%f] Lng[%f]", city.ID, name, lat, lng)
+		return city, nil
+	}
+
 	city := data.City{
 		Name: name,
 		Lat:  lat,
@@ -97,7 +102,7 @@ func addCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat
 	}
 	city, err := db.Mutate.AddCity(ctx, city)
 	if err != nil {
-		return data.City{}, errors.Wrap(err, "storing city")
+		return data.City{}, errors.Wrapf(err, "adding city: %s", name)
 	}
 
 	log.Printf("feed : Work : Added City : CityID[%s] Name[%s] Lat[%f] Lng[%f]", city.ID, name, lat, lng)
@@ -154,19 +159,24 @@ func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.City
 	}
 	log.Printf("feed : Work : Search Places : filter[%+v]", filter)
 
-	// For now we will test with 40 places.
-	for i := 0; i < 2; i++ {
-		places, errRet := places.Search(ctx, client, filter)
+	// Only add up to the first 100 places.
+	for i := 0; i < 5; i++ {
+		places, errRet := places.Search(ctx, client, &filter)
 		if errRet != nil && errRet != io.EOF {
 			return errors.Wrap(err, "searching places")
 		}
 
 		for _, place := range places {
+			if place, err := db.Query.PlaceByName(ctx, place.Name); err == nil {
+				log.Printf("feed : Work : Place Exists : PlaceID[%s] Name[%s]\n", place.ID, place.Name)
+				continue
+			}
+
 			place, err := db.Mutate.AddPlace(ctx, city.ID, marshal.Place(place))
 			if err != nil {
 				return errors.Wrapf(err, "adding place: %s", place.Name)
 			}
-			log.Printf("feed : Work : Added Place : %s:%s\n", place.ID, place.Name)
+			log.Printf("feed : Work : Added Place : PlaceID[%s] Name[%s]\n", place.ID, place.Name)
 		}
 
 		if errRet == io.EOF {

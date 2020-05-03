@@ -13,15 +13,16 @@ import (
 // TODO
 /*
 	General
-		We are only storing 1 result of places at this time.
 		Decide on UI, Ratel or some CLI tooling.
 		Tests for advisory and weather.
 
 	Building/Testing
-		Write integration tests.
-		Running in Kind with Ready checks
+		Allow tests to use 1 instance of Dgraph in the container.
 		Working with Circle CI
 		traval-data binary gets git information as well.
+
+	Kubernetes
+		Running in Kind with Ready checks
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.

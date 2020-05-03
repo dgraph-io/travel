@@ -37,7 +37,7 @@ type Filter struct {
 }
 
 // Search finds places for the specified search criteria.
-func Search(ctx context.Context, client *maps.Client, filter Filter) ([]Place, error) {
+func Search(ctx context.Context, client *maps.Client, filter *Filter) ([]Place, error) {
 
 	// If this call is not looking for page 1, we need to pace
 	// the searches out. We are using three seconds.

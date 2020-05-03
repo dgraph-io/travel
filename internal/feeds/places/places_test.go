@@ -38,7 +38,7 @@ func TestSearch(t *testing.T) {
 
 			var savePlace string
 			for i := 0; i < 2; i++ {
-				places, err := places.Search(context.Background(), client, filter)
+				places, err := places.Search(context.Background(), client, &filter)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to search for places : %v", failed, testID, err)
 				}

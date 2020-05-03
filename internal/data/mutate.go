@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Error variables to indicate entities exsit.
+// Set of error variables for CRUD operations.
 var (
 	ErrCityExists  = errors.New("city exists")
 	ErrPlaceExists = errors.New("place exists")
@@ -18,11 +18,11 @@ type mutate struct {
 	graphql *graphql.GraphQL
 }
 
-// AddCity first checks to validate the specified city doesn't exists in
-// the database. If it doesn't, then the city is added to the database.
-// It will return a new City with the city ID from the database.
+// AddCity add a new city to the database. If the city already exists
+// this function will fail. It will return a new City value with the city
+// ID from the database.
 func (m *mutate) AddCity(ctx context.Context, city City) (City, error) {
-	if mutCity.exists(ctx, m.query, city) {
+	if _, err := m.query.CityByName(ctx, city.Name); err == nil {
 		return City{}, ErrCityExists
 	}
 
@@ -34,11 +34,11 @@ func (m *mutate) AddCity(ctx context.Context, city City) (City, error) {
 	return city, nil
 }
 
-// AddPlace adds a new place to the database and connects it to the specified
-// city. If the place already exists (by name), the function will return
-// an error ErrPlaceExists.
+// AddPlace add a new place to the database. If the place already exists
+// this function will fail. It will return a new Place value with the city
+// ID from the database.
 func (m *mutate) AddPlace(ctx context.Context, cityID string, place Place) (Place, error) {
-	if mutPlace.exists(ctx, m.query, place) {
+	if _, err := m.query.PlaceByName(ctx, place.Name); err == nil {
 		return Place{}, ErrPlaceExists
 	}
 

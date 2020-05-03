@@ -24,8 +24,6 @@ func TestMutate(t *testing.T) {
 
 // addCity validates a city node can be added to the database.
 func addCity(t *testing.T) {
-	t.Helper()
-
 	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
@@ -67,19 +65,17 @@ func addCity(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould get back the same city by name.", tests.Success, testID)
 
 			cityAdd.ID = ""
-			cityAdd, err = db.Mutate.AddCity(ctx, cityAdd)
+			_, err = db.Mutate.AddCity(ctx, cityAdd)
 			if err == nil {
-				t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same city twice: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same city twice.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tTest %d:\tShould not be able to add the same city twice.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould not be able to add the same city twice: %v", tests.Success, testID, err)
 		}
 	}
 }
 
 // addPlace validates a place can be added to the database.
 func addPlace(t *testing.T) {
-	t.Helper()
-
 	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
@@ -162,6 +158,13 @@ func addPlace(t *testing.T) {
 					t.Fatalf("\t%s\tTest %d:\tShould get back the same place. Diff:\n%s", tests.Failed, testID, diff)
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same place.", tests.Success, testID)
+
+				addPlace.ID = ""
+				_, err = db.Mutate.AddPlace(ctx, cityAdd.ID, addPlace)
+				if err == nil {
+					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same place twice.", tests.Failed, testID)
+				}
+				t.Logf("\t%s\tTest %d:\tShould not be able to add the same place twice: %v", tests.Success, testID, err)
 			}
 		}
 	}
@@ -169,8 +172,6 @@ func addPlace(t *testing.T) {
 
 // replaceAdvisory validates an advisory can be stored in the database.
 func replaceAdvisory(t *testing.T) {
-	t.Helper()
-
 	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 
@@ -240,8 +241,6 @@ func replaceAdvisory(t *testing.T) {
 
 // replaceAdvisory validates weather can be stored in the database.
 func replaceWeather(t *testing.T) {
-	t.Helper()
-
 	apiHost, teardown := tests.NewUnit(t)
 	defer teardown()
 

@@ -11,8 +11,6 @@ import (
 
 // ready provides support for making sure the database is ready to be used.
 func ready(t *testing.T, ctx context.Context, testID int, apiHost string) *data.DB {
-	t.Helper()
-
 	err := data.Readiness(ctx, apiHost, time.Second)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready: %v", tests.Failed, testID, err)
@@ -31,8 +29,6 @@ func ready(t *testing.T, ctx context.Context, testID int, apiHost string) *data.
 // seedCity is a support test help function to consolidate the seeding of a
 // city since so many data tests need this functionality.
 func seedCity(t *testing.T, ctx context.Context, testID int, apiHost string, city data.City) (*data.DB, data.City) {
-	t.Helper()
-
 	db := ready(t, ctx, testID, apiHost)
 
 	if err := db.Schema.Create(ctx); err != nil {
