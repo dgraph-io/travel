@@ -19,5 +19,5 @@
            command: docker pull dgraph/standalone:v20.03.0
        - run:
            name: Run tests
-           command: |
-              go test -v
+           command:
+              go test -v ./...

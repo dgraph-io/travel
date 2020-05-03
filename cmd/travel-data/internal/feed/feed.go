@@ -46,6 +46,7 @@ type Keys struct {
 // that are used to retrieve data.
 type URL struct {
 	Advisory string
+	Weather  string
 }
 
 // Work retrieves and stores the feed data for this API.
@@ -76,17 +77,17 @@ func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys, url URL) err
 		return ErrFailed
 	}
 
-	if err := replaceWeather(ctx, log, db, city.ID, keys.WeatherKey, search.Lat, search.Lng); err != nil {
+	if err := replaceWeather(ctx, log, db, keys.WeatherKey, url.Weather, city.ID, search.Lat, search.Lng); err != nil {
 		log.Printf("feed: Work: Replace Weather: ERROR: %v", err)
 		return ErrFailed
 	}
 
-	if err := replaceAdvisory(ctx, log, db, city.ID, url.Advisory, url.Advisory, search.CountryCode); err != nil {
+	if err := replaceAdvisory(ctx, log, db, url.Advisory, city.ID, search.CountryCode); err != nil {
 		log.Printf("feed: Work: Replace Advisory: ERROR: %v", err)
 		return ErrFailed
 	}
 
-	if err := addPlaces(ctx, log, db, city, keys.MapKey, search.Keyword, search.Radius); err != nil {
+	if err := addPlaces(ctx, log, db, keys.MapKey, city, search.Keyword, search.Radius); err != nil {
 		log.Printf("feed: Work: Add Place: ERROR: %v", err)
 		return ErrFailed
 	}
@@ -116,8 +117,8 @@ func addCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat
 }
 
 // replaceWeather pulls weather information and updates it for the specified city.
-func replaceWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID string, apiKey string, lat float64, lng float64) error {
-	weather, err := weather.Search(ctx, apiKey, lat, lng)
+func replaceWeather(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, url string, cityID string, lat float64, lng float64) error {
+	weather, err := weather.Search(ctx, apiKey, url, lat, lng)
 	if err != nil {
 		return errors.Wrap(err, "searching weather")
 	}
@@ -133,7 +134,7 @@ func replaceWeather(ctx context.Context, log *log.Logger, db *data.DB, cityID st
 }
 
 // replaceAdvisory pulls advisory information and updates it for the specified city.
-func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID string, url string, countryCode string) error {
+func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, url string, cityID string, countryCode string) error {
 	advisory, err := advisory.Search(ctx, url, countryCode)
 	if err != nil {
 		return errors.Wrap(err, "searching advisory")
@@ -150,7 +151,7 @@ func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, cityID s
 }
 
 // addPlaces pulls place information and adds new places to the specified city.
-func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, city data.City, apiKey string, keyword string, radius uint) error {
+func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, city data.City, keyword string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")

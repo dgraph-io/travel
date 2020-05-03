@@ -19,8 +19,8 @@ const (
 	failed  = "\u2717"
 )
 
-// TestPlaces validates searches can be conducted against the Google maps API.
-func TestPlaces(t *testing.T) {
+// TestAdvisory validates searches can be conducted against www.travel-advisory.info.
+func TestAdvisory(t *testing.T) {
 	t.Log("Given the need to retreve an advisory.")
 	{
 		testID := 0

@@ -65,6 +65,7 @@ func run() error {
 		}
 		URL struct {
 			Advisory string `conf:"default:https://www.travel-advisory.info/api"`
+			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		Dgraph struct {
 			APIHost string `conf:"default:localhost:8080"`
@@ -118,6 +119,7 @@ func run() error {
 
 	url := feed.URL{
 		Advisory: cfg.URL.Advisory,
+		Weather:  cfg.URL.Weather,
 	}
 
 	if err := feed.Work(log, dgraph, search, keys, url); err != nil {

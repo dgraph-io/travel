@@ -49,7 +49,7 @@ func TestPlaces(t *testing.T) {
 					t.Logf("\t%s\tTest %d:\tShould get a full page of places.", success, testID)
 				}
 
-				if savePlace == places[0].Name {
+				if savePlace == places[i].Name {
 					t.Errorf("\t%s\tTest %d:\tShould get different places per page.", failed, testID)
 				} else {
 					t.Logf("\t%s\tTest %d:\tShould get different places per page.", success, testID)
