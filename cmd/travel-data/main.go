@@ -15,10 +15,7 @@ import (
 	UI
 		https://observablehq.com/@d3/force-directed-graph
 
-	Building/Testing
-		Working with Circle CI
-
-	travel-api
+	travel-api (coming soon)
 		Identify an end point we need that dgraph can't provide.
 
 	Kubernetes
