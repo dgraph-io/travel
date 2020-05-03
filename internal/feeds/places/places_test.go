@@ -14,8 +14,8 @@ const (
 	failed  = "\u2717"
 )
 
-// TestSearch validates searches can be conducted against the Google maps API.
-func TestSearch(t *testing.T) {
+// TestPlaces validates searches can be conducted against the Google maps API.
+func TestPlaces(t *testing.T) {
 	t.Log("Given the need to retreve places.")
 	{
 		testID := 0

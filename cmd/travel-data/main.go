@@ -13,8 +13,11 @@ import (
 // TODO
 /*
 	General
-		Decide on UI, Ratel or some CLI tooling.
 		Tests for advisory and weather.
+		Tests for places is failing.
+
+	UI
+		https://observablehq.com/@d3/force-directed-graph
 
 	Building/Testing
 		Allow tests to use 1 instance of Dgraph in the container.

@@ -80,7 +80,7 @@ func Search(ctx context.Context, client *maps.Client, filter *Filter) ([]Place, 
 	var places []Place
 	for _, result := range resp.Results {
 		var photoReferenceID string
-		if len(result.Photos) == 0 {
+		if len(result.Photos) > 0 {
 			photoReferenceID = result.Photos[0].PhotoReference
 		}
 
