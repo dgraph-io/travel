@@ -35,11 +35,11 @@ func (m *mutate) DropAll(ctx context.Context) error {
 }
 
 // AddCity add a new city to the database. If the city already exists
-// this function will fail. It will return a new City value with the city
-// ID from the database.
+// this function will fail but the found city is returned. If the city is
+// being added, the city with the id from the database is returned.
 func (m *mutate) AddCity(ctx context.Context, city City) (City, error) {
-	if _, err := m.query.CityByName(ctx, city.Name); err == nil {
-		return City{}, ErrCityExists
+	if city, err := m.query.CityByName(ctx, city.Name); err == nil {
+		return city, ErrCityExists
 	}
 
 	city, err := mutCity.add(ctx, m.graphql, city)
@@ -51,11 +51,11 @@ func (m *mutate) AddCity(ctx context.Context, city City) (City, error) {
 }
 
 // AddPlace add a new place to the database. If the place already exists
-// this function will fail. It will return a new Place value with the city
-// ID from the database.
+// this function will fail but the found place is returned. If the city is
+// being added, the city with the id from the database is returned.
 func (m *mutate) AddPlace(ctx context.Context, cityID string, place Place) (Place, error) {
-	if _, err := m.query.PlaceByName(ctx, place.Name); err == nil {
-		return Place{}, ErrPlaceExists
+	if place, err := m.query.PlaceByName(ctx, place.Name); err == nil {
+		return place, ErrPlaceExists
 	}
 
 	place, err := mutPlace.add(ctx, m.graphql, place)
