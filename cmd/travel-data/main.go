@@ -14,15 +14,15 @@ import (
 /*
 	General
 		Tests for advisory and weather.
-		Tests for places is failing.
 
 	UI
 		https://observablehq.com/@d3/force-directed-graph
 
 	Building/Testing
-		Allow tests to use 1 instance of Dgraph in the container.
 		Working with Circle CI
-		traval-data binary gets git information as well.
+
+	travel-api
+		Identify an end point we need that dgraph can't provide.
 
 	Kubernetes
 		Running in Kind with Ready checks

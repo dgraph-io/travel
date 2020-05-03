@@ -20,5 +20,4 @@
        - run:
            name: Run tests
            command: |
-              cd internal/data
               go test -v
