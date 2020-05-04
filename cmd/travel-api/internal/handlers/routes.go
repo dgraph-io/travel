@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/dgraph-io/travel/internal/mid"
@@ -10,7 +9,7 @@ import (
 )
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger) http.Handler {
+func API(build string, shutdown chan os.Signal, log *log.Logger) *web.App {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
