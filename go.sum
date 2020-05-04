@@ -1,10 +1,10 @@
-github.com/ardanlabs/conf v1.2.1 h1:lxQaqN+Nh9hvDwMGO0wNn8EmEs2FqNlNZ5SvjR4iziY=
-github.com/ardanlabs/conf v1.2.1/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
+github.com/ardanlabs/conf v1.2.2 h1:pWJGXnlWjI9w3v3jayZv/KSEpOBtWFfVPn1WFWLhjbs=
+github.com/ardanlabs/conf v1.2.2/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dimfeld/httptreemux/v5 v5.1.0 h1:eMYq0Ka2Dh2f8p+fEoxM7bR7cno2C5ICQu9wtfa744Q=
-github.com/dimfeld/httptreemux/v5 v5.1.0/go.mod h1:QeEylH57C0v3VO0tkKraVz9oD3Uu93CKPnTLbsidvSw=
+github.com/dimfeld/httptreemux/v5 v5.2.2 h1:8JAUcuNrLbL5uwmvQ4lZVCjuQ/Ioojc+7VGt89aMElU=
+github.com/dimfeld/httptreemux/v5 v5.2.2/go.mod h1:QeEylH57C0v3VO0tkKraVz9oD3Uu93CKPnTLbsidvSw=
 github.com/go-playground/locales v0.13.0 h1:HyWk6mgj5qFqCT5fjGBuRArbVDfE4hi8+e8ceBS/t7Q=
 github.com/go-playground/locales v0.13.0/go.mod h1:taPMhCMXrRLJO55olJkUXHZBHCxTMfnGwq/HNwmWNS8=
 github.com/go-playground/universal-translator v0.17.0 h1:icxd5fm+REJzpZx7ZfpaD876Lmtgy7VtROAbHHXk8no=
@@ -39,8 +39,8 @@ golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1/go.mod h1:tRJNPiyCQ0inRvYxb
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-googlemaps.github.io/maps v0.0.0-20200130222743-aef6b08443c7 h1:CMWtkeDykmTrKFa1Sf94gam5pGZcfHX8MNnKV6uZ4xc=
-googlemaps.github.io/maps v0.0.0-20200130222743-aef6b08443c7/go.mod h1:skwIRP56b3wXI7uVor5+NBjKLuQ3WXPpUvSKq4k7luo=
+googlemaps.github.io/maps v1.1.2 h1:2Atd3jbOTzsr/wFdzJ065KQsNfIBE7yJqh0JL8Nu0x0=
+googlemaps.github.io/maps v1.1.2/go.mod h1:ez+qLvSMuh8umNcocEEhPy3q8NAG4Otq1w09YVqCBgU=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 h1:YR8cESwS4TdDjEe65xsg0ogRM/Nc3DYOhEAlW+xobZo=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

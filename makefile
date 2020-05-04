@@ -17,6 +17,9 @@ up:
 down:
 	docker-compose down
 
+seed:
+	go run cmd/travel-data/main.go
+
 test:
 	go test ./... -count=1
 
@@ -36,6 +39,7 @@ deps-reset:
 
 deps-upgrade:
 	go get -u -t -d -v ./...
+	go mod vendor
 
 deps-cleancache:
 	go clean -modcache
