@@ -54,8 +54,8 @@ func run() error {
 			Radius  int    `conf:"default:5000"`
 		}
 		APIKeys struct {
-			MapsKey    string `conf:"default:AIzaSyBR0-ToiYlrhPlhidE7DA-Zx7EfE7FnUek"`
-			WeatherKey string `conf:"default:b2302a48062dc1da72430c612557498d"`
+			MapsKey    string `conf:"default:AIzaSyAKz3OhgUF-BO3dsFQWEwHsGmAh7BXe15w"`
+			WeatherKey string `conf:"default:5b68961dd2602c2f722f02448d2de823"`
 		}
 		URL struct {
 			Advisory string `conf:"default:https://www.travel-advisory.info/api"`

@@ -1,3 +1,6 @@
+// Package weather is providing support to query the Open Weather API
+// and retrieve weather for a specified city.
+// https://openweathermap.org/api
 package weather
 
 import (
@@ -57,10 +60,21 @@ func Search(ctx context.Context, apiKey string, url string, lat float64, lng flo
 		return Weather{}, errors.Wrapf(err, "unmarshal[%s]", string(data))
 	}
 
+	if res.ID == 0 {
+		return Weather{}, errors.New("invalid API key")
+	}
+
+	var visibility string
+	var description string
+	if len(res.Sky) > 0 {
+		visibility = res.Sky[0].Visibility
+		description = res.Sky[0].Description
+	}
+
 	weather := Weather{
 		CityName:      res.Name,
-		Visibility:    res.Sky[0].Visibility,
-		Desc:          res.Sky[0].Description,
+		Visibility:    visibility,
+		Desc:          description,
 		Temp:          res.Points.Temp,
 		FeelsLike:     res.Points.FeelsLike,
 		MinTemp:       res.Points.MinTemp,

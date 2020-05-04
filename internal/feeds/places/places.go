@@ -1,5 +1,6 @@
 // Package places is providing support to query the Google maps places API
 // and retrieve places for a specified city.
+// https://developers.google.com/places/web-service/intro
 package places
 
 import (

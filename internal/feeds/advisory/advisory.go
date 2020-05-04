@@ -1,3 +1,6 @@
+// Package advisory is providing support to query the Travel Advisory API
+// and retrieve an advisory for a specified city.
+// www.travel-advisory.info
 package advisory
 
 import (
