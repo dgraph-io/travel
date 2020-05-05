@@ -1,5 +1,7 @@
 github.com/ardanlabs/conf v1.2.2 h1:pWJGXnlWjI9w3v3jayZv/KSEpOBtWFfVPn1WFWLhjbs=
 github.com/ardanlabs/conf v1.2.2/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
+github.com/ardanlabs/graphql v1.2.0 h1:TJTMLohyKV7e/BOqyem+jwNDry0XaCuHZE4EhNZDeUc=
+github.com/ardanlabs/graphql v1.2.0/go.mod h1:EVDvwBm2jree7dIrrUUfrmyfPCh+SYjadwwM/uFRI/Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

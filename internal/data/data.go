@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dgraph-io/travel/internal/platform/graphql"
+	"github.com/ardanlabs/graphql"
 )
 
 // DB provides support for storing data inside of Dgraph.
