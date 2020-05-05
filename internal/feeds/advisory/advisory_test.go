@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/dgraph-io/travel/internal/feeds/advisory"
@@ -60,8 +59,7 @@ func mockServer() *httptest.Server {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
-		reader := strings.NewReader(result)
-		io.Copy(w, reader)
+		io.WriteString(w, result)
 	}
 
 	return httptest.NewServer(http.HandlerFunc(f))

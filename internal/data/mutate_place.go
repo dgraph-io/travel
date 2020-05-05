@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dgraph-io/travel/internal/platform/graphql"
+	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
 )
 
