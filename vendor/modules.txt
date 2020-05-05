@@ -1,7 +1,7 @@
 # github.com/ardanlabs/conf v1.2.2
 ## explicit
 github.com/ardanlabs/conf
-# github.com/ardanlabs/graphql v1.1.0
+# github.com/ardanlabs/graphql v1.2.0
 ## explicit
 github.com/ardanlabs/graphql
 # github.com/dimfeld/httptreemux/v5 v5.2.2

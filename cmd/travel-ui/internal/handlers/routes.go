@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -30,7 +30,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger) (*web.App, error
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 		markup := executeTemplate("index", nil)
-		fmt.Fprint(w, string(markup))
+		io.WriteString(w, string(markup))
 		return nil
 	}
 	app.Handle("GET", "/", handler)
