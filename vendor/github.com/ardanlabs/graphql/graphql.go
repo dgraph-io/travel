@@ -1,3 +1,5 @@
+// Package graphql provides support for executing mutations and queries against a
+// database using GraphQL. It was designed specifically for working with [Dgraph](https://dgraph.io/).
 package graphql
 
 import (
@@ -65,7 +67,7 @@ func (g *GraphQL) Query(ctx context.Context, queryString string, response interf
 	return g.QueryWithVars(ctx, cmdQuery, queryString, nil, response)
 }
 
-// QueryPM performs a GraphQL+- query against the configured server.
+// QueryPM performs a GraphQL+- query against the configured Dgraph server.
 func (g *GraphQL) QueryPM(ctx context.Context, queryString string, response interface{}) error {
 	return g.QueryWithVars(ctx, cmdQueryPM, queryString, nil, response)
 }
