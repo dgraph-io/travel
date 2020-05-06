@@ -15,11 +15,11 @@ import (
 
 // These commands represents the set of know graphql commands.
 const (
-	cmdAlter   = "alter"
-	cmdAdmin   = "admin"
-	cmdSchema  = "admin/schema"
-	cmdQuery   = "graphql"
-	cmdQueryPM = "query"
+	CmdAlter   = "alter"
+	CmdAdmin   = "admin"
+	CmdSchema  = "admin/schema"
+	CmdQuery   = "graphql"
+	CmdQueryPM = "query"
 )
 
 // GraphQL represents a system that can accept a graphql query.
@@ -41,35 +41,35 @@ func New(apiHost string, client *http.Client) *GraphQL {
 // CreateSchema performs a schema operation against the configured server.
 func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, response interface{}) error {
 	r := strings.NewReader(schemaString)
-	return g.do(ctx, cmdSchema, r, response)
+	return g.do(ctx, CmdSchema, r, response)
 }
 
 // DropAll perform an alter operatation against the configured server
 // to remove all the data and schema.
 func (g *GraphQL) DropAll(ctx context.Context, response interface{}) error {
 	r := strings.NewReader(`{"drop_all": true}`)
-	return g.do(ctx, cmdAlter, r, response)
+	return g.do(ctx, CmdAlter, r, response)
 }
 
 // QuerySchema performs a schema query operation against the configured server.
 func (g *GraphQL) QuerySchema(ctx context.Context, response interface{}) error {
 	query := `query { getGQLSchema { schema }}`
-	return g.QueryWithVars(ctx, cmdAdmin, query, nil, response)
+	return g.QueryWithVars(ctx, CmdAdmin, query, nil, response)
 }
 
 // Mutate performs a mutation operation against the configured server.
 func (g *GraphQL) Mutate(ctx context.Context, mutationString string, response interface{}) error {
-	return g.QueryWithVars(ctx, cmdQuery, mutationString, nil, response)
+	return g.QueryWithVars(ctx, CmdQuery, mutationString, nil, response)
 }
 
 // Query performs a GraphQL query against the configured server.
 func (g *GraphQL) Query(ctx context.Context, queryString string, response interface{}) error {
-	return g.QueryWithVars(ctx, cmdQuery, queryString, nil, response)
+	return g.QueryWithVars(ctx, CmdQuery, queryString, nil, response)
 }
 
 // QueryPM performs a GraphQL+- query against the configured Dgraph server.
 func (g *GraphQL) QueryPM(ctx context.Context, queryString string, response interface{}) error {
-	return g.QueryWithVars(ctx, cmdQueryPM, queryString, nil, response)
+	return g.QueryWithVars(ctx, CmdQueryPM, queryString, nil, response)
 }
 
 // QueryWithVars performs a query against the configured server with variable substituion.
