@@ -24,7 +24,7 @@ services:
     container_name: dgraph
     networks:
       - shared-network
-    image: dgraph/standalone:v20.03.0
+    image: dgraph/standalone:v20.03.1
     ports:
       - 8000:8000
       - 8080:8080
