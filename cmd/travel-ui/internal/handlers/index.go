@@ -1,8 +1,10 @@
-<!DOCTYPE html>
+package handlers
+
+var indexHTML = `<!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Sample App - Search</title>
-		<meta content="Home Page For Sample App" name="description">
+		<title>Travel Graph</title>
+		<meta content="City Graph" name="description">
 		<meta charset="utf-8">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<link rel="stylesheet" href="/static/css/main.css" rel='stylesheet' type='text/css'/>
@@ -46,7 +48,7 @@
 				window.alert(d.id)
 			}
 			
-			d3.json("/static/data/miserables.json").then(function(data) {
+			d3.json("/data").then(function(data) {
         		var chart = (function(){
           		const links = data.links.map(d => Object.create(d));
           		const nodes = data.nodes.map(d => Object.create(d));
@@ -99,4 +101,4 @@
     })
     </script>
   </body>
-</html>
+</html>`
