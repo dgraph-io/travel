@@ -1,6 +1,7 @@
 # binaries
 cmd/travel-data/travel-data
 cmd/travel-api/travel-api
+cmd/travel-ui/travel-ui
 
 # Mac
 .DS_Store
