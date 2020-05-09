@@ -21,7 +21,7 @@ var indexHTML = `<!DOCTYPE html>
 		<link rel="stylesheet" href="/static/css/main.css" rel='stylesheet' type='text/css'/>
 	</head>
 	<style>
-	.shadowbox {
+	.graphbox {
 		width: 400px;
 		heigth: 500px;
 		border: 1px solid #333;
@@ -29,9 +29,35 @@ var indexHTML = `<!DOCTYPE html>
 		padding: 8px 12px;
 		background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
 	}
+	.databox {
+		width: 400px;
+		heigth: 500px;
+		border: 2px solid #003B62;
+  		font-family: verdana;
+  		background-color: #B5CFE0;
+  		padding-left: 5px;
+	}
+	td {
+		width: 500px;
+		padding: 10px;
+  		text-align: left;
+		vertical-align: top;
+	}
 	</style>
 	<body>
-		<div class="shadowbox"></div>
+		<table>
+			<tr>
+				<td><div class="graphbox"></div></td>
+				<td>
+					<div class="databox">
+						<table>
+							<tr><td><div>City: Sydney</div></td></tr>
+							<tr><td id="data"></td></tr>
+						</table>
+					</div>
+				</td>
+			</tr>
+		</table>
 		<script>
 			var width = 400;	
 			var height = 500;
@@ -67,7 +93,8 @@ var indexHTML = `<!DOCTYPE html>
 			}
 
 			function showInfo(d, i) {
-				window.alert(d.id)
+				var cell = document.getElementById("data");
+				cell.innerText = d.id;
 			}
 			
 			d3.json("/data").then(function(data) {
@@ -122,7 +149,7 @@ var indexHTML = `<!DOCTYPE html>
           
           	return svg.node();
         })();
-		document.querySelector("div.shadowbox").appendChild(chart);
+		document.querySelector("div.graphbox").appendChild(chart);
     })
 	</script>
   </body>
