@@ -44,6 +44,9 @@ func run() error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
+		Dgraph struct {
+			APIHost string `conf:"default:localhost:8080"`
+		}
 	}
 
 	if err := conf.Parse(os.Args[1:], "UI", &cfg); err != nil {
@@ -98,7 +101,7 @@ func run() error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log)
+	handler, err := handlers.UI(build, shutdown, log, cfg.Dgraph.APIHost)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}

@@ -1,5 +1,16 @@
 package handlers
 
+import (
+	"context"
+	"io"
+	"net/http"
+)
+
+func index(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	io.WriteString(w, indexHTML)
+	return nil
+}
+
 var indexHTML = `<!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -9,10 +20,21 @@ var indexHTML = `<!DOCTYPE html>
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<link rel="stylesheet" href="/static/css/main.css" rel='stylesheet' type='text/css'/>
 	</head>
+	<style>
+	.shadowbox {
+		width: 400px;
+		heigth: 500px;
+		border: 1px solid #333;
+		box-shadow: 8px 8px 5px #444;
+		padding: 8px 12px;
+		background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
+	}
+	</style>
 	<body>
+		<div class="shadowbox"></div>
 		<script>
-			var height = 600;
-			var width = 800;
+			var width = 400;	
+			var height = 500;
 			
 			color = (function(){
 			  const scale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -51,15 +73,18 @@ var indexHTML = `<!DOCTYPE html>
 			d3.json("/data").then(function(data) {
         		var chart = (function(){
           		const links = data.links.map(d => Object.create(d));
-          		const nodes = data.nodes.map(d => Object.create(d));
+				  const nodes = data.nodes.map(d => Object.create(d));
+				  
+				const manyBody = d3.forceManyBody()
+					.strength(-200);
 
           		const simulation = d3.forceSimulation(nodes)
               		.force("link", d3.forceLink(links).id(d => d.id))
-              		.force("charge", d3.forceManyBody())
-              		.force("center", d3.forceCenter(width / 2, height / 4));
+					.force("charge", manyBody)
+              		.force("center", d3.forceCenter((width / 2)+(width / 8), (height / 2)+(height / 6)));
 
           		const svg = d3.create("svg")
-              		.attr("viewBox", [0, 0, width, height]);
+              		.attr("viewBox", [10, 10, width, height]);
 
           		const link = svg.append("g")
               		.attr("stroke", "#999")
@@ -97,8 +122,8 @@ var indexHTML = `<!DOCTYPE html>
           
           	return svg.node();
         })();
-		document.querySelector("body").appendChild(chart);
+		document.querySelector("div.shadowbox").appendChild(chart);
     })
-    </script>
+	</script>
   </body>
 </html>`
