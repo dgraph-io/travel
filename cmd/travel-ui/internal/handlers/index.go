@@ -18,7 +18,7 @@ var indexHTML = `<!DOCTYPE html>
 		<meta content="City Graph" name="description">
 		<meta charset="utf-8">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
-		<link rel="stylesheet" href="/static/css/main.css" rel='stylesheet' type='text/css'/>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	</head>
 	<style>
 	.graphbox {
@@ -91,11 +91,6 @@ var indexHTML = `<!DOCTYPE html>
 				  .on("drag", dragged)
 				  .on("end", dragended);
 			}
-
-			function showInfo(d, i) {
-				var cell = document.getElementById("data");
-				cell.innerText = d.id;
-			}
 			
 			d3.json("/data").then(function(data) {
         		var chart = (function(){
@@ -150,7 +145,28 @@ var indexHTML = `<!DOCTYPE html>
           	return svg.node();
         })();
 		document.querySelector("div.graphbox").appendChild(chart);
-    })
+	})
+
+	$.ajaxSetup({
+		contentType: "application/json; charset=utf-8"
+	});
+
+	function showInfo(d, i) {
+		var cell = document.getElementById("data");
+		switch (d.type) {
+			case "advisory":
+				$.post("http://localhost:8080/graphql",
+				'{"query":"query { getCity(id: \\"0x02\\") { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
+				function(o, status){
+					if (typeof o.data === "undefined") {
+						cell.innerText = o.errors[0].message;
+						return;
+					}
+					cell.innerText = o.data.getCity.advisory.id;
+				});
+				break;
+		}
+	}
 	</script>
   </body>
 </html>`

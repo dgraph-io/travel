@@ -43,6 +43,7 @@ func (f fetch) handler(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 type node struct {
 	ID     string `json:"id"`
+	Type   string `json:"type"`
 	Group  int    `json:"group"`
 	Radius int    `json:"radius"`
 	Color  string `json:"color"`
@@ -62,10 +63,10 @@ type doc struct {
 func marshalCity(cityName string, places []data.Place) (string, error) {
 	d := doc{
 		Nodes: []node{
-			{cityName, 0, 20, "blue"},
-			{"Advisory", 1, 15, "red"},
-			{"Weather", 2, 15, "orange"},
-			{"Places", 3, 15, "purple"},
+			{cityName, "city", 0, 20, "blue"},
+			{"Advisory", "advisory", 1, 15, "red"},
+			{"Weather", "weather", 2, 15, "orange"},
+			{"Places", "places", 3, 15, "purple"},
 		},
 		Links: []link{
 			{cityName, "Advisory", 5},
@@ -75,7 +76,7 @@ func marshalCity(cityName string, places []data.Place) (string, error) {
 	}
 
 	for _, place := range places {
-		d.Nodes = append(d.Nodes, node{place.Name, 3, 8, "purple"})
+		d.Nodes = append(d.Nodes, node{place.Name, "place", 3, 8, "purple"})
 		d.Links = append(d.Links, link{"Places", place.Name, 2})
 	}
 
