@@ -20,23 +20,22 @@ import (
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
+	log := log.New(os.Stdout, "TRAVEL : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	defer log.Println("main : Completed")
+
+	if err := run(log); err != nil {
 		log.Println("error :", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-
-	// =========================================================================
-	// Logging
-
-	log := log.New(os.Stdout, "SALES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+func run(log *log.Logger) error {
 
 	// =========================================================================
 	// Configuration
 
 	var cfg struct {
+		conf.Version
 		Web struct {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
@@ -45,14 +44,24 @@ func run() error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 	}
+	cfg.Version.SVN = build
+	cfg.Version.Desc = "copyright information here"
 
-	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
-		if err == conf.ErrHelpWanted {
-			usage, err := conf.Usage("SALES", &cfg)
+	if err := conf.Parse(os.Args[1:], "TRAVEL", &cfg); err != nil {
+		switch err {
+		case conf.ErrHelpWanted:
+			usage, err := conf.Usage("TRAVEL", &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
+			return nil
+		case conf.ErrVersionWanted:
+			version, err := conf.VersionString("TRAVEL", &cfg)
+			if err != nil {
+				return errors.Wrap(err, "generating config version")
+			}
+			fmt.Println(version)
 			return nil
 		}
 		return errors.Wrap(err, "parsing config")

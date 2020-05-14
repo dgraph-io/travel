@@ -1,4 +1,4 @@
-# github.com/ardanlabs/conf v1.2.2
+# github.com/ardanlabs/conf v1.3.2
 ## explicit
 github.com/ardanlabs/conf
 # github.com/ardanlabs/graphql v1.2.1
@@ -35,12 +35,23 @@ github.com/pkg/errors
 ## explicit
 # github.com/stretchr/testify v1.5.1
 ## explicit
+# go.opencensus.io v0.22.3
+## explicit
+go.opencensus.io/internal/tagencoding
+go.opencensus.io/metric/metricdata
+go.opencensus.io/metric/metricproducer
+go.opencensus.io/resource
+go.opencensus.io/stats
+go.opencensus.io/stats/internal
+go.opencensus.io/stats/view
+go.opencensus.io/tag
 # golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 golang.org/x/time/rate
-# googlemaps.github.io/maps v1.1.2
+# googlemaps.github.io/maps v1.2.0
 ## explicit
 googlemaps.github.io/maps
 googlemaps.github.io/maps/internal
+googlemaps.github.io/maps/metrics
 # gopkg.in/go-playground/assert.v1 v1.2.1
 ## explicit
 # gopkg.in/go-playground/validator.v9 v9.31.0
