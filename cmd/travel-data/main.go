@@ -26,23 +26,21 @@ import (
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
-		log.Println("main : ERROR : ", err)
+	log := log.New(os.Stdout, "DATA : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+
+	if err := run(log); err != nil {
+		log.Println("main: error:", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-
-	// =========================================================================
-	// Logging
-
-	log := log.New(os.Stdout, "DATA : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+func run(log *log.Logger) error {
 
 	// =========================================================================
 	// Configuration
 
 	var cfg struct {
+		conf.Version
 		City struct {
 			CountryCode string  `conf:"default:AU"`
 			Name        string  `conf:"default:sydney"`
@@ -65,14 +63,24 @@ func run() error {
 			APIHost string `conf:"default:localhost:8080"`
 		}
 	}
+	cfg.Version.SVN = build
+	cfg.Version.Desc = "copyright information here"
 
-	if err := conf.Parse(os.Args[1:], "PLACES", &cfg); err != nil {
-		if err == conf.ErrHelpWanted {
-			usage, err := conf.Usage("PLACES", &cfg)
+	if err := conf.Parse(os.Args[1:], "DATA", &cfg); err != nil {
+		switch err {
+		case conf.ErrHelpWanted:
+			usage, err := conf.Usage("DATA", &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
+			return nil
+		case conf.ErrVersionWanted:
+			version, err := conf.VersionString("DATA", &cfg)
+			if err != nil {
+				return errors.Wrap(err, "generating config version")
+			}
+			fmt.Println(version)
 			return nil
 		}
 		return errors.Wrap(err, "parsing config")
@@ -81,14 +89,14 @@ func run() error {
 	// =========================================================================
 	// App Starting
 
-	log.Printf("main : Started : Application initializing : version %q", build)
-	defer log.Println("main : Completed")
+	log.Printf("main: Application initializing : version %q", build)
+	defer log.Println("main: Completed")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main : Config :\n%v\n", out)
+	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
 	// Process the feed

@@ -20,18 +20,15 @@ import (
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
-		log.Println("error :", err)
+	log := log.New(os.Stdout, "UI : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+
+	if err := run(log); err != nil {
+		log.Println("main: error:", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-
-	// =========================================================================
-	// Logging
-
-	log := log.New(os.Stdout, "UI : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+func run(log *log.Logger) error {
 
 	// =========================================================================
 	// Configuration
@@ -43,6 +40,9 @@ func run() error {
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
+		}
+		Dgraph struct {
+			APIHost string `conf:"default:localhost:8080"`
 		}
 	}
 
@@ -63,14 +63,14 @@ func run() error {
 
 	// Print the build version for our logs. Also expose it under /debug/vars.
 	expvar.NewString("build").Set(build)
-	log.Printf("main : Started : Application initializing : version %q", build)
+	log.Printf("main: Application initializing : version %q", build)
 	defer log.Println("main : Completed")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main : Config :\n%v\n", out)
+	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
 	// Start Debug Service
@@ -80,17 +80,17 @@ func run() error {
 	//
 	// Not concerned with shutting this down when the application is shutdown.
 
-	log.Println("main : Started : Initializing debugging support")
+	log.Println("main: Initializing debugging support")
 
 	go func() {
-		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
-		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
+		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
+		log.Printf("main: Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
 	}()
 
 	// =========================================================================
 	// Start UI Service
 
-	log.Println("main : Started : Initializing UI support")
+	log.Println("main: Initializing UI support")
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
@@ -98,7 +98,7 @@ func run() error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log)
+	handler, err := handlers.UI(build, shutdown, log, cfg.Dgraph.APIHost)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}
@@ -117,7 +117,7 @@ func run() error {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main : UI listening on %s", ui.Addr)
+		log.Printf("main: UI listening on %s", ui.Addr)
 		serverErrors <- ui.ListenAndServe()
 	}()
 
@@ -130,7 +130,7 @@ func run() error {
 		return errors.Wrap(err, "server error")
 
 	case sig := <-shutdown:
-		log.Printf("main : %v : Start shutdown", sig)
+		log.Printf("main: %v : Start shutdown", sig)
 
 		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
