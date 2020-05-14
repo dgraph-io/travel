@@ -22,16 +22,16 @@ var indexHTML = `<!DOCTYPE html>
 	</head>
 	<style>
 	.graphbox {
-		width: 400px;
-		heigth: 500px;
+		width: 500px;
+		heigth: 600px;
 		border: 1px solid #333;
 		box-shadow: 8px 8px 5px #444;
 		padding: 8px 12px;
 		background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
 	}
 	.databox {
-		width: 400px;
-		heigth: 500px;
+		width: 500px;
+		heigth: 600px;
 		border: 2px solid #003B62;
   		font-family: verdana;
   		background-color: #B5CFE0;
@@ -42,6 +42,8 @@ var indexHTML = `<!DOCTYPE html>
 		padding: 10px;
   		text-align: left;
 		vertical-align: top;
+	}
+	#data {
 	}
 	</style>
 	<body>
@@ -59,8 +61,8 @@ var indexHTML = `<!DOCTYPE html>
 			</tr>
 		</table>
 		<script>
-			var width = 400;	
-			var height = 500;
+			var width = 500;	
+			var height = 600;
 			
 			color = (function(){
 			  const scale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -151,6 +153,11 @@ var indexHTML = `<!DOCTYPE html>
 		contentType: "application/json; charset=utf-8"
 	});
 
+	function convertKelvin(k) {
+		var num = k * 9/5 - 459.67
+		return Math.round((num + Number.EPSILON) * 100) / 100
+	}
+
 	function showInfo(d, i) {
 		var cell = document.getElementById("data");
 		switch (d.type) {
@@ -162,7 +169,42 @@ var indexHTML = `<!DOCTYPE html>
 						cell.innerText = o.errors[0].message;
 						return;
 					}
-					cell.innerText = o.data.getCity.advisory.id;
+					var innerHTML = "<table>";
+					innerHTML += "<tr><td>Advisory</td><td></td></tr>";
+					innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.advisory.id + "</td></tr>";
+					innerHTML += "<tr><td>Country:</td><td>" + o.data.getCity.advisory.country + "</td></tr>";
+					innerHTML += "<tr><td>Country Code:</td><td>" + o.data.getCity.advisory.country_code + "</td></tr>";
+					innerHTML += "<tr><td>Continent:</td><td>" + o.data.getCity.advisory.continent + "</td></tr>";
+					innerHTML += "<tr><td>Score:</td><td>" + o.data.getCity.advisory.score + "</td></tr>";
+					innerHTML += "<tr><td>Message:</td><td>" + o.data.getCity.advisory.message + "</td></tr>";
+					innerHTML += "</table>";
+					cell.innerHTML = innerHTML;
+				});
+				break;
+			case "weather":
+				$.post("http://localhost:8080/graphql",
+				'{"query":"query { getCity(id: \\"0x02\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
+				function(o, status){
+					if (typeof o.data === "undefined") {
+						cell.innerText = o.errors[0].message;
+						return;
+					}
+					var innerHTML = "<table>";
+					innerHTML += "<tr><td>Weather</td><td></td></tr>";
+					innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.weather.id + "</td></tr>";
+					innerHTML += "<tr><td>City Name:</td><td>" + o.data.getCity.weather.city_name + "</td></tr>";
+					innerHTML += "<tr><td>Visibility:</td><td>" + o.data.getCity.weather.visibility + "</td></tr>";
+					innerHTML += "<tr><td>Description:</td><td>" + o.data.getCity.weather.description + "</td></tr>";
+					innerHTML += "<tr><td>Temp:</td><td>" + convertKelvin(o.data.getCity.weather.temp) + "F</td></tr>";
+					innerHTML += "<tr><td>Feels Like:</td><td>" + convertKelvin(o.data.getCity.weather.feels_like) + "F</td></tr>";
+					innerHTML += "<tr><td>Min Temp:</td><td>" + convertKelvin(o.data.getCity.weather.temp_min) + "F</td></tr>";
+					innerHTML += "<tr><td>Max Temp:</td><td>" + convertKelvin(o.data.getCity.weather.temp_max) + "F</td></tr>";
+					innerHTML += "<tr><td>Pressure:</td><td>" + o.data.getCity.weather.pressure + "</td></tr>";
+					innerHTML += "<tr><td>Humidity:</td><td>" + o.data.getCity.weather.humidity + "</td></tr>";
+					innerHTML += "<tr><td>Wind Speed:</td><td>" + o.data.getCity.weather.wind_speed + "</td></tr>";
+					innerHTML += "<tr><td>Wind Direction:</td><td>" + o.data.getCity.weather.wind_direction + "</td></tr>";
+					innerHTML += "</table>";
+					cell.innerHTML = innerHTML;
 				});
 				break;
 		}
