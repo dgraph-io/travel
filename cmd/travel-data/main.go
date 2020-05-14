@@ -27,10 +27,9 @@ var build = "develop"
 
 func main() {
 	log := log.New(os.Stdout, "DATA : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
-	defer log.Println("main : Completed")
 
 	if err := run(log); err != nil {
-		log.Println("main : ERROR : ", err)
+		log.Println("main: error:", err)
 		os.Exit(1)
 	}
 }
@@ -90,14 +89,14 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// App Starting
 
-	log.Printf("main : Started : Application initializing : version %q", build)
-	defer log.Println("main : Completed")
+	log.Printf("main: Application initializing : version %q", build)
+	defer log.Println("main: Completed")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main : Config :\n%v\n", out)
+	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
 	// Process the feed
