@@ -43,7 +43,33 @@ var indexHTML = `<!DOCTYPE html>
   		text-align: left;
 		vertical-align: top;
 	}
-	#data {
+	.bluedot {
+		height: 25px;
+		width: 25px;
+		background-color: blue;
+		border-radius: 50%;
+		border: 1px solid #000;
+	}
+	.reddot {
+		height: 25px;
+		width: 25px;
+		background-color: red;
+		border-radius: 50%;
+		border: 1px solid #000;
+	}
+	.orangedot {
+		height: 25px;
+		width: 25px;
+		background-color: orange;
+		border-radius: 50%;
+		border: 1px solid #000;
+	}
+	.purpledot {
+		height: 25px;
+		width: 25px;
+		background-color: purple;
+		border-radius: 50%;
+		border: 1px solid #000;
 	}
 	</style>
 	<body>
@@ -53,7 +79,26 @@ var indexHTML = `<!DOCTYPE html>
 				<td>
 					<div class="databox">
 						<table>
-							<tr><td><div>City: Sydney</div></td></tr>
+							<tr>
+								<td>
+									<div class="bluedot"></div>
+									<div>City</div>
+								</td>
+								<td>
+									<div class="reddot"></div>
+									<div>Advisory</div>
+								</td>
+								<td>
+									<div class="orangedot"></div>
+									<div>Weather</div>
+								</td>
+								<td>
+									<div class="purpledot"></div>
+									<div>Place</div>
+								</td>
+							</tr>
+						</table>
+						<table>
 							<tr><td id="data"></td></tr>
 						</table>
 					</div>
@@ -161,16 +206,34 @@ var indexHTML = `<!DOCTYPE html>
 	function showInfo(d, i) {
 		var cell = document.getElementById("data");
 		switch (d.type) {
+			case "city":
+				$.post("http://localhost:8080/graphql",
+				'{"query":"query { getCity(id: \\"0x02\\") { id name lat lng } }","variables":null}',
+				function(o, status){
+					if (typeof o.data === "undefined") {
+						cell.innerText = "ERROR: " + o.errors[0].message;
+						return;
+					}
+					var innerHTML = "<table width=\"70%\">";
+					innerHTML += "<tr><td><div class=\"bluedot\"></div></td><td>City</td></tr>";
+					innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.id + "</td></tr>";
+					innerHTML += "<tr><td>Name:</td><td>" + o.data.getCity.name + "</td></tr>";
+					innerHTML += "<tr><td>Lat:</td><td>" + o.data.getCity.lat + "</td></tr>";
+					innerHTML += "<tr><td>Lng:</td><td>" + o.data.getCity.lng + "</td></tr>";
+					innerHTML += "</table>";
+					cell.innerHTML = innerHTML;
+				});
+				break;
 			case "advisory":
 				$.post("http://localhost:8080/graphql",
 				'{"query":"query { getCity(id: \\"0x02\\") { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
 				function(o, status){
 					if (typeof o.data === "undefined") {
-						cell.innerText = o.errors[0].message;
+						cell.innerText = "ERROR: " + o.errors[0].message;
 						return;
 					}
-					var innerHTML = "<table>";
-					innerHTML += "<tr><td>Advisory</td><td></td></tr>";
+					var innerHTML = "<table width=\"70%\">";
+					innerHTML += "<tr><td><div class=\"reddot\"></div></td><td>Advisory</td></tr>";
 					innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.advisory.id + "</td></tr>";
 					innerHTML += "<tr><td>Country:</td><td>" + o.data.getCity.advisory.country + "</td></tr>";
 					innerHTML += "<tr><td>Country Code:</td><td>" + o.data.getCity.advisory.country_code + "</td></tr>";
@@ -186,11 +249,11 @@ var indexHTML = `<!DOCTYPE html>
 				'{"query":"query { getCity(id: \\"0x02\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
 				function(o, status){
 					if (typeof o.data === "undefined") {
-						cell.innerText = o.errors[0].message;
+						cell.innerText = "ERROR: " + o.errors[0].message;
 						return;
 					}
-					var innerHTML = "<table>";
-					innerHTML += "<tr><td>Weather</td><td></td></tr>";
+					var innerHTML = "<table width=\"70%\">";
+					innerHTML += "<tr><td><div class=\"orangedot\"></div></td><td>Weather</td></tr>";
 					innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.weather.id + "</td></tr>";
 					innerHTML += "<tr><td>City Name:</td><td>" + o.data.getCity.weather.city_name + "</td></tr>";
 					innerHTML += "<tr><td>Visibility:</td><td>" + o.data.getCity.weather.visibility + "</td></tr>";
@@ -203,6 +266,24 @@ var indexHTML = `<!DOCTYPE html>
 					innerHTML += "<tr><td>Humidity:</td><td>" + o.data.getCity.weather.humidity + "</td></tr>";
 					innerHTML += "<tr><td>Wind Speed:</td><td>" + o.data.getCity.weather.wind_speed + "</td></tr>";
 					innerHTML += "<tr><td>Wind Direction:</td><td>" + o.data.getCity.weather.wind_direction + "</td></tr>";
+					innerHTML += "</table>";
+					cell.innerHTML = innerHTML;
+				});
+				break;
+			case "place":
+				$.post("http://localhost:8080/graphql",
+				'{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
+				function(o, status){
+					if (typeof o.data === "undefined") {
+						cell.innerText = "ERROR: " + o.errors[0].message;
+						return;
+					}
+					var innerHTML = "<table width=\"70%\">";
+					innerHTML += "<tr><td><div class=\"purpledot\"></div></td><td>Place</td></tr>";
+					innerHTML += "<tr><td>ID:</td><td>" + o.data.queryPlace[0].id + "</td></tr>";
+					innerHTML += "<tr><td>Name:</td><td>" + o.data.queryPlace[0].name + "</td></tr>";
+					innerHTML += "<tr><td>Address:</td><td>" + o.data.queryPlace[0].address + "</td></tr>";
+					innerHTML += "<tr><td>Avg User Rating:</td><td>" + o.data.queryPlace[0].avg_user_rating + "</td></tr>";
 					innerHTML += "</table>";
 					cell.innerHTML = innerHTML;
 				});
