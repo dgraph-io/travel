@@ -44,7 +44,7 @@ func (cityMarshal) add(city City) (string, cityIDResult) {
 			lng: %f
 		}])
 		%s
-	}`, city.Name, city.Lat, city.Lng, result.graphql())
+	}`, city.Name, city.Lat, city.Lng, result.marshal())
 
 	return mutation, result
 }
@@ -57,7 +57,7 @@ type cityIDResult struct {
 	} `json:"addCity"`
 }
 
-func (cityIDResult) graphql() string {
+func (cityIDResult) marshal() string {
 	return `{
 		city {
 			id

@@ -126,7 +126,7 @@ mutation {
 }`, cityID, weather.ID, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
 		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
-		weather.WindSpeed, result.graphql())
+		weather.WindSpeed, result.marshal())
 
 	return mutation, result
 }

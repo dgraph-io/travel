@@ -83,7 +83,7 @@ mutation {
 	%s
 }`, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
-		result.graphql())
+		result.marshal())
 
 	return mutation, result
 }
@@ -112,7 +112,7 @@ mutation {
 	%s
 }`, cityID, advisory.ID, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
-		result.graphql())
+		result.marshal())
 
 	return mutation, result
 }
@@ -123,7 +123,7 @@ func (advisoryMarshal) delete(advisoryID string) (string, deleteAdvisoryResult) 
 mutation {
 	deleteAdvisory(filter: { id: [%q] })
 	%s
-}`, advisoryID, result.graphql())
+}`, advisoryID, result.marshal())
 
 	return mutation, result
 }
@@ -136,7 +136,7 @@ type advisoryIDResult struct {
 	} `json:"addAdvisory"`
 }
 
-func (advisoryIDResult) graphql() string {
+func (advisoryIDResult) marshal() string {
 	return `{
 		advisory {
 			id
@@ -151,7 +151,7 @@ type deleteAdvisoryResult struct {
 	} `json:"deleteAdvisory"`
 }
 
-func (deleteAdvisoryResult) graphql() string {
+func (deleteAdvisoryResult) marshal() string {
 	return `{
 		msg,
 		numUids,

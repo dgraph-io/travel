@@ -63,7 +63,7 @@ func (m *mutate) AddPlace(ctx context.Context, cityID string, place Place) (Plac
 		return Place{}, errors.New("adding place to database")
 	}
 
-	if err := mutPlace.updateCity(ctx, m.graphql, cityID, place); err != nil {
+	if err := mutPlace.updateCity(ctx, m.graphql, cityID, place.ID); err != nil {
 		return Place{}, errors.Wrap(err, "adding place to city in database")
 	}
 
