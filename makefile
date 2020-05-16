@@ -22,6 +22,7 @@ seed:
 
 test:
 	go test ./... -count=1
+	staticcheck ./...
 
 clean:
 	docker system prune -f
