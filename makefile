@@ -20,6 +20,9 @@ down:
 seed:
 	go run cmd/travel-data/main.go
 
+ui:
+	go run cmd/travel-ui/main.go
+
 test:
 	go test ./... -count=1
 	staticcheck ./...
