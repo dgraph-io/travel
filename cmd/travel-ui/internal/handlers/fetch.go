@@ -87,9 +87,3 @@ func marshalCity(cityName string, places []data.Place) (string, error) {
 
 	return string(data), nil
 }
-
-var errDoc = `{
-	"nodes": [
-	  {"id": %q, "group": 0, "radius": 15, "color": "red"},
-	]
-}`
