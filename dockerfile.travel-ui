@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.14.3 as build_travel-api
+FROM golang:1.14.3 as build_travel-ui
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
@@ -13,7 +13,7 @@ RUN mkdir -p /service
 WORKDIR /service
 COPY . .
 
-# Build the api binary. We are doing this last since this will be different
+# Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
 WORKDIR /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
 RUN go build -ldflags "-X main.build=${VCS_REF}"
@@ -25,7 +25,7 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
-COPY --from=build_travel-api /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
+COPY --from=build_travel-ui /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
 CMD /app/main
 

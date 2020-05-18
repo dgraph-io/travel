@@ -19,6 +19,19 @@ services:
     # environment:
       # - GODEBUG=gctrace=1
 
+  # This is the core service API.
+  travel-ui:
+    container_name: travel-ui
+    networks:
+      - shared-network
+    image: travel-ui-amd64:1.0
+    ports:
+      - 80:80 # API
+      - 4080:4080 # DEBUG API
+    environment:
+      - UI_DGRAPH_API_HOST=dgraph:8080
+      # - GODEBUG=gctrace=1
+
   # Database
   dgraph:
     container_name: dgraph
@@ -26,7 +39,4 @@ services:
       - shared-network
     image: dgraph/standalone:v20.03.1
     ports:
-      - 8000:8000
       - 8080:8080
-      - 9080:9080
-

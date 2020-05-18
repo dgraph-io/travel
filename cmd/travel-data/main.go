@@ -60,7 +60,7 @@ func run(log *log.Logger) error {
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		Dgraph struct {
-			APIHost string `conf:"default:localhost:8080"`
+			APIHost string `conf:"default:0.0.0.0:8080"`
 		}
 	}
 	cfg.Version.SVN = build

@@ -42,7 +42,7 @@ func run(log *log.Logger) error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Dgraph struct {
-			APIHost string `conf:"default:localhost:8080"`
+			APIHost string `conf:"default:0.0.0.0:8080"`
 		}
 	}
 
