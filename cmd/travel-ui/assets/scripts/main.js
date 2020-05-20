@@ -11,7 +11,7 @@ function showInfo(d, i) {
     var cell = document.getElementById("data");
     switch (d.type) {
         case "city":
-            $.post("http://localhost:8080/graphql",
+            $.post(Dgraph,
             '{"query":"query { getCity(id: \\"0x02\\") { id name lat lng } }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
@@ -29,7 +29,7 @@ function showInfo(d, i) {
             });
             break;
         case "advisory":
-            $.post("http://localhost:8080/graphql",
+            $.post(Dgraph,
             '{"query":"query { getCity(id: \\"0x02\\") { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
@@ -49,7 +49,7 @@ function showInfo(d, i) {
             });
             break;
         case "weather":
-            $.post("http://localhost:8080/graphql",
+            $.post(Dgraph,
             '{"query":"query { getCity(id: \\"0x02\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
@@ -75,7 +75,7 @@ function showInfo(d, i) {
             });
             break;
         case "place":
-            $.post("http://localhost:8080/graphql",
+            $.post(Dgraph,
             '{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {

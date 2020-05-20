@@ -1,33 +1,62 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
-func index(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	f, err := os.Open("assets/views/index.html")
+type index struct {
+	tmpl   *template.Template
+	dgraph string
+}
+
+func newIndex(dgraph string) (*index, error) {
+	data, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
-		return errors.Wrap(err, "opening index page")
+		return nil, errors.Wrap(err, "reading index page")
 	}
-	io.Copy(w, f)
+
+	tmpl := template.New("index")
+	if _, err := tmpl.Parse(string(data)); err != nil {
+		return nil, errors.Wrap(err, "creating template")
+	}
+
+	index := index{
+		dgraph: "http://" + dgraph + "/graphql",
+		tmpl:   tmpl,
+	}
+
+	return &index, nil
+}
+
+func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	var markup bytes.Buffer
+	vars := map[string]interface{}{"APIHost": i.dgraph}
+
+	if err := i.tmpl.Execute(&markup, vars); err != nil {
+		return errors.Wrap(err, "executing template")
+	}
+
+	io.Copy(w, &markup)
 	return nil
 }
 
 type fetch struct {
-	apiHost string
+	dgraph string
 }
 
 func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	cityName := "sydney"
 
-	db, err := data.NewDB(f.apiHost)
+	db, err := data.NewDB(f.dgraph)
 	if err != nil {
 		return errors.Wrap(err, "new db")
 	}

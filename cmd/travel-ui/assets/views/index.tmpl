@@ -4,11 +4,14 @@
 		<title>Travel Graph</title>
 		<meta content="City Graph" name="description">
         <meta charset="utf-8">
-        <link rel="stylesheet" href="/assets/styles/main.css">
+        <link rel="stylesheet" href="/assets/styles/main.css?v3">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="/assets/scripts/d3.js"></script>
-        <script src="/assets/scripts/main.js"></script>
+        <script src="/assets/scripts/d3.js?v3"></script>
+		<script src="/assets/scripts/main.js?v3"></script>
+		<script>
+			var Dgraph = {{.APIHost}};
+		</script>
 	</head>
 	<body>
 		<table>

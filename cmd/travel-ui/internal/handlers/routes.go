@@ -8,14 +8,21 @@ import (
 
 	"github.com/dgraph-io/travel/internal/mid"
 	"github.com/dgraph-io/travel/internal/platform/web"
+	"github.com/pkg/errors"
 )
 
 // UI constructs an http.Handler with all application routes defined.
-func UI(build string, shutdown chan os.Signal, log *log.Logger, apiHost string) (*web.App, error) {
+func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph string) (*web.App, error) {
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
-	app.Handle("GET", "/", index)
+	// Build index page and set the route.
+	index, err := newIndex(dgraph)
+	if err != nil {
+		return nil, errors.Wrap(err, "loading index template")
+	}
+	app.Handle("GET", "/", index.handler)
 
+	// Set the route to load assets.
 	fs := http.FileServer(http.Dir("assets"))
 	fs = http.StripPrefix("/assets/", fs)
 	f := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
@@ -24,8 +31,9 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, apiHost string) 
 	}
 	app.Handle("GET", "/assets/*", f)
 
+	// Set the route to load data for the graph.
 	fetch := fetch{
-		apiHost: apiHost,
+		dgraph: dgraph,
 	}
 	app.Handle("GET", "/data", fetch.data)
 
