@@ -5,16 +5,26 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
+func index(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	f, err := os.Open("assets/views/index.html")
+	if err != nil {
+		return errors.Wrap(err, "opening index page")
+	}
+	io.Copy(w, f)
+	return nil
+}
+
 type fetch struct {
 	apiHost string
 }
 
-func (f fetch) handler(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	cityName := "sydney"
 
 	db, err := data.NewDB(f.apiHost)

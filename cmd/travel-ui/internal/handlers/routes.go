@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/dgraph-io/travel/internal/mid"
@@ -14,10 +16,18 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, apiHost string) 
 
 	app.Handle("GET", "/", index)
 
+	fs := http.FileServer(http.Dir("assets"))
+	fs = http.StripPrefix("/assets/", fs)
+	f := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		fs.ServeHTTP(w, r)
+		return nil
+	}
+	app.Handle("GET", "/assets/*", f)
+
 	fetch := fetch{
 		apiHost: apiHost,
 	}
-	app.Handle("GET", "/data", fetch.handler)
+	app.Handle("GET", "/data", fetch.data)
 
 	return app, nil
 }

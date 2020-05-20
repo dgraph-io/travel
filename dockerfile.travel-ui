@@ -25,6 +25,7 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
+COPY --from=build_travel-ui /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/assets/ /app/assets/
 COPY --from=build_travel-ui /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
 CMD /app/main
