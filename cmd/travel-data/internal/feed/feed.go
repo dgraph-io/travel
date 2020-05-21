@@ -25,7 +25,7 @@ type Search struct {
 	CityName    string
 	Lat         float64
 	Lng         float64
-	Keyword     string
+	Keywords    []string
 	Radius      uint
 }
 
@@ -50,18 +50,18 @@ func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL
 	log.Println("feed: Work: Wait for the database is ready ...")
 	err := data.Readiness(ctx, dgraph.APIHostInside, 5*time.Second)
 	if err != nil {
-		log.Printf("feed: Work: Readiness: ERROR: %+v", err)
+		log.Printf("feed: Work: Readiness: ERROR: %v", err)
 		return ErrFailed
 	}
 
 	db, err := data.NewDB(dgraph)
 	if err != nil {
-		log.Printf("feed: Work: New Data: ERROR: %+v", err)
+		log.Printf("feed: Work: New Data: ERROR: %v", err)
 		return ErrFailed
 	}
 
 	if err := db.Schema.Create(ctx); err != nil {
-		log.Printf("feed: Work: Create Schema: ERROR: %+v", err)
+		log.Printf("feed: Work: Create Schema: ERROR: %v", err)
 		return ErrFailed
 	}
 
@@ -81,7 +81,7 @@ func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL
 		return ErrFailed
 	}
 
-	if err := addPlaces(ctx, log, db, keys.MapKey, city, search.Keyword, search.Radius); err != nil {
+	if err := addPlaces(ctx, log, db, keys.MapKey, city, search.Keywords, search.Radius); err != nil {
 		log.Printf("feed: Work: Add Place: ERROR: %v", err)
 		return ErrFailed
 	}
@@ -145,43 +145,45 @@ func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, url stri
 }
 
 // addPlaces pulls place information and adds new places to the specified city.
-func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, city data.City, keyword string, radius uint) error {
+func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, city data.City, keywords []string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
 	}
 
-	filter := places.Filter{
-		Name:    city.Name,
-		Lat:     city.Lat,
-		Lng:     city.Lng,
-		Keyword: keyword,
-		Radius:  radius,
-	}
-	log.Printf("feed: Work: Search Places: filter: %v]", filter)
-
-	// Only add up to the first 100 places.
-	for i := 0; i < 5; i++ {
-		places, errRet := places.Search(ctx, client, &filter)
-		if errRet != nil && errRet != io.EOF {
-			return errors.Wrap(err, "searching places")
+	for _, placeType := range keywords {
+		filter := places.Filter{
+			Name:    city.Name,
+			Lat:     city.Lat,
+			Lng:     city.Lng,
+			Keyword: placeType,
+			Radius:  radius,
 		}
+		log.Printf("feed: Work: Search Places: filter: %v]", filter)
 
-		for _, place := range places {
-			place, err := db.Mutate.AddPlace(ctx, city.ID, marshal.Place(place))
-			if err != nil && err != data.ErrPlaceExists {
-				return errors.Wrapf(err, "adding place: %s", place.Name)
+		// Only store up to the first 100 places.
+		for i := 0; i < 5; i++ {
+			places, errRet := places.Search(ctx, client, &filter)
+			if errRet != nil && errRet != io.EOF {
+				return errors.Wrap(err, "searching places")
 			}
 
-			if err == data.ErrPlaceExists {
-				log.Printf("feed: Work: Place Existed: ID: %s Name: %s", place.ID, place.Name)
-			} else {
-				log.Printf("feed: Work: Added Place: ID: %s Name: %s", place.ID, place.Name)
-			}
-		}
+			for _, place := range places {
+				place, err := db.Mutate.AddPlace(ctx, city.ID, marshal.Place(place, placeType))
+				if err != nil && err != data.ErrPlaceExists {
+					return errors.Wrapf(err, "adding place: %s", place.Name)
+				}
 
-		if errRet == io.EOF {
-			break
+				if err == data.ErrPlaceExists {
+					log.Printf("feed: Work: Place Existed: ID: %s Name: %s", place.ID, place.Name)
+				} else {
+					log.Printf("feed: Work: Added Place: ID: %s Name: %s", place.ID, place.Name)
+				}
+			}
+
+			if errRet == io.EOF {
+				break
+			}
 		}
 	}
 

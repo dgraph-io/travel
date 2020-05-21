@@ -33,6 +33,9 @@ ui:
 	cd cmd/travel-ui; \
 	go run main.go --web-ui-host=0.0.0.0:81
 
+database:
+	docker run -it -p 8080:8080 dgraph/standalone:v20.03.1
+
 test:
 	go test ./... -count=1
 	staticcheck ./...

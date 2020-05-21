@@ -20,7 +20,7 @@ type City {
 	lat: Float!
 	lng: Float!
 	name: String! @search(by: [exact])
-	places: [Place]
+	places: [Place] @hasInverse(field: city)
 	weather: Weather
 }
 
@@ -39,6 +39,7 @@ type Place {
 	id: ID!
 	address: String
 	avg_user_rating: Float
+	city: City!
 	city_name: String!
 	gmaps_url: String
 	lat: Float!
@@ -48,6 +49,7 @@ type Place {
 	no_user_rating: Int
 	place_id: String!
 	photo_id: String
+	type: String @search(by: [exact])
 }
 
 type Weather {

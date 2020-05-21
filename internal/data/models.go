@@ -11,6 +11,8 @@ type City struct {
 // Place contains the place data points captured from the API.
 type Place struct {
 	ID               string   `json:"id,omitempty"`
+	Type             string   `json:"type"`
+	CityID           string   `json:"city_id"`
 	PlaceID          string   `json:"place_id"`
 	CityName         string   `json:"city_name"`
 	Name             string   `json:"name"`

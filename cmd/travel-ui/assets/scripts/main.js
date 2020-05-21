@@ -76,7 +76,7 @@ function showInfo(d, i) {
             break;
         case "place":
             $.post(Dgraph,
-            '{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
+            '{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id type } }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -85,6 +85,7 @@ function showInfo(d, i) {
                 var innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"purpledot\"></div></td><td>Place</td></tr>";
                 innerHTML += "<tr><td>ID:</td><td>" + o.data.queryPlace[0].id + "</td></tr>";
+                innerHTML += "<tr><td>Type:</td><td>" + o.data.queryPlace[0].type + "</td></tr>";
                 innerHTML += "<tr><td>Name:</td><td>" + o.data.queryPlace[0].name + "</td></tr>";
                 innerHTML += "<tr><td>Address:</td><td>" + o.data.queryPlace[0].address + "</td></tr>";
                 innerHTML += "<tr><td>Avg User Rating:</td><td>" + o.data.queryPlace[0].avg_user_rating + "</td></tr>";

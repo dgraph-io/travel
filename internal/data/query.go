@@ -167,6 +167,7 @@ query {
 		no_user_rating
 		place_id
 		photo_id
+		type
 	}
 }`, placeID)
 
@@ -204,6 +205,7 @@ query {
 		no_user_rating
 		place_id
 		photo_id
+		type
 	}
 }`, name)
 
@@ -241,6 +243,7 @@ query {
 			no_user_rating
 			place_id
 			photo_id
+			type
 		}
 	}
 }`, cityID)

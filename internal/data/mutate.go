@@ -44,7 +44,7 @@ func (m *mutate) AddCity(ctx context.Context, city City) (City, error) {
 
 	city, err := mutCity.add(ctx, m.graphql, city)
 	if err != nil {
-		return City{}, errors.New("adding city to database")
+		return City{}, errors.Wrap(err, "adding city to database")
 	}
 
 	return city, nil
@@ -58,9 +58,9 @@ func (m *mutate) AddPlace(ctx context.Context, cityID string, place Place) (Plac
 		return place, ErrPlaceExists
 	}
 
-	place, err := mutPlace.add(ctx, m.graphql, place)
+	place, err := mutPlace.add(ctx, m.graphql, place, cityID)
 	if err != nil {
-		return Place{}, errors.New("adding place to database")
+		return Place{}, errors.Wrap(err, "adding place to database")
 	}
 
 	if err := mutPlace.updateCity(ctx, m.graphql, cityID, place.ID); err != nil {
