@@ -7,6 +7,7 @@ import (
 
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/cmd/travel-data/internal/feed"
+	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
@@ -60,7 +61,9 @@ func run(log *log.Logger) error {
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		Dgraph struct {
-			APIHost string `conf:"default:0.0.0.0:8080"`
+			Protocol       string `conf:"default:http"`
+			APIHost        string `conf:"default:0.0.0.0:8080"`
+			BasicAuthToken string
 		}
 	}
 	cfg.Version.SVN = build
@@ -101,8 +104,10 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Process the feed
 
-	dgraph := feed.Dgraph{
-		APIHost: cfg.Dgraph.APIHost,
+	dgraph := data.Dgraph{
+		Protocol:       cfg.Dgraph.Protocol,
+		APIHostInside:  cfg.Dgraph.APIHost,
+		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
 	}
 
 	search := feed.Search{

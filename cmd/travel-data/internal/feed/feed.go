@@ -18,12 +18,6 @@ import (
 // so the correct error code is returned.
 var ErrFailed = errors.New("feed failed")
 
-// Dgraph represents the IP and Ports we need to talk to the
-// server for the different functions we need to perform.
-type Dgraph struct {
-	APIHost string
-}
-
 // Search represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type Search struct {
@@ -50,17 +44,17 @@ type URL struct {
 }
 
 // Work retrieves and stores the feed data for this API.
-func Work(log *log.Logger, dgraph Dgraph, search Search, keys Keys, url URL) error {
+func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL) error {
 	ctx := context.Background()
 
 	log.Println("feed: Work: Wait for the database is ready ...")
-	err := data.Readiness(ctx, dgraph.APIHost, 5*time.Second)
+	err := data.Readiness(ctx, dgraph.APIHostInside, 5*time.Second)
 	if err != nil {
 		log.Printf("feed: Work: Readiness: ERROR: %+v", err)
 		return ErrFailed
 	}
 
-	db, err := data.NewDB(dgraph.APIHost)
+	db, err := data.NewDB(dgraph)
 	if err != nil {
 		log.Printf("feed: Work: New Data: ERROR: %+v", err)
 		return ErrFailed

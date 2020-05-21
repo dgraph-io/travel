@@ -8,6 +8,15 @@ import (
 	"github.com/ardanlabs/graphql"
 )
 
+// Dgraph represents the IP and Ports we need to talk to the
+// server for the different functions we need to perform.
+type Dgraph struct {
+	Protocol       string
+	APIHostInside  string
+	APIHostOutside string
+	BasicAuthToken string
+}
+
 // DB provides support for storing data inside of Dgraph.
 type DB struct {
 	Schema schema
@@ -17,7 +26,7 @@ type DB struct {
 
 // NewDB constructs a data value for use to store data inside
 // of the Dgraph database.
-func NewDB(apiHost string) (*DB, error) {
+func NewDB(dgraph Dgraph) (*DB, error) {
 	client := http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -34,7 +43,7 @@ func NewDB(apiHost string) (*DB, error) {
 		},
 	}
 
-	graphql := graphql.New(apiHost, &client)
+	graphql := graphql.New(dgraph.Protocol, dgraph.APIHostInside, dgraph.BasicAuthToken, &client)
 
 	db := DB{
 		Schema: schema{graphql: graphql},

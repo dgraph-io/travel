@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/graphql"
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/platform/tests"
 )
@@ -17,7 +18,11 @@ func ready(t *testing.T, ctx context.Context, testID int, apiHost string) *data.
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to to see Dgraph is ready.", tests.Success, testID)
 
-	db, err := data.NewDB(apiHost)
+	dgraph := data.Dgraph{
+		Protocol:      graphql.HTTP,
+		APIHostInside: apiHost,
+	}
+	db, err := data.NewDB(dgraph)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to connect to Dgraph: %v", tests.Failed, testID, err)
 	}

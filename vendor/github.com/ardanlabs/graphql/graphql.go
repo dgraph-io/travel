@@ -22,19 +22,27 @@ const (
 	CmdQueryPM = "query"
 )
 
+// These are the supported protocols.
+const (
+	HTTP  = "http"
+	HTTPS = "https"
+)
+
 // GraphQL represents a system that can accept a graphql query.
 type GraphQL struct {
-	url    string
-	client *http.Client
+	url            string
+	basicAuthToken string
+	client         *http.Client
 }
 
 // New constructs a GraphQL for use to making queries agains a
 // specified host. The apiHost is just the IP:Port of the
 // Dgraph API endpoint.
-func New(apiHost string, client *http.Client) *GraphQL {
+func New(protocol string, apiHost string, basicAuthToken string, client *http.Client) *GraphQL {
 	return &GraphQL{
-		url:    "http://" + apiHost + "/",
-		client: client,
+		url:            fmt.Sprintf("%s://%s/", protocol, apiHost),
+		basicAuthToken: basicAuthToken,
+		client:         client,
 	}
 }
 
@@ -107,6 +115,9 @@ func (g *GraphQL) do(ctx context.Context, command string, r io.Reader, response 
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	if g.basicAuthToken != "" {
+		req.Header.Set("Authorization: Basic", g.basicAuthToken)
+	}
 
 	resp, err := g.client.Do(req)
 	if err != nil {

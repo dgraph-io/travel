@@ -1,7 +1,7 @@
 # github.com/ardanlabs/conf v1.3.2
 ## explicit
 github.com/ardanlabs/conf
-# github.com/ardanlabs/graphql v1.2.1
+# github.com/ardanlabs/graphql v1.3.0
 ## explicit
 github.com/ardanlabs/graphql
 # github.com/dimfeld/httptreemux/v5 v5.2.2
@@ -15,7 +15,7 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.17.0
 ## explicit
 github.com/go-playground/universal-translator
-# github.com/google/go-cmp v0.4.0
+# github.com/google/go-cmp v0.4.1
 ## explicit
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff

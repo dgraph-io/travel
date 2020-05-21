@@ -13,6 +13,7 @@ import (
 
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/cmd/travel-ui/internal/handlers"
+	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
@@ -42,7 +43,10 @@ func run(log *log.Logger) error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Dgraph struct {
-			APIHost string `conf:"default:0.0.0.0:8080"`
+			Protocol       string `conf:"default:http"`
+			APIHostInside  string `conf:"default:0.0.0.0:8080"`
+			APIHostOutside string `conf:"default:0.0.0.0:8080"`
+			BasicAuthToken string
 		}
 	}
 
@@ -97,8 +101,16 @@ func run(log *log.Logger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
+	// Capture the configuration for Dgraph.
+	dgraph := data.Dgraph{
+		Protocol:       cfg.Dgraph.Protocol,
+		APIHostInside:  cfg.Dgraph.APIHostInside,
+		APIHostOutside: cfg.Dgraph.APIHostOutside,
+		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
+	}
+
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log, cfg.Dgraph.APIHost)
+	handler, err := handlers.UI(build, shutdown, log, dgraph)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}

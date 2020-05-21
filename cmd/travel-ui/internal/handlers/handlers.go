@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -14,11 +15,11 @@ import (
 )
 
 type index struct {
-	tmpl   *template.Template
-	dgraph string
+	tmpl            *template.Template
+	graphQLEndpoint string
 }
 
-func newIndex(dgraph string) (*index, error) {
+func newIndex(dgraph data.Dgraph) (*index, error) {
 	data, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")
@@ -30,8 +31,8 @@ func newIndex(dgraph string) (*index, error) {
 	}
 
 	index := index{
-		dgraph: "http://" + dgraph + "/graphql",
-		tmpl:   tmpl,
+		graphQLEndpoint: fmt.Sprintf("%s://%s/graphql", dgraph.Protocol, dgraph.APIHostOutside),
+		tmpl:            tmpl,
 	}
 
 	return &index, nil
@@ -39,7 +40,7 @@ func newIndex(dgraph string) (*index, error) {
 
 func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	var markup bytes.Buffer
-	vars := map[string]interface{}{"APIHost": i.dgraph}
+	vars := map[string]interface{}{"GraphQLEndpoint": i.graphQLEndpoint}
 
 	if err := i.tmpl.Execute(&markup, vars); err != nil {
 		return errors.Wrap(err, "executing template")
@@ -50,7 +51,7 @@ func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 type fetch struct {
-	dgraph string
+	dgraph data.Dgraph
 }
 
 func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
