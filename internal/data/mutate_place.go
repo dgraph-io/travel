@@ -19,6 +19,9 @@ func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Plac
 	if place.ID != "" {
 		return Place{}, errors.New("place contains id")
 	}
+	if place.CityID.ID == "" {
+		return Place{}, errors.New("cityid not provided")
+	}
 
 	for i := range place.LocationType {
 		if !strings.HasPrefix(place.LocationType[i], `"`) {
@@ -58,6 +61,10 @@ mutation {
 	addPlace(input: [{
 		address: %q
 		avg_user_rating: %f
+		category: %q
+		city: {
+			id: %q
+		}
 		city_name: %q
 		gmaps_url: %q
 		lat: %f
@@ -69,7 +76,7 @@ mutation {
 		photo_id: %q
 	}])
 	%s
-}`, place.Address, place.AvgUserRating, place.CityName, place.GmapsURL,
+}`, place.Address, place.AvgUserRating, place.Category, place.CityID.ID, place.CityName, place.GmapsURL,
 		place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
 		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID,
 		result.marshal())

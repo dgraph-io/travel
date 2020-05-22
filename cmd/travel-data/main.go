@@ -49,8 +49,8 @@ func run(log *log.Logger) error {
 			Lng         float64 `conf:"default:151.209900"`
 		}
 		Search struct {
-			Keyword string `conf:"default:hotels"`
-			Radius  int    `conf:"default:5000"`
+			Categories []string `conf:"default:mcdonalds;dominos;kfc"`
+			Radius     int      `conf:"default:5000"`
 		}
 		APIKeys struct {
 			MapsKey    string `conf:"default:AIzaSyAKz3OhgUF-BO3dsFQWEwHsGmAh7BXe15w"`
@@ -115,7 +115,7 @@ func run(log *log.Logger) error {
 		CityName:    cfg.City.Name,
 		Lat:         cfg.City.Lat,
 		Lng:         cfg.City.Lng,
-		Keyword:     cfg.Search.Keyword,
+		Categories:  cfg.Search.Categories,
 		Radius:      uint(cfg.Search.Radius),
 	}
 

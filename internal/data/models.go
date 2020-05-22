@@ -8,9 +8,16 @@ type City struct {
 	Lng  float64 `json:"lng"`
 }
 
+// CityID is used to capture the city id in relationships.
+type CityID struct {
+	ID string `json:"id"`
+}
+
 // Place contains the place data points captured from the API.
 type Place struct {
 	ID               string   `json:"id,omitempty"`
+	Category         string   `json:"category"`
+	CityID           CityID   `json:"city"`
 	PlaceID          string   `json:"place_id"`
 	CityName         string   `json:"city_name"`
 	Name             string   `json:"name"`

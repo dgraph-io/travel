@@ -83,6 +83,8 @@ func addPlace(apiHost string) func(t *testing.T) {
 				places := []data.Place{
 					{
 						PlaceID:          "12345",
+						Category:         "test",
+						CityID:           data.CityID{ID: cityAdd.ID},
 						CityName:         "sydney",
 						Name:             "Bill's SPAM shack",
 						Address:          "123 Mocking Bird Lane",
@@ -96,6 +98,8 @@ func addPlace(apiHost string) func(t *testing.T) {
 					},
 					{
 						PlaceID:          "65432",
+						Category:         "test",
+						CityID:           data.CityID{ID: cityAdd.ID},
 						CityName:         "sydney",
 						Name:             "Karthic Coffee",
 						Address:          "634 Ventura Blvd",
@@ -110,7 +114,7 @@ func addPlace(apiHost string) func(t *testing.T) {
 				}
 
 				for i, place := range places {
-					addPlace, err := db.Mutate.AddPlace(ctx, cityAdd.ID, place)
+					addPlace, err := db.Mutate.AddPlace(ctx, place)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to save a place in Dgraph: %v", tests.Failed, testID, err)
 					}
@@ -146,7 +150,7 @@ func addPlace(apiHost string) func(t *testing.T) {
 					t.Logf("\t%s\tTest %d:\tShould get back the same place.", tests.Success, testID)
 
 					addPlace.ID = ""
-					_, err = db.Mutate.AddPlace(ctx, cityAdd.ID, addPlace)
+					_, err = db.Mutate.AddPlace(ctx, addPlace)
 					if err == nil {
 						t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same place twice.", tests.Failed, testID)
 					}

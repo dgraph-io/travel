@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
@@ -20,7 +21,7 @@ type City {
 	lat: Float!
 	lng: Float!
 	name: String! @search(by: [exact])
-	places: [Place]
+	places: [Place] @hasInverse(field: city)
 	weather: Weather
 }
 
@@ -39,6 +40,8 @@ type Place {
 	id: ID!
 	address: String
 	avg_user_rating: Float
+	category: String @search(by: [exact])
+	city: City!
 	city_name: String!
 	gmaps_url: String
 	lat: Float!
@@ -80,8 +83,18 @@ func (s *schema) Create(ctx context.Context) error {
 
 	switch {
 	case got == `{"getGQLSchema":null}`:
-		if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
-			return errors.Wrap(err, "creating schema")
+		for i := 0; i < 2; i++ {
+			if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
+
+				// Dgraph can fail because it's not ready to accept a schema
+				// yet. Just retry once if this is the case.
+				if i == 0 {
+					time.Sleep(time.Second)
+					continue
+				}
+				return errors.Wrap(err, "creating schema")
+			}
+			break
 		}
 	default:
 		if err := s.Validate(ctx); err != nil {

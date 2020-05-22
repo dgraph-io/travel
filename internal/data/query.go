@@ -33,19 +33,17 @@ query {
 }`, cityID)
 
 	var result struct {
-		GetCity struct {
-			City
-		} `json:"getCity"`
+		GetCity City `json:"getCity"`
 	}
 	if err := q.graphql.Query(ctx, query, &result); err != nil {
 		return City{}, errors.Wrap(err, "query failed")
 	}
 
-	if result.GetCity.City.ID == "" {
+	if result.GetCity.ID == "" {
 		return City{}, ErrCityNotFound
 	}
 
-	return result.GetCity.City, nil
+	return result.GetCity, nil
 }
 
 // CityByName returns the specified city from the database by the city name.
@@ -158,6 +156,10 @@ query {
 		id
 		address
 		avg_user_rating
+		category
+		city {
+			id
+		}
 		city_name
 		gmaps_url
 		lat
@@ -195,6 +197,10 @@ query {
 		id
 		address
 		avg_user_rating
+		category
+		city {
+			id
+		}
 		city_name
 		gmaps_url
 		lat
@@ -208,9 +214,7 @@ query {
 }`, name)
 
 	var result struct {
-		QueryPlace []struct {
-			Place
-		} `json:"queryPlace"`
+		QueryPlace []Place `json:"queryPlace"`
 	}
 	if err := q.graphql.Query(ctx, query, &result); err != nil {
 		return Place{}, errors.Wrap(err, "query failed")
@@ -220,7 +224,46 @@ query {
 		return Place{}, ErrPlaceNotFound
 	}
 
-	return result.QueryPlace[0].Place, nil
+	return result.QueryPlace[0], nil
+}
+
+// PlaceByCategory returns the collection of places from the database
+// by the cagtegory name.
+func (q *query) PlaceByCategory(ctx context.Context, category string) ([]Place, error) {
+	query := fmt.Sprintf(`
+query {
+	queryPlace(filter: { category: { eq: %q } }) {
+		id
+		address
+		avg_user_rating
+		category
+		city {
+			id
+		}
+		city_name
+		gmaps_url
+		lat
+		lng
+		location_type
+		name
+		no_user_rating
+		place_id
+		photo_id
+	}
+}`, category)
+
+	var result struct {
+		QueryPlace []Place `json:"queryPlace"`
+	}
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return nil, errors.Wrap(err, "query failed")
+	}
+
+	if len(result.QueryPlace) != 1 {
+		return nil, ErrPlaceNotFound
+	}
+
+	return result.QueryPlace, nil
 }
 
 // Places returns the collection of places from the database by the city id.
@@ -232,6 +275,10 @@ query {
 			id
 			address
 			avg_user_rating
+			category
+			city {
+				id
+			}
 			city_name
 			gmaps_url
 			lat

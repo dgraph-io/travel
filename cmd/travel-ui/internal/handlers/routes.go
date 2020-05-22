@@ -33,7 +33,8 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgra
 
 	// Set the route to load data for the graph.
 	fetch := fetch{
-		dgraph: dgraph,
+		dgraph:   dgraph,
+		cityName: "sydney",
 	}
 	app.Handle("GET", "/data", fetch.data)
 
