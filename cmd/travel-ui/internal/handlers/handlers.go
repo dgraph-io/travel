@@ -52,18 +52,17 @@ func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 type fetch struct {
-	dgraph data.Dgraph
+	dgraph   data.Dgraph
+	cityName string
 }
 
 func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	cityName := "sydney"
-
 	db, err := data.NewDB(f.dgraph)
 	if err != nil {
 		return errors.Wrap(err, "new db")
 	}
 
-	city, err := db.Query.CityByName(context.Background(), cityName)
+	city, err := db.Query.CityByName(context.Background(), f.cityName)
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
@@ -73,7 +72,7 @@ func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request,
 		return errors.Wrap(err, "query places")
 	}
 
-	out, err := marshalCity(cityName, places)
+	out, err := marshalCity(f.cityName, places)
 	if err != nil {
 		return errors.Wrap(err, "marshal city")
 	}
@@ -103,10 +102,10 @@ type doc struct {
 
 func marshalCity(cityName string, places []data.Place) (string, error) {
 
-	// Need the unique set of place types.
-	types := make(map[string]string)
+	// Need the unique set of categories.
+	categories := make(map[string]string)
 	for _, place := range places {
-		types[place.Type] = ""
+		categories[place.Category] = ""
 	}
 
 	d := doc{
@@ -121,16 +120,16 @@ func marshalCity(cityName string, places []data.Place) (string, error) {
 		},
 	}
 
-	for placeType := range types {
+	for category := range categories {
 		colorString := randomcolor.GetRandomColorInHex()
-		types[placeType] = colorString
-		d.Nodes = append(d.Nodes, node{placeType, "place", 3, 15, colorString})
-		d.Links = append(d.Links, link{cityName, placeType, 2})
+		categories[category] = colorString
+		d.Nodes = append(d.Nodes, node{category, "place", 3, 15, colorString})
+		d.Links = append(d.Links, link{cityName, category, 2})
 	}
 
 	for _, place := range places {
-		d.Nodes = append(d.Nodes, node{place.Name, place.Type, 3, 8, types[place.Type]})
-		d.Links = append(d.Links, link{place.Type, place.Name, 2})
+		d.Nodes = append(d.Nodes, node{place.Name, place.Category, 3, 8, categories[place.Category]})
+		d.Links = append(d.Links, link{place.Category, place.Name, 2})
 	}
 
 	data, err := json.Marshal(d)

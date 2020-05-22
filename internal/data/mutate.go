@@ -53,17 +53,17 @@ func (m *mutate) AddCity(ctx context.Context, city City) (City, error) {
 // AddPlace add a new place to the database. If the place already exists
 // this function will fail but the found place is returned. If the city is
 // being added, the city with the id from the database is returned.
-func (m *mutate) AddPlace(ctx context.Context, cityID string, place Place) (Place, error) {
+func (m *mutate) AddPlace(ctx context.Context, place Place) (Place, error) {
 	if place, err := m.query.PlaceByName(ctx, place.Name); err == nil {
 		return place, ErrPlaceExists
 	}
 
-	place, err := mutPlace.add(ctx, m.graphql, place, cityID)
+	place, err := mutPlace.add(ctx, m.graphql, place)
 	if err != nil {
 		return Place{}, errors.Wrap(err, "adding place to database")
 	}
 
-	if err := mutPlace.updateCity(ctx, m.graphql, cityID, place.ID); err != nil {
+	if err := mutPlace.updateCity(ctx, m.graphql, place.CityID.ID, place.ID); err != nil {
 		return Place{}, errors.Wrap(err, "adding place to city in database")
 	}
 

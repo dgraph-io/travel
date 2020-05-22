@@ -25,7 +25,7 @@ type Search struct {
 	CityName    string
 	Lat         float64
 	Lng         float64
-	Keywords    []string
+	Categories  []string
 	Radius      uint
 }
 
@@ -81,7 +81,7 @@ func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL
 		return ErrFailed
 	}
 
-	if err := addPlaces(ctx, log, db, keys.MapKey, city, search.Keywords, search.Radius); err != nil {
+	if err := addPlaces(ctx, log, db, keys.MapKey, city, search.Categories, search.Radius); err != nil {
 		log.Printf("feed: Work: Add Place: ERROR: %v", err)
 		return ErrFailed
 	}
@@ -145,18 +145,18 @@ func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, url stri
 }
 
 // addPlaces pulls place information and adds new places to the specified city.
-func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, city data.City, keywords []string, radius uint) error {
+func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, city data.City, categories []string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
 	}
 
-	for _, placeType := range keywords {
+	for _, category := range categories {
 		filter := places.Filter{
 			Name:    city.Name,
 			Lat:     city.Lat,
 			Lng:     city.Lng,
-			Keyword: placeType,
+			Keyword: category,
 			Radius:  radius,
 		}
 		log.Printf("feed: Work: Search Places: filter: %v]", filter)
@@ -169,7 +169,7 @@ func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string,
 			}
 
 			for _, place := range places {
-				place, err := db.Mutate.AddPlace(ctx, city.ID, marshal.Place(place, placeType))
+				place, err := db.Mutate.AddPlace(ctx, marshal.Place(place, city.ID, category))
 				if err != nil && err != data.ErrPlaceExists {
 					return errors.Wrapf(err, "adding place: %s", place.Name)
 				}

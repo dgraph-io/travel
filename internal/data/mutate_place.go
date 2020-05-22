@@ -15,11 +15,11 @@ type mutatePlace struct {
 
 var mutPlace mutatePlace
 
-func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place, cityID string) (Place, error) {
+func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place) (Place, error) {
 	if place.ID != "" {
 		return Place{}, errors.New("place contains id")
 	}
-	if cityID == "" {
+	if place.CityID.ID == "" {
 		return Place{}, errors.New("cityid not provided")
 	}
 
@@ -29,7 +29,7 @@ func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Plac
 		}
 	}
 
-	mutation, result := mutPlace.marshal.add(place, cityID)
+	mutation, result := mutPlace.marshal.add(place)
 	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
 		return Place{}, errors.Wrap(err, "failed to add place")
 	}
@@ -54,13 +54,14 @@ func (mutatePlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cit
 
 type placeMarshal struct{}
 
-func (placeMarshal) add(place Place, cityID string) (string, placeIDResult) {
+func (placeMarshal) add(place Place) (string, placeIDResult) {
 	var result placeIDResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addPlace(input: [{
 		address: %q
 		avg_user_rating: %f
+		category: %q
 		city: {
 			id: %q
 		}
@@ -73,12 +74,11 @@ mutation {
 		no_user_rating: %d
 		place_id: %q
 		photo_id: %q
-		type: %q
 	}])
 	%s
-}`, place.Address, place.AvgUserRating, cityID, place.CityName, place.GmapsURL,
+}`, place.Address, place.AvgUserRating, place.Category, place.CityID.ID, place.CityName, place.GmapsURL,
 		place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
-		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID, place.Type,
+		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID,
 		result.marshal())
 
 	return mutation, result

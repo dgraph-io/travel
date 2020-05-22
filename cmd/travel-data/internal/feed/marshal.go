@@ -15,10 +15,11 @@ var marshal m
 
 // Place marshals a Place value from the places package into
 // a data Place value.
-func (m) Place(place places.Place, placeType string) data.Place {
+func (m) Place(place places.Place, cityID string, category string) data.Place {
 	return data.Place{
 		PlaceID:          place.PlaceID,
-		Type:             placeType,
+		Category:         category,
+		CityID:           data.CityID{ID: cityID},
 		CityName:         place.CityName,
 		Name:             place.Name,
 		Address:          place.Address,
@@ -34,10 +35,10 @@ func (m) Place(place places.Place, placeType string) data.Place {
 
 // Places marshals a collection of Place values from the
 // places package into a collection of data Place values.
-func (m) Places(places []places.Place, placeType string) []data.Place {
+func (m) Places(places []places.Place, cityID string, category string) []data.Place {
 	dataPlaces := make([]data.Place, len(places))
 	for i, place := range places {
-		dataPlaces[i] = marshal.Place(place, placeType)
+		dataPlaces[i] = marshal.Place(place, cityID, category)
 	}
 	return dataPlaces
 }
