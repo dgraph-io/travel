@@ -100,6 +100,7 @@ function showInfo(d, i) {
                 var innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"dot\" style=\"background-color:" + d.color + "\";></div></td><td>" + d.type +"</td></tr>";
                 innerHTML += "<tr><td>ID:</td><td>" + o.data.queryPlace[0].id + "</td></tr>";
+                innerHTML += "<tr><td>Type:</td><td>" + o.data.queryPlace[0].type + "</td></tr>";
                 innerHTML += "<tr><td>Name:</td><td>" + o.data.queryPlace[0].name + "</td></tr>";
                 innerHTML += "<tr><td>Address:</td><td>" + o.data.queryPlace[0].address + "</td></tr>";
                 innerHTML += "<tr><td>Avg User Rating:</td><td>" + o.data.queryPlace[0].avg_user_rating + "</td></tr>";
