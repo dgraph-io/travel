@@ -20,6 +20,8 @@ travel-ui:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
+run: up seed browser
+
 up:
 	docker-compose up --detach
 
@@ -37,11 +39,14 @@ ui:
 	go run main.go --web-ui-host=0.0.0.0:81
 
 database:
-	docker run -it -p 8080:8080 dgraph/standalone:v20.03.1
+	docker run -it -d -p 8080:8080 dgraph/standalone:v20.03.1
 
 test:
 	go test ./... -count=1
 	staticcheck ./...
+
+browser:
+	python -m webbrowser "http://localhost"
 
 clean:
 	docker system prune -f
