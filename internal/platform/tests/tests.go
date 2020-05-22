@@ -11,14 +11,13 @@ const (
 )
 
 // Configuration for running tests set in the makefile.
-var (
+const (
 	dbImage = "dgraph/standalone:v20.03.1"
 )
 
 // NewUnit creates a test value with necessary application state to run
 // database tests. It will return the host to use to connect to the database.
 func NewUnit(t *testing.T) (apiHost string, teardown func()) {
-	t.Helper()
 
 	// Start a DB container instance with dgraph running.
 	c := startDBContainer(t, dbImage)

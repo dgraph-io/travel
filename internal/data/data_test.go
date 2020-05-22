@@ -10,6 +10,23 @@ import (
 	"github.com/dgraph-io/travel/internal/platform/tests"
 )
 
+// TestData validates all the mutation support in data.
+func TestData(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	apiHost, teardown := tests.NewUnit(t)
+	t.Cleanup(teardown)
+
+	t.Run("readiness", readiness(apiHost))
+	t.Run("schema", schema(apiHost))
+	t.Run("city", addCity(apiHost))
+	t.Run("place", addPlace(apiHost))
+	t.Run("advisory", replaceAdvisory(apiHost))
+	t.Run("weather", replaceWeather(apiHost))
+}
+
 // ready provides support for making sure the database is ready to be used.
 func ready(t *testing.T, ctx context.Context, testID int, apiHost string) *data.DB {
 	err := data.Readiness(ctx, apiHost, time.Second)

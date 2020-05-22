@@ -10,22 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// TestMutate validates all the mutation support in data.
-func TestMutate(t *testing.T) {
-	if testing.Short() {
-		t.SkipNow()
-	}
-
-	var teardown func()
-	apiHost, teardown := tests.NewUnit(t)
-	t.Cleanup(teardown)
-
-	t.Run("city", addCity(apiHost))
-	t.Run("place", addPlace(apiHost))
-	t.Run("advisory", replaceAdvisory(apiHost))
-	t.Run("weather", replaceWeather(apiHost))
-}
-
 // addCity validates a city node can be added to the database.
 func addCity(apiHost string) func(t *testing.T) {
 	tf := func(t *testing.T) {
