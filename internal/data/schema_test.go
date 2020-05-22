@@ -23,7 +23,7 @@ func TestSchema(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling the application schema.", testID)
 		{
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 			defer cancel()
 
 			db := ready(t, ctx, 0, apiHost)
