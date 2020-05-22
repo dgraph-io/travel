@@ -1,5 +1,5 @@
-var width = 500;	
-var height = 600;
+var width = 1000;	
+var height = 800;
 
 color = (function(){
   const scale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -31,18 +31,19 @@ var drag = simulation => {
 }
 
 d3.json("/data").then(function(data) {
-	var chart = (function(){
-	    const links = data.links.map(d => Object.create(d));
-	    const nodes = data.nodes.map(d => Object.create(d));
+    var chart = (function () {
+        const links = data.links.map(d => Object.create(d));
+        const nodes = data.nodes.map(d => Object.create(d));
 	  
-	    const manyBody = d3.forceManyBody()
-		    .strength(-200);
-	    const simulation = d3.forceSimulation(nodes)
-  		    .force("link", d3.forceLink(links).id(d => d.id))
-		    .force("charge", manyBody)
-  		    .force("center", d3.forceCenter((width / 2)+(width / 8), (height / 2)+(height / 6)));
-	    const svg = d3.create("svg")
-  		    .attr("viewBox", [10, 10, width, height]);
+        const manyBody = d3.forceManyBody()
+            .strength(-200);
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id))
+            .force("charge", manyBody)
+            .force("center", d3.forceCenter((width / 2), (height / 2)));
+        const svg = d3.create("svg")
+            .attr("viewBox", [10, 10, width, height])
+            .attr('preserveAspectRatio', 'xMinYMid');
 	    const link = svg.append("g")
   		    .attr("stroke", "#999")
   		    .attr("stroke-opacity", 0.6)

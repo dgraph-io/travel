@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/AvraamMavridis/randomcolor"
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
@@ -101,23 +102,35 @@ type doc struct {
 }
 
 func marshalCity(cityName string, places []data.Place) (string, error) {
+
+	// Need the unique set of place types.
+	types := make(map[string]string)
+	for _, place := range places {
+		types[place.Type] = ""
+	}
+
 	d := doc{
 		Nodes: []node{
 			{cityName, "city", 0, 20, "blue"},
 			{"Advisory", "advisory", 1, 15, "red"},
 			{"Weather", "weather", 2, 15, "orange"},
-			{"Places", "places", 3, 15, "purple"},
 		},
 		Links: []link{
 			{cityName, "Advisory", 5},
 			{cityName, "Weather", 5},
-			{cityName, "Places", 5},
 		},
 	}
 
+	for placeType := range types {
+		colorString := randomcolor.GetRandomColorInHex()
+		types[placeType] = colorString
+		d.Nodes = append(d.Nodes, node{placeType, "place", 3, 15, colorString})
+		d.Links = append(d.Links, link{cityName, placeType, 2})
+	}
+
 	for _, place := range places {
-		d.Nodes = append(d.Nodes, node{place.Name, "place", 3, 8, "purple"})
-		d.Links = append(d.Links, link{"Places", place.Name, 2})
+		d.Nodes = append(d.Nodes, node{place.Name, place.Type, 3, 8, types[place.Type]})
+		d.Links = append(d.Links, link{place.Type, place.Name, 2})
 	}
 
 	data, err := json.Marshal(d)

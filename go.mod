@@ -3,6 +3,7 @@ module github.com/dgraph-io/travel
 go 1.14
 
 require (
+	github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c
 	github.com/ardanlabs/conf v1.3.2
 	github.com/ardanlabs/graphql v1.3.0
 	github.com/dimfeld/httptreemux/v5 v5.2.2

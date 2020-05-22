@@ -1,0 +1,7 @@
+sudo: false
+notifications:
+  email: false
+language: go
+go:
+  - "1.10.x"
+  - master

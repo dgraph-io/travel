@@ -4,47 +4,19 @@
 		<title>Travel Graph</title>
 		<meta content="City Graph" name="description">
         <meta charset="utf-8">
-        <link rel="stylesheet" href="/assets/styles/main.css?v3">
+        <link rel="stylesheet" href="/assets/styles/main.css?v6">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="/assets/scripts/d3.js?v3"></script>
-		<script src="/assets/scripts/main.js?v3"></script>
+        <script src="/assets/scripts/d3.js?v6"></script>
+		<script src="/assets/scripts/main.js?v6"></script>
 		<script>
 			var Dgraph = {{.GraphQLEndpoint}};
 		</script>
 	</head>
 	<body>
-		<table>
-			<tr>
-				<td><div class="graphbox"></div></td>
-				<td>
-					<div class="databox">
-						<table>
-							<tr>
-								<td>
-									<div class="bluedot"></div>
-									<div>City</div>
-								</td>
-								<td>
-									<div class="reddot"></div>
-									<div>Advisory</div>
-								</td>
-								<td>
-									<div class="orangedot"></div>
-									<div>Weather</div>
-								</td>
-								<td>
-									<div class="purpledot"></div>
-									<div>Place</div>
-								</td>
-							</tr>
-						</table>
-						<table>
-							<tr><td id="data"></td></tr>
-						</table>
-					</div>
-				</td>
-			</tr>
-		</table>
+		<div class="graphbox"></div>
+		<div class="databox">
+			<div id="data"/>
+		</div>
   </body>
 </html>
