@@ -10,7 +10,7 @@ const (
 	Failed  = "\u2717"
 )
 
-// Configuration for running tests set in the makefile.
+// Configuration for running tests.
 const (
 	dbImage = "dgraph/standalone:v20.03.1"
 )
