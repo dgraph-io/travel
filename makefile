@@ -21,10 +21,13 @@ travel-ui:
 		.
 
 up:
-	docker-compose up
+	docker-compose up --detach
 
 down:
 	docker-compose down
+
+logs:
+	docker-compose logs -f
 
 seed:
 	go run cmd/travel-data/main.go
@@ -51,6 +54,10 @@ remove-all:
 
 deps-reset:
 	git checkout -- go.mod
+	go mod tidy
+	go mod vendor
+
+tidy:
 	go mod tidy
 	go mod vendor
 
