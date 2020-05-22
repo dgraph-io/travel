@@ -10,8 +10,10 @@ const (
 	Failed  = "\u2717"
 )
 
-// dbImage is the image to use for running the database.
-const dbImage string = "dgraph/standalone:v20.03.1"
+// Configuration for running tests set in the makefile.
+var (
+	dbImage = "dgraph/standalone:v20.03.1"
+)
 
 // NewUnit creates a test value with necessary application state to run
 // database tests. It will return the host to use to connect to the database.
