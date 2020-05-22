@@ -14,14 +14,14 @@ type Container struct {
 }
 
 // StartContainer runs a postgres container to execute commands.
-func StartContainer(t *testing.T) *Container {
+func StartContainer(t *testing.T, image string) *Container {
 	t.Helper()
 
-	cmd := exec.Command("docker", "run", "-d", "-P", "dgraph/standalone:v20.03.0")
+	cmd := exec.Command("docker", "run", "-d", "-P", image)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("could not start container: %v", err)
+		t.Fatalf("could not start container %s: %v", image, err)
 	}
 
 	id := out.String()[:12]
