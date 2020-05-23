@@ -1,5 +1,7 @@
 SHELL := /bin/bash
 
+# Building containers
+
 all: travel-api travel-ui
 
 travel-api:
@@ -20,6 +22,8 @@ travel-ui:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
+# Running from within docker compose
+
 run: up seed browser
 
 up:
@@ -28,34 +32,47 @@ up:
 down:
 	docker-compose down
 
+browser:
+	python -m webbrowser "http://localhost"
+
 logs:
 	docker-compose logs -f
+
+# Running from within the local computer
+
+run-local: up-local seed browser-local ui-local
+
+up-local:
+	docker run -it -d -p 8080:8080 dgraph/standalone:v20.03.1
+
+ui-local:
+	cd cmd/travel-ui; \
+	go run main.go --web-ui-host=0.0.0.0:81
+
+FILES := $(shell docker ps -aq)
+
+down-local:
+	docker stop $(FILES)
+	docker rm $(FILES)
+
+browser-local:
+	python -m webbrowser "http://localhost:81"
+
+logs-local:
+	docker logs -f
+
+# Seeding the database
 
 seed:
 	go run cmd/travel-data/main.go
 
-ui:
-	cd cmd/travel-ui; \
-	go run main.go --web-ui-host=0.0.0.0:81
-
-database:
-	docker run -it -d -p 8080:8080 dgraph/standalone:v20.03.1
+# Running tests within the local computer
 
 test:
 	go test ./... -count=1
 	staticcheck ./...
 
-browser:
-	python -m webbrowser "http://localhost"
-
-clean:
-	docker system prune -f
-
-stop-all:
-	docker stop $(docker ps -aq)
-
-remove-all:
-	docker rm $(docker ps -aq)
+# Modules support
 
 deps-reset:
 	git checkout -- go.mod
@@ -72,3 +89,8 @@ deps-upgrade:
 
 deps-cleancache:
 	go clean -modcache
+
+# Docker support
+
+clean:
+	docker system prune -f

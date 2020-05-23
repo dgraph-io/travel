@@ -1,5 +1,5 @@
-var width = 1000;	
-var height = 800;
+const width = 1000;	
+const height = 800;
 
 color = (function(){
   const scale = d3.scaleOrdinal(d3.schemeCategory10);
