@@ -1,11 +1,34 @@
+.cityinput {
+    width: 100%;
+    height: 50px;
+    margin: 10px 20px;
+}
+.button {
+    background-color: #4CAF50; /* Green */
+    border: #000;
+    color: white;
+    padding: 8px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+}
+#citysearch {
+    width: 300px;
+    font-size: 26px;
+    border: 1px solid #333;
+    margin: 5px 10px 10px 0px;
+    padding: 0px 5px 5px 5px;
+}
 .graphbox {
     width: 1000px;
     height: 800px;
     border: 1px solid #333;
     box-shadow: 8px 8px 5px #444;
-    padding: 8px 12px;
+    padding: 10px 10px;
     background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
     float: left;
+    margin: 0px 10px 10px 20px;
 }
 .databox {
     height: 800px;
@@ -13,10 +36,11 @@
     border: 1px solid #333;
     box-shadow: 8px 8px 5px #444;
     font-family: verdana;
-    padding: 8px 12px;
+    padding: 10px 10px;
     background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
     float: left;
     overflow: auto;
+    margin: 0px 10px;
 }
 .bluedot {
     height: 25px;

@@ -11,9 +11,14 @@
 		<script src="/assets/scripts/main.js?v6"></script>
 		<script>
 			var Dgraph = {{.GraphQLEndpoint}};
+			var CityID = {{.CityID}};
 		</script>
 	</head>
 	<body>
+		<div class="cityinput">
+			<input id="citysearch" type="text" value="sydney"/>
+			<button class="button" onclick="searchCity()">Search City</button>
+		</div>
 		<div class="graphbox"></div>
 		<div class="databox">
 			<div id="data"/>

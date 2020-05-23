@@ -2,6 +2,10 @@ $.ajaxSetup({
     contentType: "application/json; charset=utf-8"
 });
 
+function searchCity() {
+    window.alert(document.getElementById("citysearch").value)
+}
+
 function convertKelvin(k) {
     var num = k * 9/5 - 459.67
     return Math.round((num + Number.EPSILON) * 100) / 100
@@ -12,7 +16,7 @@ function showInfo(d, i) {
     switch (d.type) {
         case "city":
             $.post(Dgraph,
-            '{"query":"query { getCity(id: \\"0x02\\") { id name lat lng } }","variables":null}',
+            '{"query":"query { getCity(id: \\"' + CityID + '\\") { id name lat lng } }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -30,7 +34,7 @@ function showInfo(d, i) {
             break;
         case "advisory":
             $.post(Dgraph,
-            '{"query":"query { getCity(id: \\"0x02\\") { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
+            '{"query":"query { getCity(id: \\"' + CityID + '\\") { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -50,7 +54,7 @@ function showInfo(d, i) {
             break;
         case "weather":
             $.post(Dgraph,
-            '{"query":"query { getCity(id: \\"0x02\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
+            '{"query":"query { getCity(id: \\"' + CityID + '\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
