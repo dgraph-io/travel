@@ -11,18 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO
-/*
-	UI
-		https://observablehq.com/@d3/force-directed-graph
-
-	travel-api (coming soon)
-		Identify an end point we need that dgraph can't provide.
-
-	Kubernetes
-		Running in Kind with Ready checks
-*/
-
 // build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 

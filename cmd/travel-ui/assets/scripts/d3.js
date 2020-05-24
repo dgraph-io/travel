@@ -6,7 +6,7 @@ color = (function(){
   return d => scale(d.group);
 })();
 
-var drag = simulation => {
+let drag = simulation => {
     function dragstarted(d) {
 	    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
 	    d.fx = d.x;
@@ -30,8 +30,8 @@ var drag = simulation => {
 	  .on("end", dragended);
 }
 
-d3.json("/data").then(function(data) {
-    var chart = (function () {
+function makechart(data) {
+    let f = function () {
         const links = data.links.map(d => Object.create(d));
         const nodes = data.nodes.map(d => Object.create(d));
 	  
@@ -75,7 +75,17 @@ d3.json("/data").then(function(data) {
         });
 
         return svg.node();
-    })();
-    
+    }
+    let chart = f();
     document.querySelector("div.graphbox").appendChild(chart);
-})
+}
+
+function drawchart(city) {
+    document.getElementById("data").innerHTML = "";
+    document.querySelector("div.graphbox").innerHTML = "";
+    
+    let err = function(error) {
+        document.querySelector("div.graphbox").innerHTML = "no data for city: " + city;
+    }
+    d3.json("/data/" + city).then(makechart).catch(err);
+}

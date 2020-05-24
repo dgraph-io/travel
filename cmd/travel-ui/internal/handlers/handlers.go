@@ -57,8 +57,7 @@ func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 type fetch struct {
-	dgraph   data.Dgraph
-	cityName string
+	dgraph data.Dgraph
 }
 
 func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
@@ -67,7 +66,7 @@ func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request,
 		return errors.Wrap(err, "new db")
 	}
 
-	city, err := db.Query.CityByName(context.Background(), f.cityName)
+	city, err := db.Query.CityByName(context.Background(), params["city"])
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
@@ -77,7 +76,7 @@ func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request,
 		return errors.Wrap(err, "query places")
 	}
 
-	out, err := marshalCity(f.cityName, places)
+	out, err := marshalCity(params["city"], places)
 	if err != nil {
 		return errors.Wrap(err, "marshal city")
 	}

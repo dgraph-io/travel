@@ -29,6 +29,8 @@
     background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
     float: left;
     margin: 0px 10px 10px 20px;
+    font-family: verdana;
+    font-size: 30px;
 }
 .databox {
     height: 800px;

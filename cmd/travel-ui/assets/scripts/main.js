@@ -3,16 +3,16 @@ $.ajaxSetup({
 });
 
 function searchCity() {
-    window.alert(document.getElementById("citysearch").value)
+    drawchart(document.getElementById("citysearch").value);
 }
 
 function convertKelvin(k) {
-    var num = k * 9/5 - 459.67
+    let num = k * 9/5 - 459.67
     return Math.round((num + Number.EPSILON) * 100) / 100
 }
 
 function showInfo(d, i) {
-    var cell = document.getElementById("data");
+    let cell = document.getElementById("data");
     switch (d.type) {
         case "city":
             $.post(Dgraph,
@@ -22,7 +22,7 @@ function showInfo(d, i) {
                     cell.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
-                var innerHTML = "<table width=\"70%\">";
+                let innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"bluedot\"></div></td><td>City</td></tr>";
                 innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.id + "</td></tr>";
                 innerHTML += "<tr><td>Name:</td><td>" + o.data.getCity.name + "</td></tr>";
@@ -34,13 +34,13 @@ function showInfo(d, i) {
             break;
         case "advisory":
             $.post(Dgraph,
-            '{"query":"query { getCity(id: \\"' + CityID + '\\") { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
+            '{"query":"query { getCity(id: \\"' + CityID + '\\") { advisory { id continent country country_code last_updated message score source }} }","letiables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
-                var innerHTML = "<table width=\"70%\">";
+                let innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"reddot\"></div></td><td>Advisory</td></tr>";
                 innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.advisory.id + "</td></tr>";
                 innerHTML += "<tr><td>Country:</td><td>" + o.data.getCity.advisory.country + "</td></tr>";
@@ -54,13 +54,13 @@ function showInfo(d, i) {
             break;
         case "weather":
             $.post(Dgraph,
-            '{"query":"query { getCity(id: \\"' + CityID + '\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
+            '{"query":"query { getCity(id: \\"' + CityID + '\\") { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","letiables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
-                var innerHTML = "<table width=\"70%\">";
+                let innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"orangedot\"></div></td><td>Weather</td></tr>";
                 innerHTML += "<tr><td>ID:</td><td>" + o.data.getCity.weather.id + "</td></tr>";
                 innerHTML += "<tr><td>City Name:</td><td>" + o.data.getCity.weather.city_name + "</td></tr>";
@@ -80,13 +80,13 @@ function showInfo(d, i) {
             break;
         case "place":
                 $.post(Dgraph,
-                '{"query":"query { queryPlace(filter: { category: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating category city{ id } city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
+                '{"query":"query { queryPlace(filter: { category: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating category city{ id } city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","letiables":null}',
                 function(o, status){
                     if (typeof o.data === "undefined") {
                         cell.innerText = "ERROR: " + o.errors[0].message;
                         return;
                     }
-                    var innerHTML = "<table width=\"70%\">";
+                    let innerHTML = "<table width=\"70%\">";
                     innerHTML += "<tr><td><div class=\"dot\" style=\"background-color:" + d.color + "\";></div></td><td>" + d.id + "</td></tr>";
                     for (i = 0; i < o.data.queryPlace.length; i++) {
                         innerHTML += "<tr><td>ID:</td><td>" + o.data.queryPlace[i].id + "</td></tr>";
@@ -102,13 +102,13 @@ function showInfo(d, i) {
                 break;
         default:
             $.post(Dgraph,
-            '{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating category city{ id } city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
+            '{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating category city{ id } city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","letiables":null}',
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
-                var innerHTML = "<table width=\"70%\">";
+                let innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"dot\" style=\"background-color:" + d.color + "\";></div></td><td>" + d.type +"</td></tr>";
                 innerHTML += "<tr><td>ID:</td><td>" + o.data.queryPlace[0].id + "</td></tr>";
                 innerHTML += "<tr><td>CityID:</td><td>" + o.data.queryPlace[0].city.id + "</td></tr>";
