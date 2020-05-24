@@ -57,8 +57,11 @@ function makechart(data) {
             .data(nodes)
             .join("circle")
             .attr("r", d => d.radius)
+            .attr("rorg", d => d.radius)
             .attr("fill", d => d.color)
             .on("click", showInfo)
+            .on("mouseover", circleMouseOver)
+            .on("mouseout", circleMouseOut)
             .call(drag(simulation));
         node.append("title")
             .text(d => d.id.split(":")[0]);
