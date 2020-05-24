@@ -6,19 +6,19 @@ color = (function(){
   return d => scale(d.group);
 })();
 
-let drag = simulation => {
-    function dragstarted(d) {
+const drag = simulation => {
+    const dragstarted = d => {
 	    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
 	    d.fx = d.x;
 	    d.fy = d.y;
     }
 
-    function dragged(d) {
+    const dragged = d => {
 	    d.fx = d3.event.x;
 	    d.fy = d3.event.y;
     }
 
-    function dragended(d) {
+    const dragended = d => {
 	    if (!d3.event.active) simulation.alphaTarget(0);
 	    d.fx = null;
 	    d.fy = null;
@@ -31,10 +31,9 @@ let drag = simulation => {
 }
 
 function makechart(data) {
-    let f = function () {
+    const f = function () {
         const links = data.links.map(d => Object.create(d));
         const nodes = data.nodes.map(d => Object.create(d));
-	  
         const manyBody = d3.forceManyBody()
             .strength(-200);
         const simulation = d3.forceSimulation(nodes)
@@ -73,10 +72,10 @@ function makechart(data) {
                 .attr("cx", d => d.x)
                 .attr("cy", d => d.y);
         });
-
         return svg.node();
     }
-    let chart = f();
+
+    const chart = f();
     document.querySelector("div.graphbox").appendChild(chart);
 }
 
@@ -84,7 +83,7 @@ function drawchart(city) {
     document.getElementById("data").innerHTML = "";
     document.querySelector("div.graphbox").innerHTML = "";
     
-    let err = function(error) {
+    const err = function(error) {
         document.querySelector("div.graphbox").innerHTML = "no data for city: " + city;
     }
     d3.json("/data/" + city).then(makechart).catch(err);

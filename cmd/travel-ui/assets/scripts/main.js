@@ -4,18 +4,18 @@ $.ajaxSetup({
 
 function loadData() {
     drawchart(document.getElementById("cityselection").value);
-    let d = { type: "city" };
+    const d = { type: "city" };
     showInfo(d);
 }
 
 function convertKelvin(k) {
-    let num = k * 9/5 - 459.67
+    const num = k * 9/5 - 459.67
     return Math.round((num + Number.EPSILON) * 100) / 100
 }
 
 function showInfo(d, i) {
-    let cell = document.getElementById("data");
-    let name = document.getElementById("cityselection").value;
+    const cell = document.getElementById("data");
+    const name = document.getElementById("cityselection").value;
     switch (d.type) {
         case "city":
             $.post(Dgraph,
