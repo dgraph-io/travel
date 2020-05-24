@@ -9,8 +9,127 @@ function loadData() {
 }
 
 function convertKelvin(k) {
-    const num = k * 9/5 - 459.67
-    return Math.round((num + Number.EPSILON) * 100) / 100
+    const num = k * 9 / 5 - 459.67;
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
+function queryCity(cityName) {
+    return '\
+{\
+    "query": "query {\
+        queryCity(filter: { name: { eq: \\"' + cityName + '\\" } }) {\
+            id\
+            name\
+            lat\
+            lng\
+        } \
+    }",\
+    "variables": null\
+}';
+}
+
+function queryAdvisory(cityName) {
+    return '\
+{\
+    "query":"query {\
+        queryCity(filter: { name: { eq: \\"' + cityName + '\\" } }) {\
+            advisory {\
+                id\
+                continent\
+                country\
+                country_code\
+                last_updated\
+                message\
+                score\
+                source\
+            }\
+        }\
+    }",\
+    "variables":null\
+}';
+}
+
+function queryWeather(cityName) {
+    return '\
+{\
+    "query":"query {\
+        queryCity(filter: { name: { eq: \\"' + cityName + '\\" } }) {\
+            weather {\
+                id\
+                city_name\
+                description\
+                feels_like\
+                humidity\
+                pressure\
+                sunrise\
+                sunset\
+                temp\
+                temp_min\
+                temp_max\
+                visibility\
+                wind_direction\
+                wind_speed\
+            }\
+        }\
+    }",\
+    "variables":null\
+}';
+}
+
+function queryPlaceByCategory(cityName, category) {
+    return '\
+{\
+     "query": "query {\
+        queryCity(filter: { name: { eq: \\"' + cityName + '\\" } }) {\
+            places(filter: {category: {eq: \\"' + category + '\\" } }) {\
+                id\
+                address\
+                avg_user_rating\
+                category\
+                city{\
+                    id\
+                }\
+                city_name\
+                gmaps_url\
+                lat\
+                lng\
+                location_type\
+                name\
+                no_user_rating\
+                place_id\
+                photo_id\
+            }\
+        }\
+    }",\
+    "variables": null\
+} ';
+}
+
+function queryPlaceByName(placeName) {
+    return '\
+{\
+     "query": "query {\
+        queryPlace(filter: { name: { eq: \\"' + placeName + '\\" } }) {\
+            id\
+            address\
+            avg_user_rating\
+            category\
+            city{\
+                id\
+            }\
+            city_name\
+            gmaps_url\
+            lat\
+            lng\
+            location_type\
+            name\
+            no_user_rating\
+            place_id\
+            photo_id\
+        }\
+    }",\
+    "variables": null\
+} ';
 }
 
 function showInfo(d, i) {
@@ -19,7 +138,7 @@ function showInfo(d, i) {
     switch (d.type) {
         case "city":
             $.post(Dgraph,
-            '{"query":"query { queryCity(filter: { name: { eq: \\"' + name + '\\" } }) { id name lat lng } }","variables":null}',
+            queryCity(name),
             function (o, status) {
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -37,7 +156,7 @@ function showInfo(d, i) {
             break;
         case "advisory":
             $.post(Dgraph,
-            '{"query":"query { queryCity(filter: { name: { eq: \\"' + name + '\\" } }) { advisory { id continent country country_code last_updated message score source }} }","variables":null}',
+            queryAdvisory(name),
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -57,7 +176,7 @@ function showInfo(d, i) {
             break;
         case "weather":
             $.post(Dgraph,
-            '{"query":"query { queryCity(filter: { name: { eq: \\"' + name + '\\" } }) { weather { id city_name description feels_like humidity pressure sunrise sunset temp temp_min temp_max visibility wind_direction wind_speed }} }","variables":null}',
+            queryWeather(name),
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -83,7 +202,7 @@ function showInfo(d, i) {
             break;
         case "place":
             $.post(Dgraph,
-            '{"query":"query { queryPlace(filter: { category: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating category city{ id } city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
+            queryPlaceByCategory(name, d.id),
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
@@ -91,12 +210,12 @@ function showInfo(d, i) {
                 }
                 let innerHTML = "<table width=\"70%\">";
                 innerHTML += "<tr><td><div class=\"dot\" style=\"background-color:" + d.color + "\";></div></td><td>" + d.id + "</td></tr>";
-                for (i = 0; i < o.data.queryPlace.length; i++) {
-                    innerHTML += "<tr><td>ID:</td><td>" + o.data.queryPlace[i].id + "</td></tr>";
-                    innerHTML += "<tr><td>City:</td><td>" + o.data.queryPlace[i].city_name + "</td></tr>";
-                    innerHTML += "<tr><td>Name:</td><td>" + o.data.queryPlace[i].name.split(":")[0] + "</td></tr>";
-                    innerHTML += "<tr><td>Address:</td><td>" + o.data.queryPlace[i].address + "</td></tr>";
-                    innerHTML += "<tr><td>Avg User Rating:</td><td>" + o.data.queryPlace[i].avg_user_rating + "</td></tr>";
+                for (i = 0; i < o.data.queryCity[0].places.length; i++) {
+                    innerHTML += "<tr><td>ID:</td><td>" + o.data.queryCity[0].places[i].id + "</td></tr>";
+                    innerHTML += "<tr><td>City:</td><td>" + o.data.queryCity[0].places[i].city_name + "</td></tr>";
+                    innerHTML += "<tr><td>Name:</td><td>" + o.data.queryCity[0].places[i].name.split(":")[0] + "</td></tr>";
+                    innerHTML += "<tr><td>Address:</td><td>" + o.data.queryCity[0].places[i].address + "</td></tr>";
+                    innerHTML += "<tr><td>Avg User Rating:</td><td>" + o.data.queryCity[0].places[i].avg_user_rating + "</td></tr>";
                     innerHTML += "<tr><td colspan=\"2\">==============================</td></tr>";
                 }
                 innerHTML += "</table>";
@@ -105,7 +224,7 @@ function showInfo(d, i) {
             break;
         default:
             $.post(Dgraph,
-            '{"query":"query { queryPlace(filter: { name: { eq: \\"' + d.id + '\\" } }) { id address avg_user_rating category city{ id } city_name gmaps_url lat lng location_type name no_user_rating place_id photo_id } }","variables":null}',
+            queryPlaceByName(d.id),
             function(o, status){
                 if (typeof o.data === "undefined") {
                     cell.innerText = "ERROR: " + o.errors[0].message;
