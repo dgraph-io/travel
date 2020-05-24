@@ -14,6 +14,20 @@ import (
 	"googlemaps.github.io/maps"
 )
 
+type city struct {
+	CountryCode string
+	Name        string
+	Lat         float64
+	Lng         float64
+}
+
+// These are the currently cities supported.
+var cities = map[string]city{
+	"miami":   {"US", "miami", 25.7617, -80.1918},
+	"newyork": {"US", "new york", 40.730610, -73.935242},
+	"sydney":  {"AU", "sydney", -33.865143, 151.209900},
+}
+
 // ErrFailed is used to report the program failed back to main
 // so the correct error code is returned.
 var ErrFailed = errors.New("feed failed")
@@ -21,12 +35,9 @@ var ErrFailed = errors.New("feed failed")
 // Search represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type Search struct {
-	CountryCode string
-	CityName    string
-	Lat         float64
-	Lng         float64
-	Categories  []string
-	Radius      uint
+	CityName   string
+	Categories []string
+	Radius     uint
 }
 
 // Keys represents the set of keys needed for the different API's
@@ -47,6 +58,12 @@ type URL struct {
 func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL) error {
 	ctx := context.Background()
 
+	searchCity, ok := cities[search.CityName]
+	if !ok {
+		log.Print("feed: Work: city selection: ERROR: not a suppored city")
+		return ErrFailed
+	}
+
 	log.Println("feed: Work: Wait for the database is ready ...")
 	err := data.Readiness(ctx, dgraph.APIHostInside, 5*time.Second)
 	if err != nil {
@@ -65,18 +82,18 @@ func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL
 		return ErrFailed
 	}
 
-	city, err := addCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
+	city, err := addCity(ctx, log, db, searchCity.Name, searchCity.Lat, searchCity.Lng)
 	if err != nil {
 		log.Printf("feed: Work: Add City: ERROR: %v", err)
 		return ErrFailed
 	}
 
-	if err := replaceWeather(ctx, log, db, keys.WeatherKey, url.Weather, city.ID, search.Lat, search.Lng); err != nil {
+	if err := replaceWeather(ctx, log, db, keys.WeatherKey, url.Weather, city.ID, city.Lat, city.Lng); err != nil {
 		log.Printf("feed: Work: Replace Weather: ERROR: %v", err)
 		return ErrFailed
 	}
 
-	if err := replaceAdvisory(ctx, log, db, url.Advisory, city.ID, search.CountryCode); err != nil {
+	if err := replaceAdvisory(ctx, log, db, url.Advisory, city.ID, searchCity.CountryCode); err != nil {
 		log.Printf("feed: Work: Replace Advisory: ERROR: %v", err)
 		return ErrFailed
 	}
@@ -161,8 +178,8 @@ func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string,
 		}
 		log.Printf("feed: Work: Search Places: filter: %v]", filter)
 
-		// Only store up to the first 100 places.
-		for i := 0; i < 5; i++ {
+		// Only store up to the first 20 places.
+		for i := 0; i < 1; i++ {
 			places, errRet := places.Search(ctx, client, &filter)
 			if errRet != nil && errRet != io.EOF {
 				return errors.Wrap(err, "searching places")

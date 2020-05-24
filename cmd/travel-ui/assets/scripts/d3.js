@@ -62,7 +62,7 @@ function makechart(data) {
             .on("click", showInfo)
             .call(drag(simulation));
         node.append("title")
-            .text(d => d.id);
+            .text(d => d.id.split(":")[0]);
         simulation.on("tick", () => {
             link
                 .attr("x1", d => d.source.x)

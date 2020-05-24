@@ -13,7 +13,12 @@
     display: inline-block;
     font-size: 20px;
 }
-#citysearch {
+.cityselectionlabel {
+    font-size: 26px;
+    margin: 5px 10px 10px 0px;
+    padding: 0px 5px 5px 5px;
+}
+#cityselection {
     width: 300px;
     font-size: 26px;
     border: 1px solid #333;

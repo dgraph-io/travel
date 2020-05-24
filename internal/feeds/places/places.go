@@ -5,6 +5,7 @@ package places
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -90,10 +91,14 @@ func Search(ctx context.Context, client NearbySearcher, filter *Filter) ([]Place
 			photoReferenceID = result.Photos[0].PhotoReference
 		}
 
+		// I want a unique name incase the maps api does not do this.
+		// I will parse the : out on the UI side.
+		name := fmt.Sprintf("%s:%s", result.Name, result.PlaceID)
+
 		place := Place{
 			PlaceID:          result.PlaceID,
 			CityName:         filter.Name,
-			Name:             result.Name,
+			Name:             name,
 			Address:          result.FormattedAddress,
 			Lat:              result.Geometry.Location.Lat,
 			Lng:              result.Geometry.Location.Lng,

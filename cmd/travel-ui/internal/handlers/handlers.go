@@ -18,7 +18,6 @@ import (
 type index struct {
 	tmpl            *template.Template
 	graphQLEndpoint string
-	cityID          string
 }
 
 func newIndex(dgraph data.Dgraph) (*index, error) {
@@ -35,7 +34,6 @@ func newIndex(dgraph data.Dgraph) (*index, error) {
 	index := index{
 		tmpl:            tmpl,
 		graphQLEndpoint: fmt.Sprintf("%s://%s/graphql", dgraph.Protocol, dgraph.APIHostOutside),
-		cityID:          "0x02",
 	}
 
 	return &index, nil
@@ -45,7 +43,6 @@ func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	var markup bytes.Buffer
 	vars := map[string]interface{}{
 		"GraphQLEndpoint": i.graphQLEndpoint,
-		"CityID":          i.cityID,
 	}
 
 	if err := i.tmpl.Execute(&markup, vars); err != nil {

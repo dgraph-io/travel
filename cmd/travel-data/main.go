@@ -31,13 +31,10 @@ func run(log *log.Logger) error {
 	var cfg struct {
 		conf.Version
 		City struct {
-			CountryCode string  `conf:"default:AU"`
-			Name        string  `conf:"default:sydney"`
-			Lat         float64 `conf:"default:-33.865143"`
-			Lng         float64 `conf:"default:151.209900"`
+			Name string `conf:"default:sydney"`
 		}
 		Search struct {
-			Categories []string `conf:"default:mcdonalds;dominos;kfc"`
+			Categories []string `conf:"default:resturant;bar;supermarket"`
 			Radius     int      `conf:"default:5000"`
 		}
 		APIKeys struct {
@@ -99,12 +96,9 @@ func run(log *log.Logger) error {
 	}
 
 	search := feed.Search{
-		CountryCode: cfg.City.CountryCode,
-		CityName:    cfg.City.Name,
-		Lat:         cfg.City.Lat,
-		Lng:         cfg.City.Lng,
-		Categories:  cfg.Search.Categories,
-		Radius:      uint(cfg.Search.Radius),
+		CityName:   cfg.City.Name,
+		Categories: cfg.Search.Categories,
+		Radius:     uint(cfg.Search.Radius),
 	}
 
 	keys := feed.Keys{
