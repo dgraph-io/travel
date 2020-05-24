@@ -13,15 +13,14 @@
 			var Dgraph = {{.GraphQLEndpoint}};
 		</script>
 	</head>
-	<body onload="searchCity()">
+	<body onload="loadData()">
 		<div class="cityinput">
 			<label class="cityselectionlabel">Choose a city:</label>
-			<select id="cityselection">
-				<option value="miami">Miami</option>
-				<option value="new york">New York</option>
-				<option value="sydney">Sydney</option>			
+			<select id="cityselection" onchange="loadData()">
+				{{range $index, $element := .Cities}}
+					<option value="{{$element}}">{{$element}}</option>
+				{{end}}	
 			</select>
-			<button class="button" onclick="loadData()">Load Data</button>
 		</div>
 		<div class="graphbox"></div>
 		<div class="databox">

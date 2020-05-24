@@ -11,6 +11,20 @@ import (
 	"github.com/pkg/errors"
 )
 
+type city struct {
+	CountryCode string
+	Name        string
+	Lat         float64
+	Lng         float64
+}
+
+// These are the currently cities supported.
+var cities = []city{
+	{"US", "miami", 25.7617, -80.1918},
+	{"US", "new york", 40.730610, -73.935242},
+	{"AU", "sydney", -33.865143, 151.209900},
+}
+
 // build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 
@@ -30,9 +44,6 @@ func run(log *log.Logger) error {
 
 	var cfg struct {
 		conf.Version
-		City struct {
-			Name string `conf:"default:sydney"`
-		}
 		Search struct {
 			Categories []string `conf:"default:resturant;bar;supermarket"`
 			Radius     int      `conf:"default:5000"`
@@ -95,12 +106,6 @@ func run(log *log.Logger) error {
 		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
 	}
 
-	search := feed.Search{
-		CityName:   cfg.City.Name,
-		Categories: cfg.Search.Categories,
-		Radius:     uint(cfg.Search.Radius),
-	}
-
 	keys := feed.Keys{
 		MapKey:     cfg.APIKeys.MapsKey,
 		WeatherKey: cfg.APIKeys.WeatherKey,
@@ -111,8 +116,18 @@ func run(log *log.Logger) error {
 		Weather:  cfg.URL.Weather,
 	}
 
-	if err := feed.Work(log, dgraph, search, keys, url); err != nil {
-		return err
+	for _, city := range cities {
+		search := feed.Search{
+			CityName:    city.Name,
+			CountryCode: city.CountryCode,
+			Lat:         city.Lat,
+			Lng:         city.Lng,
+			Categories:  cfg.Search.Categories,
+			Radius:      uint(cfg.Search.Radius),
+		}
+		if err := feed.Work(log, dgraph, search, keys, url); err != nil {
+			return err
+		}
 	}
 
 	return nil

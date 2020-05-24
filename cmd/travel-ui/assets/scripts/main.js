@@ -4,6 +4,8 @@ $.ajaxSetup({
 
 function loadData() {
     drawchart(document.getElementById("cityselection").value);
+    let d = { type: "city" };
+    showInfo(d);
 }
 
 function convertKelvin(k) {

@@ -35,6 +35,7 @@ func run(log *log.Logger) error {
 	// Configuration
 
 	var cfg struct {
+		conf.Version
 		Web struct {
 			UIHost          string        `conf:"default:0.0.0.0:80"`
 			DebugHost       string        `conf:"default:0.0.0.0:4080"`
@@ -49,14 +50,24 @@ func run(log *log.Logger) error {
 			BasicAuthToken string
 		}
 	}
+	cfg.Version.SVN = build
+	cfg.Version.Desc = "copyright information here"
 
 	if err := conf.Parse(os.Args[1:], "UI", &cfg); err != nil {
-		if err == conf.ErrHelpWanted {
+		switch err {
+		case conf.ErrHelpWanted:
 			usage, err := conf.Usage("UI", &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
+			return nil
+		case conf.ErrVersionWanted:
+			version, err := conf.VersionString("UI", &cfg)
+			if err != nil {
+				return errors.Wrap(err, "generating config version")
+			}
+			fmt.Println(version)
 			return nil
 		}
 		return errors.Wrap(err, "parsing config")
