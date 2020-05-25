@@ -1,6 +1,3 @@
-const width = 1000;	
-const height = 800;
-
 color = (function(){
   const scale = d3.scaleOrdinal(d3.schemeCategory10);
   return d => scale(d.group);
@@ -32,6 +29,8 @@ const drag = simulation => {
 
 function makechart(data) {
     const f = function () {
+        const width = document.querySelector("div.graphbox").clientWidth;
+        const height = document.querySelector("div.graphbox").clientHeight;
         const links = data.links.map(d => Object.create(d));
         const nodes = data.nodes.map(d => Object.create(d));
         const manyBody = d3.forceManyBody()

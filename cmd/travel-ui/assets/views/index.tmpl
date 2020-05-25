@@ -20,12 +20,21 @@
 			<select id="cityselection" onchange="loadData()">
 				{{range $index, $element := .Cities}}
 					<option value="{{$element}}">{{$element}}</option>
-				{{end}}	
+				{{end}}
 			</select>
 		</div>
 		<div class="graphbox"></div>
-		<div class="databox">
-			<div id="data"/>
+		<div class="infobox">
+			<div class="tabbox">
+				<input type="button" class="button" value="Data" onclick="showTab('data')">
+				<input type="button" class="button" value="Code" onclick="showTab('code')">
+			</div>
+			<div class="databox">
+				<div id="data"></div>
+			</div>
+			<div class="codebox">
+				<pre id="code"></pre>
+			</div>
 		</div>
   </body>
 </html>

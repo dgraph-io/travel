@@ -8,6 +8,18 @@ function loadData() {
     showInfo(d);
 }
 
+function showTab(which) {
+    const data = document.querySelector("div.databox");
+    const code = document.querySelector("div.codebox");
+    if (which == "data") {
+        code.style.display = "none";
+        data.style.display = "block";
+        return;
+    }
+    code.style.display = "block";
+    data.style.display = "none";
+}
+
 function circleMouseOver(d, index, circles) {
     const circle = circles[index];
     const radius = parseInt(circle.getAttribute("r"));
@@ -21,15 +33,16 @@ function circleMouseOut(d, index, circles) {
 }
 
 function showInfo(d, index, circles) {
-    const cell = document.getElementById("data");
+    const data = document.getElementById("data");
+    const code = document.getElementById("code");
     const name = document.getElementById("cityselection").value;
     switch (d.type) {
         case "city":
-            $.post(Dgraph,
-            queryCity(name),
-            function (o, status) {
+            var query = queryCity(name);
+            code.innerHTML = query.replace(/\\n/g, "<br />");
+            $.post(Dgraph, query, function (o, status) {
                 if (typeof o.data === "undefined") {
-                    cell.innerText = "ERROR: " + o.errors[0].message;
+                    data.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"bluedot\"></div><div class=\"dotlabel\">City</div>";
@@ -39,15 +52,15 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Lat: " + o.data.queryCity[0].lat + "</dt>";
                 innerHTML += "<dt>Lng: " + o.data.queryCity[0].lng + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                cell.innerHTML = innerHTML;
+                data.innerHTML = innerHTML;
             });
             break;
         case "advisory":
-            $.post(Dgraph,
-            queryAdvisory(name),
-            function(o, status){
+            var query = queryAdvisory(name);
+            code.innerHTML = query.replace(/\\n/g, "<br />");
+            $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    cell.innerText = "ERROR: " + o.errors[0].message;
+                    data.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"reddot\"></div><div class=\"dotlabel\">Advisory</div>";
@@ -59,15 +72,15 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Score: " + o.data.queryCity[0].advisory.score + "</dt>";
                 innerHTML += "<dt>Message: " + o.data.queryCity[0].advisory.message + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                cell.innerHTML = innerHTML;
+                data.innerHTML = innerHTML;
             });
             break;
         case "weather":
-            $.post(Dgraph,
-            queryWeather(name),
-            function(o, status){
+            var query = queryWeather(name);
+            code.innerHTML =  query.replace(/\\n/g, "<br />");
+            $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    cell.innerText = "ERROR: " + o.errors[0].message;
+                    data.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"orangedot\"></div><div class=\"dotlabel\">Weather</div>";
@@ -85,15 +98,15 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Wind Speed: " + o.data.queryCity[0].weather.wind_speed + "</dt>";
                 innerHTML += "<dt>Wind Direction: " + o.data.queryCity[0].weather.wind_direction + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                cell.innerHTML = innerHTML;
+                data.innerHTML = innerHTML;
             });
             break;
         case "place":
-            $.post(Dgraph,
-            queryPlaceByCategory(name, d.id),
-            function(o, status){
+            var query = queryPlaceByCategory(name, d.id);
+            code.innerHTML =  query.replace(/\\n/g, "<br />");
+            $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    cell.innerText = "ERROR: " + o.errors[0].message;
+                    data.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"dot\" style=\"background-color:" + d.color + "\"></div><div class=\"dotlabel\">" + d.id + "</div>";
@@ -108,15 +121,15 @@ function showInfo(d, index, circles) {
                     innerHTML += "</dl></td></tr>";
                 }
                 innerHTML += "</table>";
-                cell.innerHTML = innerHTML;
+                data.innerHTML = innerHTML;
             });
             break;
         default:
-            $.post(Dgraph,
-            queryPlaceByName(d.id),
-            function(o, status){
+            var query = queryPlaceByName(d.id);
+            code.innerHTML =  query.replace(/\\n/g, "<br />");
+            $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    cell.innerText = "ERROR: " + o.errors[0].message;
+                    data.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"dot\" style=\"background-color:" + d.color + "\"></div><div class=\"dotlabel\">" + d.type + "</div>";
@@ -127,7 +140,7 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Address: " + o.data.queryPlace[0].address + "</dt>";
                 innerHTML += "<dt>Avg User Rating: " + o.data.queryPlace[0].avg_user_rating + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                cell.innerHTML = innerHTML;
+                data.innerHTML = innerHTML;
             });
             break;
     }
