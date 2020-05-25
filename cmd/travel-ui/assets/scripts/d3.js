@@ -82,7 +82,6 @@ function makechart(data) {
 }
 
 function drawchart(city) {
-    document.getElementById("data").innerHTML = "";
     document.querySelector("div.graphbox").innerHTML = "";
     
     const err = function(error) {

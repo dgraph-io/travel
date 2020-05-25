@@ -57,19 +57,28 @@ tr:nth-child(odd) {
     overflow: auto;
     padding: 0px 0px 10px 0px;
 }
-.databox {
+.nodebox {
     height: 720px;
     font-family: verdana;
     padding: 10px 0px;
     overflow: auto;
 }
-.codebox {
+.querybox {
     height: 720px;
     display: none;
     font-size: 20px;
     overflow: auto;
 }
-#code {
+#query {
+    white-space: pre-wrap;
+}
+.schemabox {
+    height: 720px;
+    display: none;
+    font-size: 20px;
+    overflow: auto;
+}
+#schema {
     white-space: pre-wrap;
 }
 .dotlabel {

@@ -3,21 +3,53 @@ $.ajaxSetup({
 });
 
 function loadData() {
+    document.getElementById("node").innerHTML = "";
+    document.getElementById("query").innerHTML = "";
+
     drawchart(document.getElementById("cityselection").value);
     const d = { type: "city" };
     showInfo(d);
 }
 
+function loadSchema() {
+    const schemaBox = document.getElementById("schema");
+    let dgraph = Dgraph.replace("graphql", "admin")
+    schema.innerHTML = "fetching schema ...";
+
+    $.post(dgraph, querySchema(), function (o, status) {
+        if (typeof o.data === "undefined") {
+            schema.innerText = "ERROR: " + o.errors[0].message;
+            return;
+        }
+        let doc = JSON.stringify(o).replace(/\\n/g, "<br />");
+        doc = doc.replace(/\\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+        schemaBox.innerHTML = "<b>Schema:</b><br /><br />" + doc;
+    });
+}
+
 function showTab(which) {
-    const data = document.querySelector("div.databox");
-    const code = document.querySelector("div.codebox");
-    if (which == "data") {
-        code.style.display = "none";
-        data.style.display = "block";
-        return;
+    const node = document.querySelector("div.nodebox");
+    const query = document.querySelector("div.querybox");
+    const schema = document.querySelector("div.schemabox");
+
+    switch (which) {
+        case "node":
+            node.style.display = "block";
+            query.style.display = "none";
+            schema.style.display = "none";
+            break;
+        case "query":
+            node.style.display = "none";
+            query.style.display = "block";
+            schema.style.display = "none";
+            break;
+        case "schema":
+            node.style.display = "none";
+            query.style.display = "none";
+            schema.style.display = "block";
+            loadSchema();
+            break;
     }
-    code.style.display = "block";
-    data.style.display = "none";
 }
 
 function circleMouseOver(d, index, circles) {
@@ -39,17 +71,16 @@ function showQueryResponse(query, resp) {
 }
 
 function showInfo(d, index, circles) {
-    const data = document.getElementById("data");
-    const code = document.getElementById("code");
+    const nodeBox = document.getElementById("node");
+    const queryBox = document.getElementById("query");
     const name = document.getElementById("cityselection").value;
 
     switch (d.type) {
-        
         case "city":
             var query = queryCity(name);
             $.post(Dgraph, query, function (o, status) {
                 if (typeof o.data === "undefined") {
-                    data.innerText = "ERROR: " + o.errors[0].message;
+                    nodeBox.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerData = "<div class=\"bluedot\"></div><div class=\"dotlabel\">City</div>";
@@ -59,8 +90,8 @@ function showInfo(d, index, circles) {
                 innerData += "<dt>Lat: " + o.data.queryCity[0].lat + "</dt>";
                 innerData += "<dt>Lng: " + o.data.queryCity[0].lng + "</dt>";
                 innerData += "</dl></td></tr></table>";
-                data.innerHTML = innerData;                
-                code.innerHTML = showQueryResponse(query, o);
+                nodeBox.innerHTML = innerData;                
+                queryBox.innerHTML = showQueryResponse(query, o);
             });
             break;
 
@@ -68,7 +99,7 @@ function showInfo(d, index, circles) {
             var query = queryAdvisory(name);
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    data.innerText = "ERROR: " + o.errors[0].message;
+                    nodeBox.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"reddot\"></div><div class=\"dotlabel\">Advisory</div>";
@@ -80,8 +111,8 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Score: " + o.data.queryCity[0].advisory.score + "</dt>";
                 innerHTML += "<dt>Message: " + o.data.queryCity[0].advisory.message + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                data.innerHTML = innerHTML;
-                code.innerHTML = showQueryResponse(query, o);
+                nodeBox.innerHTML = innerHTML;
+                queryBox.innerHTML = showQueryResponse(query, o);
             });
             break;
 
@@ -89,7 +120,7 @@ function showInfo(d, index, circles) {
             var query = queryWeather(name);
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    data.innerText = "ERROR: " + o.errors[0].message;
+                    nodeBox.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"orangedot\"></div><div class=\"dotlabel\">Weather</div>";
@@ -107,8 +138,8 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Wind Speed: " + o.data.queryCity[0].weather.wind_speed + "</dt>";
                 innerHTML += "<dt>Wind Direction: " + o.data.queryCity[0].weather.wind_direction + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                data.innerHTML = innerHTML;
-                code.innerHTML = showQueryResponse(query, o);
+                nodeBox.innerHTML = innerHTML;
+                queryBox.innerHTML = showQueryResponse(query, o);
             });
             break;
 
@@ -116,7 +147,7 @@ function showInfo(d, index, circles) {
             var query = queryPlaceByCategory(name, d.id);
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    data.innerText = "ERROR: " + o.errors[0].message;
+                    nodeBox.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"dot\" style=\"background-color:" + d.color + "\"></div><div class=\"dotlabel\">" + d.id + "</div>";
@@ -131,8 +162,8 @@ function showInfo(d, index, circles) {
                     innerHTML += "</dl></td></tr>";
                 }
                 innerHTML += "</table>";
-                data.innerHTML = innerHTML;
-                code.innerHTML = showQueryResponse(query, o);
+                nodeBox.innerHTML = innerHTML;
+                queryBox.innerHTML = showQueryResponse(query, o);
             });
             break;
 
@@ -140,7 +171,7 @@ function showInfo(d, index, circles) {
             var query = queryPlaceByName(d.id);
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
-                    data.innerText = "ERROR: " + o.errors[0].message;
+                    nodeBox.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
                 let innerHTML = "<div class=\"dot\" style=\"background-color:" + d.color + "\"></div><div class=\"dotlabel\">" + d.type + "</div>";
@@ -151,8 +182,8 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Address: " + o.data.queryPlace[0].address + "</dt>";
                 innerHTML += "<dt>Avg User Rating: " + o.data.queryPlace[0].avg_user_rating + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
-                data.innerHTML = innerHTML;
-                code.innerHTML = showQueryResponse(query, o);
+                nodeBox.innerHTML = innerHTML;
+                queryBox.innerHTML = showQueryResponse(query, o);
             });
             break;
     }

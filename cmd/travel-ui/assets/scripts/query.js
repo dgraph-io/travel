@@ -1,3 +1,10 @@
+function querySchema() {
+    return JSON.stringify({
+        query: `query { getGQLSchema { schema }}`,
+        variables: null
+    });
+}
+
 function queryCity(cityName) {
     return JSON.stringify({
         query: `query {
