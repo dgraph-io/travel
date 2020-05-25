@@ -10,7 +10,7 @@ tr:nth-child(even) {
     background: #E8E8E8;
 }
 tr:nth-child(odd) {
-    background: #C0C0C0;
+    background: rgb(226, 225, 225);
 }
 .cityinput {
     width: 100%;
@@ -52,31 +52,38 @@ tr:nth-child(odd) {
     overflow: auto;
 }
 .tabbox {
-    border-bottom: 1px solid #333;
     font-family: verdana;
     overflow: auto;
-    padding: 0px 0px 10px 0px;
+    padding: 0px 0px;
 }
 .nodebox {
-    height: 720px;
+    height: 710px;
     font-family: verdana;
-    padding: 10px 0px;
     overflow: auto;
+    padding: 20px 15px;
+    border: 1px solid #333;
+    background-color: #faf9f5;
 }
 .querybox {
-    height: 720px;
+    height: 740px;
     display: none;
     font-size: 20px;
     overflow: auto;
+    padding: 5px 15px;
+    border: 1px solid #333;
+    background-color: #faf9f5;
 }
 #query {
     white-space: pre-wrap;
 }
 .schemabox {
-    height: 720px;
+    height: 740px;
     display: none;
     font-size: 20px;
     overflow: auto;
+    padding: 5px 15px;
+    border: 1px solid #333;
+    background-color: #faf9f5;
 }
 #schema {
     white-space: pre-wrap;
@@ -121,9 +128,10 @@ tr:nth-child(odd) {
     margin-right: 20px;
 }
 .button {
-    background-color: #4CAF50;
-    border: none;
-    color: white;
+    background-color: #faf9f5;
+    border: 1px solid #333;
+    border-bottom: none;
+    color: black;
     padding: 10px 15px;
     text-align: center;
     text-decoration: none;
@@ -131,4 +139,5 @@ tr:nth-child(odd) {
     font-size: 18px;
     font-family: verdana;
     margin: 0px 5px;
+    cursor: pointer;
 }

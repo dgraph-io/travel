@@ -5,6 +5,7 @@ $.ajaxSetup({
 function loadData() {
     document.getElementById("node").innerHTML = "";
     document.getElementById("query").innerHTML = "";
+    showTab("node");
 
     drawchart(document.getElementById("cityselection").value);
     const d = { type: "city" };
@@ -28,25 +29,38 @@ function loadSchema() {
 }
 
 function showTab(which) {
-    const node = document.querySelector("div.nodebox");
-    const query = document.querySelector("div.querybox");
-    const schema = document.querySelector("div.schemabox");
+    const nodeBox = document.querySelector("div.nodebox");
+    const queryBox = document.querySelector("div.querybox");
+    const schemaBox = document.querySelector("div.schemabox");
+
+    const nodeBut = document.getElementById("nodebutton");
+    const queryBut = document.getElementById("querybutton");
+    const schemaBut = document.getElementById("schemabutton");
 
     switch (which) {
         case "node":
-            node.style.display = "block";
-            query.style.display = "none";
-            schema.style.display = "none";
+            nodeBox.style.display = "block";
+            queryBox.style.display = "none";
+            schemaBox.style.display = "none";
+            nodeBut.style.backgroundColor = "#d9d8d4";
+            queryBut.style.backgroundColor = "#faf9f5";
+            schemaBut.style.backgroundColor = "#faf9f5";
             break;
         case "query":
-            node.style.display = "none";
-            query.style.display = "block";
-            schema.style.display = "none";
+            nodeBox.style.display = "none";
+            queryBox.style.display = "block";
+            schemaBox.style.display = "none";
+            nodeBut.style.backgroundColor = "#faf9f5";
+            queryBut.style.backgroundColor = "#d9d8d4";
+            schemaBut.style.backgroundColor = "#faf9f5";
             break;
         case "schema":
-            node.style.display = "none";
-            query.style.display = "none";
-            schema.style.display = "block";
+            nodeBox.style.display = "none";
+            queryBox.style.display = "none";
+            schemaBox.style.display = "block";
+            nodeBut.style.backgroundColor = "#faf9f5";
+            queryBut.style.backgroundColor = "#faf9f5";
+            schemaBut.style.backgroundColor = "#d9d8d4";
             loadSchema();
             break;
     }
