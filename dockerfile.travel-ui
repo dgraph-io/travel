@@ -28,7 +28,7 @@ ARG PACKAGE_PREFIX
 COPY --from=build_travel-ui /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/assets/ /app/assets/
 COPY --from=build_travel-ui /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
-CMD /app/main
+CMD ["/app/main"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="${PACKAGE_NAME}" \
