@@ -45,7 +45,7 @@ func run(log *log.Logger) error {
 	var cfg struct {
 		conf.Version
 		Search struct {
-			Categories []string `conf:"default:resturant;bar;supermarket"`
+			Categories []string `conf:"default:restaurant;bar;supermarket"`
 			Radius     int      `conf:"default:5000"`
 		}
 		APIKeys struct {
