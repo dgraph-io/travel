@@ -30,7 +30,7 @@ tr:nth-child(odd) {
     padding: 0px 5px 5px 5px;
 }
 .graphbox {
-    width: 1000px;
+    width: 50%;
     height: 800px;
     border: 1px solid #333;
     box-shadow: 8px 8px 5px #444;
@@ -64,8 +64,13 @@ tr:nth-child(odd) {
     overflow: auto;
 }
 .codebox {
+    height: 720px;
     display: none;
     font-size: 20px;
+    overflow: auto;
+}
+#code {
+    white-space: pre-wrap;
 }
 .dotlabel {
     font-size: 25px;

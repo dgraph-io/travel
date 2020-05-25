@@ -32,32 +32,40 @@ function circleMouseOut(d, index, circles) {
     circle.setAttribute("r", radius);
 }
 
+function showQueryResponse(query, resp) {
+    let display = "<b>Query:</b><br /><br />" + query.replace(/\\n/g, "<br />");
+    display += "<br /><br /><b>Response:</b><br /><br />" + JSON.stringify(resp);
+    return display;
+}
+
 function showInfo(d, index, circles) {
     const data = document.getElementById("data");
     const code = document.getElementById("code");
     const name = document.getElementById("cityselection").value;
+
     switch (d.type) {
+        
         case "city":
             var query = queryCity(name);
-            code.innerHTML = query.replace(/\\n/g, "<br />");
             $.post(Dgraph, query, function (o, status) {
                 if (typeof o.data === "undefined") {
                     data.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
-                let innerHTML = "<div class=\"bluedot\"></div><div class=\"dotlabel\">City</div>";
-                innerHTML += "<table><tr><td><dl>";              
-                innerHTML += "<dt>ID: " + o.data.queryCity[0].id + "</dt>";
-                innerHTML += "<dt>Name: " + o.data.queryCity[0].name + "</dt>";
-                innerHTML += "<dt>Lat: " + o.data.queryCity[0].lat + "</dt>";
-                innerHTML += "<dt>Lng: " + o.data.queryCity[0].lng + "</dt>";
-                innerHTML += "</dl></td></tr></table>";
-                data.innerHTML = innerHTML;
+                let innerData = "<div class=\"bluedot\"></div><div class=\"dotlabel\">City</div>";
+                innerData += "<table><tr><td><dl>";              
+                innerData += "<dt>ID: " + o.data.queryCity[0].id + "</dt>";
+                innerData += "<dt>Name: " + o.data.queryCity[0].name + "</dt>";
+                innerData += "<dt>Lat: " + o.data.queryCity[0].lat + "</dt>";
+                innerData += "<dt>Lng: " + o.data.queryCity[0].lng + "</dt>";
+                innerData += "</dl></td></tr></table>";
+                data.innerHTML = innerData;                
+                code.innerHTML = showQueryResponse(query, o);
             });
             break;
+
         case "advisory":
             var query = queryAdvisory(name);
-            code.innerHTML = query.replace(/\\n/g, "<br />");
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
                     data.innerText = "ERROR: " + o.errors[0].message;
@@ -73,11 +81,12 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Message: " + o.data.queryCity[0].advisory.message + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
                 data.innerHTML = innerHTML;
+                code.innerHTML = showQueryResponse(query, o);
             });
             break;
+
         case "weather":
             var query = queryWeather(name);
-            code.innerHTML =  query.replace(/\\n/g, "<br />");
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
                     data.innerText = "ERROR: " + o.errors[0].message;
@@ -99,11 +108,12 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Wind Direction: " + o.data.queryCity[0].weather.wind_direction + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
                 data.innerHTML = innerHTML;
+                code.innerHTML = showQueryResponse(query, o);
             });
             break;
+
         case "place":
             var query = queryPlaceByCategory(name, d.id);
-            code.innerHTML =  query.replace(/\\n/g, "<br />");
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
                     data.innerText = "ERROR: " + o.errors[0].message;
@@ -122,11 +132,12 @@ function showInfo(d, index, circles) {
                 }
                 innerHTML += "</table>";
                 data.innerHTML = innerHTML;
+                code.innerHTML = showQueryResponse(query, o);
             });
             break;
+
         default:
             var query = queryPlaceByName(d.id);
-            code.innerHTML =  query.replace(/\\n/g, "<br />");
             $.post(Dgraph, query, function(o, status) {
                 if (typeof o.data === "undefined") {
                     data.innerText = "ERROR: " + o.errors[0].message;
@@ -141,6 +152,7 @@ function showInfo(d, index, circles) {
                 innerHTML += "<dt>Avg User Rating: " + o.data.queryPlace[0].avg_user_rating + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
                 data.innerHTML = innerHTML;
+                code.innerHTML = showQueryResponse(query, o);
             });
             break;
     }
