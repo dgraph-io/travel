@@ -18,6 +18,20 @@ function queryCity(cityName) {
     });
 }
 
+function queryCityPlaces(cityName) {
+    return JSON.stringify({
+        query: `query {
+            queryCity(filter: { name: { eq: "` + cityName + `" } }) {
+                places {
+                    lat
+                    lng
+                    name
+                }
+            }}`,
+        variables: null
+    });
+}
+
 function queryAdvisory(cityName) {
     return JSON.stringify({
         query: `query {

@@ -1,8 +1,11 @@
+var map;
+var markers = [];
+var currentMap;
+
 $.ajaxSetup({
     contentType: "application/json; charset=utf-8"
 });
 
-var map;
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
         center: {lat: 25.7617, lng: -80.1918},
@@ -10,12 +13,36 @@ function initMap() {
     });
 }
 
-function loadMap(lat, lng) {
-    var pos = {
-        lat: lat,
-        lng: lng
-    };
-    map.setCenter(pos);
+function loadMap() {
+    const name = document.getElementById("cityselection").value;
+    if (name == currentMap) {
+        return;
+    }
+    currentMap = name;
+    var query = queryCityPlaces(name);
+    $.post(Dgraph, query, function (o, status) {
+        if (typeof o.data === "undefined") {
+            nodeBox.innerText = "ERROR: " + o.errors[0].message;
+            return;
+        }
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+        var bounds = new google.maps.LatLngBounds();
+        for (i = 0; i < o.data.queryCity[0].places.length; i++) {
+            var name = o.data.queryCity[0].places[i].name.split(":")[0];
+            var latLng = new google.maps.LatLng(o.data.queryCity[0].places[i].lat, o.data.queryCity[0].places[i].lng);
+            var marker = new google.maps.Marker({
+                position: latLng,
+                title: name,
+                map: map
+            });
+            markers.push(marker);
+            bounds.extend(latLng);
+        }
+        map.fitBounds(bounds);
+    });
 }
 
 function loadData() {
@@ -102,6 +129,7 @@ function showGraphTab(which) {
             mapBox.style.display = "block";
             graphBut.style.backgroundColor = "#faf9f5";
             mapBut.style.backgroundColor = "#d9d8d4";
+            loadMap();
             break;
     }
 }
@@ -144,9 +172,8 @@ function showNodeData(d, index, circles) {
                 innerData += "<dt>Lat: " + o.data.queryCity[0].lat + "</dt>";
                 innerData += "<dt>Lng: " + o.data.queryCity[0].lng + "</dt>";
                 innerData += "</dl></td></tr></table>";
-                nodeBox.innerHTML = innerData;                
+                nodeBox.innerHTML = innerData;
                 queryBox.innerHTML = showQueryResponse(query, o);
-                loadMap(o.data.queryCity[0].lat, o.data.queryCity[0].lng);
             });
             break;
 
