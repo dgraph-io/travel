@@ -1,5 +1,5 @@
 # https://docs.docker.com/compose/compose-file
-version: '3'
+version: '3.8'
 
 networks:
   shared-network:
@@ -44,3 +44,4 @@ services:
     image: dgraph/standalone:v20.03.1
     ports:
       - 8080:8080
+    init: true
