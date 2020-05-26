@@ -16,6 +16,7 @@ services:
     ports:
       - 3000:3000 # API
       - 4000:4000 # DEBUG API
+    init: true
     depends_on:
       - dgraph
     # environment:
@@ -30,9 +31,11 @@ services:
     ports:
       - 80:80 # API
       - 4080:4080 # DEBUG API
+    init: true
     depends_on:
       - dgraph
     environment:
+      - UI_API_KEYS_MAPS_KEY=AIzaSyDzEqoBPLXBEsWS5k5VNwecMGCnJgH5poE
       - UI_DGRAPH_API_HOST_INSIDE=dgraph:8080
       # - GODEBUG=gctrace=1
 
