@@ -19,9 +19,10 @@ type index struct {
 	tmpl            *template.Template
 	graphQLEndpoint string
 	cities          []string
+	mapsKey         string
 }
 
-func newIndex(dgraph data.Dgraph, cities []string) (*index, error) {
+func newIndex(dgraph data.Dgraph, cities []string, mapsKey string) (*index, error) {
 	data, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")
@@ -36,6 +37,7 @@ func newIndex(dgraph data.Dgraph, cities []string) (*index, error) {
 		tmpl:            tmpl,
 		graphQLEndpoint: fmt.Sprintf("%s://%s/graphql", dgraph.Protocol, dgraph.APIHostOutside),
 		cities:          cities,
+		mapsKey:         mapsKey,
 	}
 
 	return &index, nil
@@ -46,6 +48,7 @@ func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	vars := map[string]interface{}{
 		"GraphQLEndpoint": i.graphQLEndpoint,
 		"Cities":          i.cities,
+		"MapsKey":         i.mapsKey,
 	}
 
 	if err := i.tmpl.Execute(&markup, vars); err != nil {

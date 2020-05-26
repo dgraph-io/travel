@@ -58,7 +58,7 @@ function makechart(data) {
             .attr("r", d => d.radius)
             .attr("rorg", d => d.radius)
             .attr("fill", d => d.color)
-            .on("click", showInfo)
+            .on("click", showNodeData)
             .on("mouseover", circleMouseOver)
             .on("mouseout", circleMouseOut)
             .call(drag(simulation));

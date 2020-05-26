@@ -49,7 +49,10 @@ func run(log *log.Logger) error {
 			Radius     int      `conf:"default:5000"`
 		}
 		APIKeys struct {
-			MapsKey    string `conf:"default:AIzaSyAKz3OhgUF-BO3dsFQWEwHsGmAh7BXe15w"`
+			// You need to generate a Google Key to support Places API and JS Maps.
+			// Once you have the key it's best to export it.
+			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
+			MapsKey    string
 			WeatherKey string `conf:"default:5b68961dd2602c2f722f02448d2de823"`
 		}
 		URL struct {

@@ -2,14 +2,31 @@ $.ajaxSetup({
     contentType: "application/json; charset=utf-8"
 });
 
+var map;
+function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: {lat: 25.7617, lng: -80.1918},
+        zoom: 8
+    });
+}
+
+function loadMap(lat, lng) {
+    var pos = {
+        lat: lat,
+        lng: lng
+    };
+    map.setCenter(pos);
+}
+
 function loadData() {
     document.getElementById("node").innerHTML = "";
     document.getElementById("query").innerHTML = "";
-    showTab("node");
+    showInfoTab("node");
+    showGraphTab("graph");
 
     drawchart(document.getElementById("cityselection").value);
     const d = { type: "city" };
-    showInfo(d);
+    showNodeData(d);
 }
 
 function loadSchema() {
@@ -28,7 +45,7 @@ function loadSchema() {
     });
 }
 
-function showTab(which) {
+function showInfoTab(which) {
     const nodeBox = document.querySelector("div.nodebox");
     const queryBox = document.querySelector("div.querybox");
     const schemaBox = document.querySelector("div.schemabox");
@@ -66,6 +83,29 @@ function showTab(which) {
     }
 }
 
+function showGraphTab(which) {
+    const graphBox = document.querySelector("div.graphbox");
+    const mapBox = document.querySelector("div.mapbox");
+
+    const graphBut = document.getElementById("graphbutton");
+    const mapBut = document.getElementById("mapbutton");
+
+    switch (which) {
+        case "graph":
+            graphBox.style.display = "block";
+            mapBox.style.display = "none";
+            graphBut.style.backgroundColor = "#d9d8d4";
+            mapBut.style.backgroundColor = "#faf9f5";
+            break;
+        case "map":
+            graphBox.style.display = "none";
+            mapBox.style.display = "block";
+            graphBut.style.backgroundColor = "#faf9f5";
+            mapBut.style.backgroundColor = "#d9d8d4";
+            break;
+    }
+}
+
 function circleMouseOver(d, index, circles) {
     const circle = circles[index];
     const radius = parseInt(circle.getAttribute("r"));
@@ -84,7 +124,7 @@ function showQueryResponse(query, resp) {
     return display;
 }
 
-function showInfo(d, index, circles) {
+function showNodeData(d, index, circles) {
     const nodeBox = document.getElementById("node");
     const queryBox = document.getElementById("query");
     const name = document.getElementById("cityselection").value;
@@ -106,6 +146,7 @@ function showInfo(d, index, circles) {
                 innerData += "</dl></td></tr></table>";
                 nodeBox.innerHTML = innerData;                
                 queryBox.innerHTML = showQueryResponse(query, o);
+                loadMap(o.data.queryCity[0].lat, o.data.queryCity[0].lng);
             });
             break;
 

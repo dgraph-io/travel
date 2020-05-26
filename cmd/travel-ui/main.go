@@ -49,6 +49,12 @@ func run(log *log.Logger) error {
 			APIHostOutside string `conf:"default:0.0.0.0:8080"`
 			BasicAuthToken string
 		}
+		APIKeys struct {
+			// You need to generate a Google Key to support Places API and JS Maps.
+			// Once you have the key it's best to export it.
+			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
+			MapsKey string
+		}
 	}
 	cfg.Version.SVN = build
 	cfg.Version.Desc = "copyright information here"
@@ -123,7 +129,7 @@ func run(log *log.Logger) error {
 	}
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log, dgraph)
+	handler, err := handlers.UI(build, shutdown, log, dgraph, cfg.APIKeys.MapsKey)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}

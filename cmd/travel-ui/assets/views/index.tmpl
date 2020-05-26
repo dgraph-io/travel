@@ -7,6 +7,8 @@
         <link rel="stylesheet" href="/assets/styles/main.css?v1">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key={{.MapsKey}}&callback=initMap&libraries=&v=weekly"></script>
         <script src="/assets/scripts/d3.js?v1"></script>
 		<script src="/assets/scripts/query.js?v1"></script>
 		<script src="/assets/scripts/main.js?v1"></script>
@@ -23,12 +25,21 @@
 				{{end}}
 			</select>
 		</div>
-		<div class="graphbox"></div>
+		<div class="graphicalBox">
+		<div class="tabbox">
+				<div type="button" id="graphbutton" class="button" onclick="showGraphTab('graph')">Graph</div>
+				<div type="button" id="mapbutton" class="button" onclick="showGraphTab('map')">Map</div>
+			</div>
+			<div class="graphbox"></div>
+			<div class="mapbox">
+				<div id="map"></div>
+			</div>
+		</div>
 		<div class="infobox">
 			<div class="tabbox">
-				<div type="button" id="nodebutton" class="button" onclick="showTab('node')">Node</div>
-				<div type="button" id="querybutton" class="button" onclick="showTab('query')">Query</div>
-				<div type="button" id="schemabutton" class="button" onclick="showTab('schema')">Schema</div>
+				<div type="button" id="nodebutton" class="button" onclick="showInfoTab('node')">Node</div>
+				<div type="button" id="querybutton" class="button" onclick="showInfoTab('query')">Query</div>
+				<div type="button" id="schemabutton" class="button" onclick="showInfoTab('schema')">Schema</div>
 			</div>
 			<div class="nodebox">
 				<div id="node"></div>
