@@ -35,7 +35,7 @@ services:
     depends_on:
       - dgraph
     environment:
-      - UI_API_KEYS_MAPS_KEY=AIzaSyDzEqoBPLXBEsWS5k5VNwecMGCnJgH5poE
+      - UI_API_KEYS_MAPS_KEY=
       - UI_DGRAPH_API_HOST_INSIDE=dgraph:8080
       # - GODEBUG=gctrace=1
 
