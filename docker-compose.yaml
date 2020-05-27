@@ -8,14 +8,29 @@ networks:
 services:
 
   # Database
-  dgraph:
-    container_name: dgraph
+  dgraph-zero:
+    container_name: dgraph-zero
     networks:
       - shared-network
-    image: dgraph/standalone:v20.03.1
+    image: dgraph/dgraph:v20.03.1
+    environment:
+      - DGRAPH_ZERO_MY=dgraph-zero:5080
+    command: dgraph zero
+  dgraph-alpha:
+    container_name: dgraph-alpha
+    networks:
+      - shared-network
+    image: dgraph/dgraph:v20.03.1
     ports:
       - 8080:8080
-    init: true
+    depends_on:
+      - dgraph-zero
+    environment:
+      - DGRAPH_ALPHA_MY=dgraph-alpha:7080
+      - DGRAPH_ALPHA_LRU_MB=1024
+      - DGRAPH_ALPHA_ZERO=dgraph-zero:5080
+      - DGRAPH_ALPHA_WHITELIST=0.0.0.0/0
+    command: dgraph alpha
 
   # This is the core service API.
   travel-api:
@@ -27,7 +42,7 @@ services:
       - 3000:3000 # API
       - 4000:4000 # DEBUG API
     depends_on:
-      - dgraph
+      - dgraph-alpha
     # environment:
       # - GODEBUG=gctrace=1
 
@@ -41,9 +56,9 @@ services:
       - 80:80 # API
       - 4080:4080 # DEBUG API
     depends_on:
-      - dgraph
+      - dgraph-alpha
     environment:
       - UI_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
-      - UI_DGRAPH_API_HOST_INSIDE=dgraph:8080
+      - UI_DGRAPH_API_HOST_INSIDE=dgraph-alpha:8080
       # - GODEBUG=gctrace=1
 
