@@ -94,3 +94,8 @@ deps-cleancache:
 
 clean:
 	docker system prune -f
+
+# Git support
+
+install-hooks:
+	cp -r .githooks/ .git/hooks/
