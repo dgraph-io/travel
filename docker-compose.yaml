@@ -7,6 +7,16 @@ networks:
 
 services:
 
+  # Database
+  dgraph:
+    container_name: dgraph
+    networks:
+      - shared-network
+    image: dgraph/standalone:v20.03.1
+    ports:
+      - 8080:8080
+    init: true
+
   # This is the core service API.
   travel-api:
     container_name: travel-api
@@ -16,7 +26,6 @@ services:
     ports:
       - 3000:3000 # API
       - 4000:4000 # DEBUG API
-    init: true
     depends_on:
       - dgraph
     # environment:
@@ -31,20 +40,10 @@ services:
     ports:
       - 80:80 # API
       - 4080:4080 # DEBUG API
-    init: true
     depends_on:
       - dgraph
     environment:
-      - UI_API_KEYS_MAPS_KEY=
+      - UI_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
       - UI_DGRAPH_API_HOST_INSIDE=dgraph:8080
       # - GODEBUG=gctrace=1
 
-  # Database
-  dgraph:
-    container_name: dgraph
-    networks:
-      - shared-network
-    image: dgraph/standalone:v20.03.1
-    ports:
-      - 8080:8080
-    init: true
