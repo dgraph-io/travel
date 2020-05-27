@@ -43,6 +43,8 @@ type AddCityPayload {
 input AddPlaceInput {
   address: String
   avg_user_rating: Float
+  category: String
+  city: CityRef!
   city_name: String!
   gmaps_url: String
   lat: Float!
@@ -278,6 +280,8 @@ type Place {
   id: ID!
   address: String
   avg_user_rating: Float
+  category: String
+  city(filter: CityFilter): City!
   city_name: String!
   gmaps_url: String
   lat: Float!
@@ -291,6 +295,7 @@ type Place {
 
 input PlaceFilter {
   id: [ID!]
+  category: StringExactFilter
   name: StringExactFilter
   and: PlaceFilter
   or: PlaceFilter
@@ -306,6 +311,7 @@ input PlaceOrder {
 enum PlaceOrderable {
   address
   avg_user_rating
+  category
   city_name
   gmaps_url
   lat
@@ -320,6 +326,8 @@ enum PlaceOrderable {
 input PlacePatch {
   address: String
   avg_user_rating: Float
+  category: String
+  city: CityRef
   city_name: String
   gmaps_url: String
   lat: Float
@@ -335,6 +343,8 @@ input PlaceRef {
   id: ID
   address: String
   avg_user_rating: Float
+  category: String
+  city: CityRef
   city_name: String
   gmaps_url: String
   lat: Float
