@@ -27,10 +27,10 @@ travel-ui:
 run: up seed browser
 
 up:
-	docker-compose up --detach
+	docker-compose up --detach --remove-orphans
 
 down:
-	docker-compose down
+	docker-compose down --remove-orphans
 
 browser:
 	python -m webbrowser "http://localhost"
