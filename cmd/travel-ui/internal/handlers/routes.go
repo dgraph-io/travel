@@ -19,13 +19,14 @@ var cities = []string{"miami", "new york", "sydney"}
 func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgraph, mapsKey string) (*web.App, error) {
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
+	// Register the index page for the website.
 	index, err := newIndex(dgraph, cities, mapsKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading index template")
 	}
 	app.Handle("GET", "/", index.handler)
 
-	// Set the route to load assets.
+	// Register the assets.
 	fs := http.FileServer(http.Dir("assets"))
 	fs = http.StripPrefix("/assets/", fs)
 	f := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
@@ -34,7 +35,14 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgra
 	}
 	app.Handle("GET", "/assets/*", f)
 
-	// Set the route to load data for the graph.
+	// Register health check endpoint.
+	check := check{
+		build:  build,
+		dgraph: dgraph,
+	}
+	app.Handle(http.MethodGet, "/health", check.health)
+
+	// Register data load endpoint.
 	fetch := fetch{
 		dgraph: dgraph,
 	}

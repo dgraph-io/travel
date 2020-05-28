@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/cmd/travel-api/internal/handlers"
+	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
@@ -41,6 +43,18 @@ func run(log *log.Logger) error {
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
+		}
+		Dgraph struct {
+			Protocol       string `conf:"default:http"`
+			APIHostInside  string `conf:"default:0.0.0.0:8080"`
+			APIHostOutside string `conf:"default:0.0.0.0:8080"`
+			BasicAuthToken string
+		}
+		Email struct {
+			User     string
+			Password string
+			Host     string
+			Port     int `conf:"default:25"`
 		}
 	}
 	cfg.Version.SVN = build
@@ -102,6 +116,22 @@ func run(log *log.Logger) error {
 
 	log.Println("main : Started : Initializing API support")
 
+	// Capture the configuration for Dgraph.
+	dgraph := data.Dgraph{
+		Protocol:       cfg.Dgraph.Protocol,
+		APIHostInside:  cfg.Dgraph.APIHostInside,
+		APIHostOutside: cfg.Dgraph.APIHostOutside,
+		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
+	}
+
+	// Capture the email configuration.
+	email := handlers.Email{
+		User:     cfg.Email.User,
+		Password: cfg.Email.Password,
+		Host:     cfg.Email.Host,
+		Port:     strconv.Itoa(cfg.Email.Port),
+	}
+
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
 	shutdown := make(chan os.Signal, 1)
@@ -109,7 +139,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log),
+		Handler:      handlers.API(build, shutdown, log, dgraph, email),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

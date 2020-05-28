@@ -115,11 +115,6 @@ func run(log *log.Logger) error {
 
 	log.Println("main: Initializing UI support")
 
-	// Make a channel to listen for an interrupt or terminate signal from the OS.
-	// Use a buffered channel because the signal package requires it.
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-
 	// Capture the configuration for Dgraph.
 	dgraph := data.Dgraph{
 		Protocol:       cfg.Dgraph.Protocol,
@@ -127,6 +122,11 @@ func run(log *log.Logger) error {
 		APIHostOutside: cfg.Dgraph.APIHostOutside,
 		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
 	}
+
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
 	handler, err := handlers.UI(build, shutdown, log, dgraph, cfg.APIKeys.MapsKey)
