@@ -1,5 +1,10 @@
 SHELL := /bin/bash
 
+# Key file
+
+source-keys:
+	source .keys
+
 # Building containers
 
 all: travel-api travel-ui

@@ -3,6 +3,9 @@ cmd/travel-data/travel-data
 cmd/travel-api/travel-api
 cmd/travel-ui/travel-ui
 
+# keys
+.keys
+
 # Mac
 .DS_Store
 
