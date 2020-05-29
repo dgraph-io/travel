@@ -14,7 +14,7 @@ import (
 // This is the schema for the application. This could be kept in a file
 // and maintained for wider use. In these cases I would use gogenerate
 // to hardcode the contents into the binary.
-var gQLSchema = `
+const gQLSchema = `
 type City {
 	id: ID!
 	advisory: Advisory
@@ -74,6 +74,12 @@ type schema struct {
 	graphql *graphql.GraphQL
 }
 
+// QuerySchema performs a schema query operation against the configured server.
+func (s *schema) QuerySchema(ctx context.Context, response interface{}) error {
+	query := `query { getGQLSchema { schema }}`
+	return s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, nil, response)
+}
+
 // Create is used create the schema in the database.
 func (s *schema) Create(ctx context.Context) error {
 	got, err := s.Query(ctx)
@@ -84,7 +90,17 @@ func (s *schema) Create(ctx context.Context) error {
 	switch {
 	case got == `{"getGQLSchema":null}`:
 		for i := 0; i < 2; i++ {
-			if err := s.graphql.CreateSchema(ctx, gQLSchema, nil); err != nil {
+			query := `mutation updateGQLSchema($schema: String!) {
+				updateGQLSchema(input: {
+					set: { schema: $schema }
+				}) {
+					gqlSchema {
+						schema
+					}	
+				}
+			}`
+			vars := map[string]interface{}{"schema": gQLSchema}
+			if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {
 
 				// Dgraph can fail because it's not ready to accept a schema
 				// yet. Just retry once if this is the case.
@@ -108,7 +124,7 @@ func (s *schema) Create(ctx context.Context) error {
 // Query returns the current schema in graphql format.
 func (s *schema) Query(ctx context.Context) (string, error) {
 	result := make(map[string]interface{})
-	if err := s.graphql.QuerySchema(ctx, &result); err != nil {
+	if err := s.QuerySchema(ctx, &result); err != nil {
 		return "", errors.Wrap(err, "validate schema")
 	}
 
@@ -143,4 +159,11 @@ func (s *schema) Validate(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// DropAll perform an alter operatation against the configured server
+// to remove all the data and schema.
+func (s *schema) DropAll(ctx context.Context) error {
+	query := strings.NewReader(`{"drop_all": true}`)
+	return s.graphql.Do(ctx, "alter", query, nil)
 }

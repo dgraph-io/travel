@@ -30,7 +30,7 @@ func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Plac
 	}
 
 	mutation, result := mutPlace.marshal.add(place)
-	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
+	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return Place{}, errors.Wrap(err, "failed to add place")
 	}
 
@@ -44,7 +44,7 @@ func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Plac
 
 func (mutatePlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, placeID string) error {
 	mutation, result := mutPlace.marshal.updCity(cityID, placeID)
-	err := graphql.Mutate(ctx, mutation, &result)
+	err := graphql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}

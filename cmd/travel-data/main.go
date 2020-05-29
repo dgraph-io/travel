@@ -62,7 +62,8 @@ func run(log *log.Logger) error {
 		Dgraph struct {
 			Protocol       string `conf:"default:http"`
 			APIHost        string `conf:"default:0.0.0.0:8080"`
-			BasicAuthToken string
+			AuthHeaderName string
+			AuthToken      string
 		}
 	}
 	cfg.Version.SVN = build
@@ -106,7 +107,8 @@ func run(log *log.Logger) error {
 	dgraph := data.Dgraph{
 		Protocol:       cfg.Dgraph.Protocol,
 		APIHostInside:  cfg.Dgraph.APIHost,
-		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
+		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
+		AuthToken:      cfg.Dgraph.AuthToken,
 	}
 
 	keys := feed.Keys{

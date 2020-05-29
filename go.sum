@@ -4,8 +4,8 @@ github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c/go.mod 
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/ardanlabs/conf v1.3.2 h1:xxwIYbajuyx0O6pDBhqJaAPBGBgysZ/JFZrnXAQNDws=
 github.com/ardanlabs/conf v1.3.2/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
-github.com/ardanlabs/graphql v1.3.0 h1:6UVhPnvtzAsNyRRkxy65OJIm4vU0VhF1LghoovXS3vI=
-github.com/ardanlabs/graphql v1.3.0/go.mod h1:EVDvwBm2jree7dIrrUUfrmyfPCh+SYjadwwM/uFRI/Y=
+github.com/ardanlabs/graphql v1.4.1 h1:GIjX+2NQTF8ZNTCWMFx6SpxdbMIbWqRyisuN+D/6f7I=
+github.com/ardanlabs/graphql v1.4.1/go.mod h1:EVDvwBm2jree7dIrrUUfrmyfPCh+SYjadwwM/uFRI/Y=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

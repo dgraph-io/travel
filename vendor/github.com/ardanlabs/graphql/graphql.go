@@ -10,14 +10,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 // These commands represents the set of know graphql commands.
 const (
-	CmdAlter   = "alter"
 	CmdAdmin   = "admin"
-	CmdSchema  = "admin/schema"
 	CmdQuery   = "graphql"
 	CmdQueryPM = "query"
 )
@@ -31,43 +28,30 @@ const (
 // GraphQL represents a system that can accept a graphql query.
 type GraphQL struct {
 	url            string
-	basicAuthToken string
+	authHeaderName string
+	authToken      string
 	client         *http.Client
 }
 
-// New constructs a GraphQL for use to making queries agains a
-// specified host. The apiHost is just the IP:Port of the
-// Dgraph API endpoint.
-func New(protocol string, apiHost string, basicAuthToken string, client *http.Client) *GraphQL {
-	return &GraphQL{
-		url:            fmt.Sprintf("%s://%s/", protocol, apiHost),
-		basicAuthToken: basicAuthToken,
-		client:         client,
+// New constructs a GraphQL for use to making queries agains a specified host.
+// The apiHost is the IP:Port of the Dgraph API endpoint.
+func New(protocol string, apiHost string, client *http.Client, options ...func(gql *GraphQL)) *GraphQL {
+	gql := GraphQL{
+		url:    fmt.Sprintf("%s://%s/", protocol, apiHost),
+		client: client,
 	}
+	for _, option := range options {
+		option(&gql)
+	}
+	return &gql
 }
 
-// CreateSchema performs a schema operation against the configured server.
-func (g *GraphQL) CreateSchema(ctx context.Context, schemaString string, response interface{}) error {
-	r := strings.NewReader(schemaString)
-	return g.do(ctx, CmdSchema, r, response)
-}
-
-// DropAll perform an alter operatation against the configured server
-// to remove all the data and schema.
-func (g *GraphQL) DropAll(ctx context.Context, response interface{}) error {
-	r := strings.NewReader(`{"drop_all": true}`)
-	return g.do(ctx, CmdAlter, r, response)
-}
-
-// QuerySchema performs a schema query operation against the configured server.
-func (g *GraphQL) QuerySchema(ctx context.Context, response interface{}) error {
-	query := `query { getGQLSchema { schema }}`
-	return g.QueryWithVars(ctx, CmdAdmin, query, nil, response)
-}
-
-// Mutate performs a mutation operation against the configured server.
-func (g *GraphQL) Mutate(ctx context.Context, mutationString string, response interface{}) error {
-	return g.QueryWithVars(ctx, CmdQuery, mutationString, nil, response)
+// WithAuth adds authentication parameters to the graphql client.
+func WithAuth(authHeaderName string, authToken string) func(gql *GraphQL) {
+	return func(gql *GraphQL) {
+		gql.authHeaderName = authHeaderName
+		gql.authToken = authToken
+	}
 }
 
 // Query performs a GraphQL query against the configured server.
@@ -95,11 +79,11 @@ func (g *GraphQL) QueryWithVars(ctx context.Context, command string, queryString
 		return fmt.Errorf("graphql encoding error: %w", err)
 	}
 
-	return g.do(ctx, command, &b, response)
+	return g.Do(ctx, command, &b, response)
 }
 
-// do provides the mechanics of handling a GraphQL request and response.
-func (g *GraphQL) do(ctx context.Context, command string, r io.Reader, response interface{}) error {
+// Do provides the mechanics of handling a GraphQL request and response.
+func (g *GraphQL) Do(ctx context.Context, command string, r io.Reader, response interface{}) error {
 
 	// Want to capture the query being executed for logging.
 	// The TeeReader will write the query to this buffer when
@@ -115,8 +99,8 @@ func (g *GraphQL) do(ctx context.Context, command string, r io.Reader, response 
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	if g.basicAuthToken != "" {
-		req.Header.Set("Authorization: Basic", g.basicAuthToken)
+	if g.authToken != "" {
+		req.Header.Set(g.authHeaderName, g.authToken)
 	}
 
 	resp, err := g.client.Do(req)

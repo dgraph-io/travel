@@ -22,11 +22,15 @@ regexs = {
 
 files_modified_arr.each do |file|
     regexs.each_pair do |key_name, regex|
+        if file == "go.sum"
+            next
+        end
+        puts file
         grep_command = "grep -iE \"#{regex}\" #{file}"
         res = `#{grep_command}`
         unless res == ""
             bad_files += 1
-            puts "Match rule for #{key_name} on file: #{file}"
+            puts "Match rule for #{key_name} on file: #{file} res: #{res}"
         end
     end
 end

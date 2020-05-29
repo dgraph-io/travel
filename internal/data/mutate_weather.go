@@ -20,7 +20,7 @@ func (mutateWeather) add(ctx context.Context, graphql *graphql.GraphQL, weather 
 	}
 
 	mutation, result := mutWeather.marshal.add(weather)
-	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
+	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return Weather{}, errors.Wrap(err, "failed to add weather")
 	}
 
@@ -38,7 +38,7 @@ func (mutateWeather) updateCity(ctx context.Context, graphql *graphql.GraphQL, c
 	}
 
 	mutation, result := mutWeather.marshal.updCity(cityID, weather)
-	err := graphql.Mutate(ctx, mutation, &result)
+	err := graphql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
@@ -53,7 +53,7 @@ func (mutateWeather) delete(ctx context.Context, query query, graphql *graphql.G
 	}
 
 	mutation, result := mutWeather.marshal.delete(weather.ID)
-	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
+	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
 

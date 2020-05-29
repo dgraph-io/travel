@@ -14,7 +14,8 @@ type Dgraph struct {
 	Protocol       string
 	APIHostInside  string
 	APIHostOutside string
-	BasicAuthToken string
+	AuthHeaderName string
+	AuthToken      string
 }
 
 // DB provides support for storing data inside of Dgraph.
@@ -43,7 +44,8 @@ func NewDB(dgraph Dgraph) (*DB, error) {
 		},
 	}
 
-	graphql := graphql.New(dgraph.Protocol, dgraph.APIHostInside, dgraph.BasicAuthToken, &client)
+	auth := graphql.WithAuth(dgraph.AuthHeaderName, dgraph.AuthToken)
+	graphql := graphql.New(dgraph.Protocol, dgraph.APIHostInside, &client, auth)
 
 	db := DB{
 		Schema: schema{graphql: graphql},

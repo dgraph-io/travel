@@ -48,7 +48,8 @@ func run(log *log.Logger) error {
 			Protocol       string `conf:"default:http"`
 			APIHostInside  string `conf:"default:0.0.0.0:8080"`
 			APIHostOutside string `conf:"default:0.0.0.0:8080"`
-			BasicAuthToken string
+			AuthHeaderName string
+			AuthToken      string
 		}
 		Email struct {
 			User     string
@@ -121,7 +122,8 @@ func run(log *log.Logger) error {
 		Protocol:       cfg.Dgraph.Protocol,
 		APIHostInside:  cfg.Dgraph.APIHostInside,
 		APIHostOutside: cfg.Dgraph.APIHostOutside,
-		BasicAuthToken: cfg.Dgraph.BasicAuthToken,
+		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
+		AuthToken:      cfg.Dgraph.AuthToken,
 	}
 
 	// Capture the email configuration.

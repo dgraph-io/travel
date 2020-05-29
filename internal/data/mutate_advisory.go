@@ -20,7 +20,7 @@ func (mutateAdvisory) add(ctx context.Context, graphql *graphql.GraphQL, advisor
 	}
 
 	mutation, result := mutAdvisory.marshal.add(advisory)
-	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
+	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return Advisory{}, errors.Wrap(err, "failed to add place")
 	}
 
@@ -38,7 +38,7 @@ func (mutateAdvisory) updateCity(ctx context.Context, graphql *graphql.GraphQL, 
 	}
 
 	mutation, result := mutAdvisory.marshal.updCity(cityID, advisory)
-	err := graphql.Mutate(ctx, mutation, &result)
+	err := graphql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
@@ -53,7 +53,7 @@ func (mutateAdvisory) delete(ctx context.Context, query query, graphql *graphql.
 	}
 
 	mutation, result := mutAdvisory.marshal.delete(advisory.ID)
-	if err := graphql.Mutate(ctx, mutation, &result); err != nil {
+	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}
 
