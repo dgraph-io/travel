@@ -59,6 +59,6 @@ services:
       - dgraph-alpha
     environment:
       - UI_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
-      - UI_DGRAPH_API_HOST_INSIDE=dgraph-alpha:8080
+      - UI_DGRAPH_URL=http://dgraph-alpha:8080
       # - GODEBUG=gctrace=1
 

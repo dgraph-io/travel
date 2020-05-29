@@ -11,9 +11,7 @@ import (
 // Dgraph represents the IP and Ports we need to talk to the
 // server for the different functions we need to perform.
 type Dgraph struct {
-	Protocol       string
-	APIHostInside  string
-	APIHostOutside string
+	URL            string
 	AuthHeaderName string
 	AuthToken      string
 }
@@ -45,7 +43,7 @@ func NewDB(dgraph Dgraph) (*DB, error) {
 	}
 
 	auth := graphql.WithAuth(dgraph.AuthHeaderName, dgraph.AuthToken)
-	graphql := graphql.New(dgraph.Protocol, dgraph.APIHostInside, &client, auth)
+	graphql := graphql.New(dgraph.URL, &client, auth)
 
 	db := DB{
 		Schema: schema{graphql: graphql},

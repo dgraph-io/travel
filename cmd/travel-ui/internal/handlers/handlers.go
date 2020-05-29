@@ -22,7 +22,7 @@ type index struct {
 	mapsKey         string
 }
 
-func newIndex(dgraph data.Dgraph, cities []string, mapsKey string) (*index, error) {
+func newIndex(dgraph data.Dgraph, browserEndpoint string, cities []string, mapsKey string) (*index, error) {
 	data, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")
@@ -35,7 +35,7 @@ func newIndex(dgraph data.Dgraph, cities []string, mapsKey string) (*index, erro
 
 	index := index{
 		tmpl:            tmpl,
-		graphQLEndpoint: fmt.Sprintf("%s://%s/graphql", dgraph.Protocol, dgraph.APIHostOutside),
+		graphQLEndpoint: fmt.Sprintf("%s/graphql", browserEndpoint),
 		cities:          cities,
 		mapsKey:         mapsKey,
 	}

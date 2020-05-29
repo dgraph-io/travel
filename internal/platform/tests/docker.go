@@ -3,14 +3,16 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"net"
 	"os/exec"
 	"testing"
 )
 
 // DBContainer tracks information about the DB docker container started for tests.
 type DBContainer struct {
-	ID      string
-	APIHost string // IP:Port
+	ID  string
+	URL string
 }
 
 // startDBContainer runs a postgres container to execute commands.
@@ -46,16 +48,15 @@ func startDBContainer(t *testing.T, image string) *DBContainer {
 		t.Fatalf("could not decode json: %v", err)
 	}
 
-	apiNet := doc[0].NetworkSettings.Ports.TCP8080[0]
+	endpoint := doc[0].NetworkSettings.Ports.TCP8080[0]
 
 	c := DBContainer{
-		ID:      id,
-		APIHost: apiNet.HostIP + ":" + apiNet.HostPort,
+		ID:  id,
+		URL: fmt.Sprintf("http://%s", net.JoinHostPort(endpoint.HostIP, endpoint.HostPort)),
 	}
 
 	t.Logf("DB ContainerID: %s", c.ID)
-	t.Logf("API Host: %s", c.APIHost)
-
+	t.Logf("Endpoint: %s", c.URL)
 	return &c
 }
 

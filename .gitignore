@@ -5,6 +5,7 @@ cmd/travel-ui/travel-ui
 
 # keys
 .keys
+.slash
 
 # Mac
 .DS_Store

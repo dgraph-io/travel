@@ -10,7 +10,7 @@ import (
 )
 
 // readiness validates the health check is working.
-func readiness(apiHost string) func(t *testing.T) {
+func readiness(url string) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		type tableTest struct {
 			name       string
@@ -33,7 +33,7 @@ func readiness(apiHost string) func(t *testing.T) {
 						ctx, cancel := context.WithTimeout(context.Background(), test.timeout)
 						defer cancel()
 
-						err := data.Readiness(ctx, apiHost, test.retryDelay)
+						err := data.Readiness(ctx, url, test.retryDelay)
 						switch test.success {
 						case true:
 							if err != nil {

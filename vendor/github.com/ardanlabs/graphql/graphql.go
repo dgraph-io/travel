@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // These commands represents the set of know graphql commands.
@@ -17,12 +18,6 @@ const (
 	CmdAdmin   = "admin"
 	CmdQuery   = "graphql"
 	CmdQueryPM = "query"
-)
-
-// These are the supported protocols.
-const (
-	HTTP  = "http"
-	HTTPS = "https"
 )
 
 // GraphQL represents a system that can accept a graphql query.
@@ -34,10 +29,10 @@ type GraphQL struct {
 }
 
 // New constructs a GraphQL for use to making queries agains a specified host.
-// The apiHost is the IP:Port of the Dgraph API endpoint.
-func New(protocol string, apiHost string, client *http.Client, options ...func(gql *GraphQL)) *GraphQL {
+// The url is the fully qualifying URL without the /graphql path.
+func New(url string, client *http.Client, options ...func(gql *GraphQL)) *GraphQL {
 	gql := GraphQL{
-		url:    fmt.Sprintf("%s://%s/", protocol, apiHost),
+		url:    strings.TrimRight(url, "/") + "/",
 		client: client,
 	}
 	for _, option := range options {

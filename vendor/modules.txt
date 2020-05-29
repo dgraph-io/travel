@@ -4,7 +4,7 @@ github.com/AvraamMavridis/randomcolor
 # github.com/ardanlabs/conf v1.3.2
 ## explicit
 github.com/ardanlabs/conf
-# github.com/ardanlabs/graphql v1.4.1
+# github.com/ardanlabs/graphql v1.4.2
 ## explicit
 github.com/ardanlabs/graphql
 # github.com/dimfeld/httptreemux/v5 v5.2.2

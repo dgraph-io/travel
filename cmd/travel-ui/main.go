@@ -44,9 +44,8 @@ func run(log *log.Logger) error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Dgraph struct {
-			Protocol       string `conf:"default:http"`
-			APIHostInside  string `conf:"default:0.0.0.0:8080"`
-			APIHostOutside string `conf:"default:0.0.0.0:8080"`
+			URL            string `conf:"default:http://0.0.0.0:8080"`
+			BrowserURL     string `conf:"default:http://0.0.0.0:8080"`
 			AuthHeaderName string
 			AuthToken      string
 		}
@@ -118,9 +117,7 @@ func run(log *log.Logger) error {
 
 	// Capture the configuration for Dgraph.
 	dgraph := data.Dgraph{
-		Protocol:       cfg.Dgraph.Protocol,
-		APIHostInside:  cfg.Dgraph.APIHostInside,
-		APIHostOutside: cfg.Dgraph.APIHostOutside,
+		URL:            cfg.Dgraph.URL,
 		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
 		AuthToken:      cfg.Dgraph.AuthToken,
 	}
@@ -131,7 +128,7 @@ func run(log *log.Logger) error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log, dgraph, cfg.APIKeys.MapsKey)
+	handler, err := handlers.UI(build, shutdown, log, dgraph, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}

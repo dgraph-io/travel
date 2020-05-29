@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -13,13 +14,13 @@ import (
 // Readiness checks if the DB is ready to receive requests. It will attempt
 // a check between each retry interval specified. The context holds the
 // total amount of time Readiness will wait to validate the DB is healthy.
-func Readiness(ctx context.Context, apiHost string, retryInterval time.Duration) error {
+func Readiness(ctx context.Context, url string, retryInterval time.Duration) error {
 
 	// We will try until the context timeout has expired.
 	for {
 
 		// If there is no error, then report health.
-		if err := checkDB(ctx, apiHost); err == nil {
+		if err := checkDB(ctx, url); err == nil {
 			return nil
 		}
 
@@ -40,11 +41,12 @@ func Readiness(ctx context.Context, apiHost string, retryInterval time.Duration)
 }
 
 // checkDB attempts to validate if the database is ready.
-func checkDB(ctx context.Context, apiHost string) error {
-	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+func checkDB(ctx context.Context, url string) error {
+	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+apiHost+"/health", nil)
+	url = fmt.Sprintf("%s/health", strings.TrimRight(url, "/"))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
