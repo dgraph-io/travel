@@ -25,7 +25,6 @@ files_modified_arr.each do |file|
         if file == "go.sum"
             next
         end
-        puts file
         grep_command = "grep -iE \"#{regex}\" #{file}"
         res = `#{grep_command}`
         unless res == ""
