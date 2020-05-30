@@ -1,5 +1,7 @@
 SHELL := /bin/bash
 
+export PROJECT ?= dgraph-travel-project
+
 all:
 	(cd ../.. && make all)
 
@@ -18,8 +20,8 @@ browser:
 	(cd ../.. && make browser)
 
 load:
-	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
-	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
+	kind load docker-image gcr.io/$(PROJECT)/travel-ui-amd64:1.0 --name dgraph-travel-cluster
+	kind load docker-image gcr.io/$(PROJECT)/travel-api-amd64:1.0 --name dgraph-travel-cluster
         # kind load docker-image dgraph/dgraph:v20.03.1 --name dgraph-travel-cluster
 
 services:

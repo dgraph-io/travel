@@ -1,5 +1,7 @@
 SHELL := /bin/bash
 
+export PROJECT ?= dgraph-travel-project
+
 # Building containers
 
 all: travel-api travel-ui
@@ -7,7 +9,7 @@ all: travel-api travel-ui
 travel-api:
 	docker build \
 		-f dockerfile.travel-api \
-		-t travel-api-amd64:1.0 \
+		-t gcr.io/$(PROJECT)/travel-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=travel-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -16,7 +18,7 @@ travel-api:
 travel-ui:
 	docker build \
 		-f dockerfile.travel-ui \
-		-t travel-ui-amd64:1.0 \
+		-t gcr.io/$(PROJECT)/travel-ui-amd64:1.0 \
 		--build-arg PACKAGE_NAME=travel-ui \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \

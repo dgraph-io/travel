@@ -1,0 +1,163 @@
+# This creates a Dgraph cluster with 1 Dgraph Zero and 1 Dgraph Alpha.
+
+# This StatefulSet runs Dgraph Zero.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dgraph-zero
+spec:
+  serviceName: "dgraph-zero"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dgraph-zero
+  template:
+    metadata:
+      labels:
+        app: dgraph-zero
+    spec:
+      containers:
+      - name: zero
+        image: dgraph/dgraph:v20.03.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5080
+          name: grpc-zero
+        - containerPort: 6080
+          name: http-zero
+        volumeMounts:
+        - name: datadir
+          mountPath: /dgraph
+        env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        command:
+          - bash
+          - "-c"
+          - |
+            set -ex
+            dgraph zero
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 6080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /state
+            port: 6080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: datadir
+        persistentVolumeClaim:
+          claimName: datadir
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+      annotations:
+        volume.alpha.kubernetes.io/storage-class: anything
+    spec:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 5Gi
+---
+# This StatefulSet runs Dgraph Alpha.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dgraph-alpha
+spec:
+  serviceName: "dgraph-alpha"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dgraph-alpha
+  template:
+    metadata:
+      labels:
+        app: dgraph-alpha
+    spec:
+      containers:
+      - name: alpha
+        image: dgraph/dgraph:v20.03.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7080
+          name: grpc-alpha-int
+        - containerPort: 8080
+          name: http-alpha
+        - containerPort: 9080
+          name: grpc-alpha
+        volumeMounts:
+        - name: datadir
+          mountPath: /dgraph
+        env:
+          # This should be the same namespace as the dgraph-zero
+          # StatefulSet to resolve a Dgraph Zero's DNS name for
+          # Alpha's --zero flag.
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: DGRAPH_ALPHA_LRU_MB
+            value: "1024"
+          - name: DGRAPH_ALPHA_WHITELIST
+            value: "0.0.0.0/0"
+        command:
+          - bash
+          - "-c"
+          - |
+            set -ex
+            dgraph alpha
+        livenessProbe:
+          httpGet:
+            path: /health?live=1
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+      terminationGracePeriodSeconds: 600
+      volumes:
+      - name: datadir
+        persistentVolumeClaim:
+          claimName: datadir
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+      annotations:
+        volume.alpha.kubernetes.io/storage-class: anything
+    spec:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 5Gi
+
