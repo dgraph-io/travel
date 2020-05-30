@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travel-ui
+spec:
+  selector:
+    matchLabels:
+      app: travel-ui
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      name: travel-ui
+      labels:
+        app: travel-ui
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      containers:
+      - name: travel-ui
+        image: travel-ui-amd64:1.0
+        env:
+        - name: UI_API_KEYS_MAPS_KEY
+          value: <ENTER_KEY_HERE>
+        - name: UI_DGRAPH_API_HOST_INSIDE
+          value: localhost:8080
+        # - name: GODEBUG
+        #   value: gctrace=1
+        ports:
+        - name: travel-ui
+          containerPort: 80
+        - name: debug
+          containerPort: 4080
+        resources: {}
+status: {}

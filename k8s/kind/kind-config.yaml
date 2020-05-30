@@ -1,0 +1,19 @@
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  # travel-ui
+  - containerPort: 80
+    hostPort: 80
+  - containerPort: 4080
+    hostPort: 4080
+  # travel-api
+  - containerPort: 3000
+    hostPort: 3000
+  - containerPort: 4000
+    hostPort: 4000
+  # dgraph-alpha
+  - containerPort: 8080
+    hostPort: 8080

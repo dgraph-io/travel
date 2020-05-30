@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travel-api
+spec:
+  selector:
+    matchLabels:
+      app: travel-api
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      name: travel-api
+      labels:
+        app: travel-api
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      containers:
+      - name: travel-api
+        image: travel-api-amd64:1.0
+        # env:
+        # - name: GODEBUG
+        #   value: gctrace=1
+        ports:
+        - name: travel-api
+          containerPort: 3000
+        - name: debug
+          containerPort: 4000
+        resources: {}
+        resources: {}
+status: {}
