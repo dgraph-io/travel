@@ -82,40 +82,32 @@ func (s *schema) QuerySchema(ctx context.Context, response interface{}) error {
 
 // Create is used create the schema in the database.
 func (s *schema) Create(ctx context.Context) error {
-	got, err := s.Query(ctx)
-	if err != nil {
-		return errors.Wrap(err, "creating schema")
+	if err := s.Validate(ctx); err == nil {
+		return nil
 	}
 
-	switch {
-	case got == `{"getGQLSchema":null}`:
-		for i := 0; i < 2; i++ {
-			query := `mutation updateGQLSchema($schema: String!) {
-				updateGQLSchema(input: {
-					set: { schema: $schema }
-				}) {
-					gqlSchema {
-						schema
-					}	
-				}
-			}`
-			vars := map[string]interface{}{"schema": gQLSchema}
-			if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {
-
-				// Dgraph can fail because it's not ready to accept a schema
-				// yet. Just retry once if this is the case.
-				if i == 0 {
-					time.Sleep(time.Second)
-					continue
-				}
-				return errors.Wrap(err, "creating schema")
+	query := `mutation updateGQLSchema($schema: String!) {
+		updateGQLSchema(input: {
+			set: { schema: $schema }
+		}) {
+			gqlSchema {
+				schema
 			}
-			break
 		}
-	default:
-		if err := s.Validate(ctx); err != nil {
-			return errors.Wrap(err, "creating schema")
+	}`
+	vars := map[string]interface{}{"schema": gQLSchema}
+	for i := 0; i < 2; i++ {
+		if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {
+
+			// Dgraph can fail because it's not ready to accept a schema
+			// yet. Just retry once if this is the case.
+			if i == 0 {
+				time.Sleep(time.Second)
+				continue
+			}
+			return errors.Wrap(err, "updating schema")
 		}
+		break
 	}
 
 	return nil
@@ -125,7 +117,7 @@ func (s *schema) Create(ctx context.Context) error {
 func (s *schema) Query(ctx context.Context) (string, error) {
 	result := make(map[string]interface{})
 	if err := s.QuerySchema(ctx, &result); err != nil {
-		return "", errors.Wrap(err, "validate schema")
+		return "", errors.Wrap(err, "query schema")
 	}
 
 	data, err := json.Marshal(result)
@@ -139,22 +131,26 @@ func (s *schema) Query(ctx context.Context) (string, error) {
 // Validate compares the schema in the database with what is
 // defined for the application.
 func (s *schema) Validate(ctx context.Context) error {
-	got, err := s.Query(ctx)
+	schema, err := s.Query(ctx)
 	if err != nil {
-		return errors.Wrap(err, "validate schema")
+		return errors.Wrap(err, "query schema")
+	}
+
+	if schema == `{"getGQLSchema":null}` {
+		return errors.New("no schema exists")
 	}
 
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
-		return errors.Wrap(err, "validate schema")
+		return errors.Wrap(err, "regex compile")
 	}
 
 	exp := reg.ReplaceAllString(gQLSchema, "")
-	got = strings.ReplaceAll(got[27:], "\\n", "")
-	got = strings.ReplaceAll(got, "\\t", "")
-	got = reg.ReplaceAllString(got, "")
+	schema = strings.ReplaceAll(schema[27:], "\\n", "")
+	schema = strings.ReplaceAll(schema, "\\t", "")
+	schema = reg.ReplaceAllString(schema, "")
 
-	if exp != got {
+	if exp != schema {
 		return errors.New("invalid schema")
 	}
 
