@@ -24,18 +24,18 @@ travel-ui:
 
 # Running from within docker compose
 
-run: up seed browser
+run-compose: up-compose seed browser-compose
 
-up:
+up-compose:
 	docker-compose up --detach --remove-orphans
 
-down:
+down-compose:
 	docker-compose down --remove-orphans
 
-browser:
+browser-compose:
 	python -m webbrowser "http://localhost"
 
-logs:
+logs-compose:
 	docker-compose logs -f
 
 # Running from within the local computer
