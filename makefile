@@ -61,6 +61,10 @@ browser-local:
 logs-local:
 	docker logs -f
 
+# Running from within the local with Slash
+
+run-slash: seed browser-local ui-local
+
 # Seeding the database
 
 seed:
