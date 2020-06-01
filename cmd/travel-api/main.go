@@ -59,17 +59,18 @@ func run(log *log.Logger) error {
 	cfg.Version.SVN = build
 	cfg.Version.Desc = "copyright information here"
 
-	if err := conf.Parse(os.Args[1:], "TRAVEL", &cfg); err != nil {
+	const prefix = "TRAVEL"
+	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
 		switch err {
 		case conf.ErrHelpWanted:
-			usage, err := conf.Usage("TRAVEL", &cfg)
+			usage, err := conf.Usage(prefix, &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
 			return nil
 		case conf.ErrVersionWanted:
-			version, err := conf.VersionString("TRAVEL", &cfg)
+			version, err := conf.VersionString(prefix, &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config version")
 			}

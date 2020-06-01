@@ -20,9 +20,9 @@ spec:
       - name: travel-ui
         image: travel-ui-amd64:1.0
         env:
-        - name: UI_API_KEYS_MAPS_KEY
+        - name: TRAVEL_API_KEYS_MAPS_KEY
           value: <ENTER_KEY_HERE>
-        - name: UI_DGRAPH_API_HOST_INSIDE
+        - name: TRAVEL_DGRAPH_API_HOST_INSIDE
           value: localhost:8080
         # - name: GODEBUG
         #   value: gctrace=1

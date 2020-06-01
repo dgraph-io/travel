@@ -58,7 +58,7 @@ services:
     depends_on:
       - dgraph-alpha
     environment:
-      - UI_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
-      - UI_DGRAPH_URL=http://dgraph-alpha:8080
+      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
+      - TRAVEL_DGRAPH_URL=http://dgraph-alpha:8080
       # - GODEBUG=gctrace=1
 
