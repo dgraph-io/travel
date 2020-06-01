@@ -29,10 +29,8 @@ spec:
         - name: datadir
           mountPath: /dgraph
         env:
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
+          - name: DGRAPH_ZERO_MY
+            value: "dgraph-zero-0.dgraph-zero:5080"
         command:
           - bash
           - "-c"
@@ -107,15 +105,12 @@ spec:
         - name: datadir
           mountPath: /dgraph
         env:
-          # This should be the same namespace as the dgraph-zero
-          # StatefulSet to resolve a Dgraph Zero's DNS name for
-          # Alpha's --zero flag.
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
           - name: DGRAPH_ALPHA_LRU_MB
             value: "1024"
+          - name: DGRAPH_ALPHA_MY
+            value: "dgraph-alpha-0.dgraph-alpha:7080"
+          - name: DGRAPH_ALPHA_ZERO
+            value: "dgraph-zero-0.dgraph-zero:5080"
           - name: DGRAPH_ALPHA_WHITELIST
             value: "0.0.0.0/0"
         command:
