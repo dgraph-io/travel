@@ -10,16 +10,8 @@ import (
 	"github.com/dgraph-io/travel/internal/platform/web"
 )
 
-// Email defines the configuration required to send an email.
-type Email struct {
-	User     string
-	Password string
-	Host     string
-	Port     string
-}
-
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgraph, email Email) *web.App {
+func API(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgraph, emailConfig EmailConfig) *web.App {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
@@ -32,10 +24,10 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgr
 	app.Handle(http.MethodGet, "/v1/health", check.health)
 
 	// Register the email endpoint.
-	send := send{
-		Email: email,
+	email := email{
+		EmailConfig: emailConfig,
 	}
-	app.Handle(http.MethodPost, "/v1/email", send.email)
+	app.Handle(http.MethodPost, "/v1/email", email.send)
 
 	return app
 }

@@ -124,7 +124,7 @@ func run(log *log.Logger) error {
 	}
 
 	// Capture the email configuration.
-	email := handlers.Email{
+	emailConfig := handlers.EmailConfig{
 		User:     cfg.Email.User,
 		Password: cfg.Email.Password,
 		Host:     cfg.Email.Host,
@@ -138,7 +138,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, dgraph, email),
+		Handler:      handlers.API(build, shutdown, log, dgraph, emailConfig),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

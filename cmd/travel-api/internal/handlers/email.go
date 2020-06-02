@@ -11,11 +11,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-type send struct {
-	Email
+// EmailConfig defines the configuration required to send an email.
+type EmailConfig struct {
+	User     string
+	Password string
+	Host     string
+	Port     string
 }
 
-func (s *send) email(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+type email struct {
+	EmailConfig
+}
+
+func (e *email) send(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var recipient struct {
 		Email   string `validate:"email"`
 		Subject string `validate:"required"`
@@ -24,12 +32,12 @@ func (s *send) email(ctx context.Context, w http.ResponseWriter, r *http.Request
 		return errors.Wrap(err, "decoding recipient")
 	}
 
-	auth := smtp.PlainAuth("", s.User, s.Password, s.Host)
+	auth := smtp.PlainAuth("", e.User, e.Password, e.Host)
 	to := []string{recipient.Email}
 	msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\nThis is the email body.\r\n", recipient.Email, recipient.Subject))
-	addr := net.JoinHostPort(s.Host, s.Port)
+	addr := net.JoinHostPort(e.Host, e.Port)
 
-	if err := smtp.SendMail(addr, auth, s.User, to, msg); err != nil {
+	if err := smtp.SendMail(addr, auth, e.User, to, msg); err != nil {
 		return errors.Wrap(err, "sending email")
 	}
 
