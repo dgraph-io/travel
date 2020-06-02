@@ -15,7 +15,7 @@ type send struct {
 	Email
 }
 
-func (s *send) email(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (s *send) email(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var recipient struct {
 		Email   string `validate:"email"`
 		Subject string `validate:"required"`

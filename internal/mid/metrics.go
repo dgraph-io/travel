@@ -24,11 +24,11 @@ var m = struct {
 func Metrics() web.Middleware {
 
 	// This is the actual middleware function to be executed.
-	f := func(before web.Handler) web.Handler {
+	m := func(before web.Handler) web.Handler {
 
 		// Wrap this handler around the next one provided.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			err := before(ctx, w, r, params)
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+			err := before(ctx, w, r)
 
 			// Increment the request counter.
 			m.req.Add(1)
@@ -50,5 +50,5 @@ func Metrics() web.Middleware {
 		return h
 	}
 
-	return f
+	return m
 }

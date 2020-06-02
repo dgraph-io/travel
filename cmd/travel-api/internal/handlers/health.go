@@ -14,7 +14,7 @@ type check struct {
 	dgraph data.Dgraph
 }
 
-func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	health := struct {
 		Version string `json:"version"`
 		Status  string `json:"status"`

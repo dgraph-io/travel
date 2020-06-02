@@ -29,7 +29,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgra
 	// Register the assets.
 	fs := http.FileServer(http.Dir("assets"))
 	fs = http.StripPrefix("/assets/", fs)
-	f := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	f := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		fs.ServeHTTP(w, r)
 		return nil
 	}

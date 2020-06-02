@@ -26,13 +26,13 @@ type Values struct {
 
 // A Handler is a type that handles an http request within our own little mini
 // framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct
 type App struct {
-	*httptreemux.TreeMux
+	*httptreemux.ContextMux
 	shutdown chan os.Signal
 	mw       []Middleware
 }
@@ -40,9 +40,9 @@ type App struct {
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	app := App{
-		TreeMux:  httptreemux.New(),
-		shutdown: shutdown,
-		mw:       mw,
+		ContextMux: httptreemux.NewContextMux(),
+		shutdown:   shutdown,
+		mw:         mw,
 	}
 
 	return &app
@@ -65,7 +65,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	handler = wrapMiddleware(a.mw, handler)
 
 	// The function to execute for each request.
-	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 
 		// Set the context with the required values to
 		// process the request.
@@ -76,12 +76,12 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		ctx := context.WithValue(r.Context(), KeyValues, &v)
 
 		// Call the wrapped handler functions.
-		if err := handler(ctx, w, r, params); err != nil {
+		if err := handler(ctx, w, r); err != nil {
 			a.SignalShutdown()
 			return
 		}
 	}
 
 	// Add this handler for the specified verb and route.
-	a.TreeMux.Handle(verb, path, h)
+	a.ContextMux.Handle(verb, path, h)
 }

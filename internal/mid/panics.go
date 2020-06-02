@@ -15,10 +15,10 @@ import (
 func Panics(log *log.Logger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
-	f := func(after web.Handler) web.Handler {
+	m := func(after web.Handler) web.Handler {
 
 		// Wrap this handler around the next one provided.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
 
 			// If the context is missing this value, request the service
 			// to be shutdown gracefully.
@@ -39,11 +39,11 @@ func Panics(log *log.Logger) web.Middleware {
 			}()
 
 			// Call the next Handler and set its return value in the err variable.
-			return after(ctx, w, r, params)
+			return after(ctx, w, r)
 		}
 
 		return h
 	}
 
-	return f
+	return m
 }
