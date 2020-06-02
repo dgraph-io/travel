@@ -1,0 +1,44 @@
+# This is a headless service which is necessary for discovery for a dgraph-alpha StatefulSet.
+# https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#creating-a-statefulset
+apiVersion: v1
+kind: Service
+metadata:
+  name: dgraph-alpha
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: dgraph-alpha
+  ports:
+  - name: "grpc-dgraph-alpha-internal"
+    port: 7080
+    targetPort: 7080
+---
+# This is a headless service which is necessary for discovery for a dgraph-zero StatefulSet.
+# https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#creating-a-statefulset
+apiVersion: v1
+kind: Service
+metadata:
+  name: dgraph-zero
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: dgraph-zero
+  ports:
+  - name: "grpc-dgraph-zero-internal"
+    port: 5080
+    targetPort: 5080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dgraph-public
+spec:
+  type: LoadBalancer
+  selector:
+    app: dgraph-alpha
+  ports:
+  - name: "http-dgraph-public"
+    port: 8080
+    targetPort: 8080

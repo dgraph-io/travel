@@ -7,21 +7,21 @@ spec:
     matchLabels:
       app: travel-ui
   replicas: 1
-  strategy: {}
   template:
     metadata:
       name: travel-ui
       labels:
         app: travel-ui
     spec:
-      containers:
       - name: travel-ui
-        image: gcr.io/{{PROJECT}}/travel-ui-amd64:1.0
+        image: gcr.io/dgraph-travel-project/travel-ui-amd64:1.0
         env:
         - name: UI_API_KEYS_MAPS_KEY
           value: <ENTER_KEY_HERE>
-        - name: UI_DGRAPH_API_HOST_INSIDE
-          value: localhost:8080
+        - name: UI_DGRAPH_URL
+          value: dgraph-alpha-0.dgraph-alpha:8080
+        - name: UI_DGRAPH_BROWSER_URL
+          value: dgraph-alpha-0.dgraph-alpha:8080
         # - name: GODEBUG
         #   value: gctrace=1
         ports:
@@ -29,5 +29,3 @@ spec:
           containerPort: 80
         - name: debug
           containerPort: 4080
-        resources: {}
-status: {}

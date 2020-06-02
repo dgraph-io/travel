@@ -23,15 +23,27 @@ cluster:
 	@echo ======================================================================
 
 upload:
-	docker push gcr.io/$(PROJECT)/sales-api-amd64:1.0
-	docker push gcr.io/$(PROJECT)/metrics-amd64:1.0
+	docker push gcr.io/$(PROJECT)/travel-api-amd64:1.0
+	docker push gcr.io/$(PROJECT)/travel-ui-amd64:1.0
 	@echo ======================================================================
 
 services:
 	# These scripts needs to be edited for the PROJECT and PRIVATE_DB_IP markers before running.
-	kubectl create -f deploy-sales-api.yaml
-	kubectl expose -f expose-sales-api.yaml --type=LoadBalancer
+	kubectl create -f deploy-dgraph.yaml
+	kubectl create -f deploy-travel-api.yaml
+	kubectl create -f deploy-travel-ui.yaml
+	kubectl create -f expose-dgraph.yaml
+	kubectl create -f expose-travel-api.yaml
+	kubectl create -f expose-travel-ui.yaml
 	@echo ======================================================================
+
+seed: DGRAPH_PUBLIC = http://$(shell kubectl get svc dgraph-public -o jsonpath='{.status.loadBalancer.ingress[0].ip}:{.spec.ports[0].port}')
+seed:
+	(export DATA_DGRAPH_URL=$(DGRAPH_PUBLIC); cd ../.. && make seed)
+
+browser: TRAVEL_UI = http://$(shell kubectl get svc travel-ui -o jsonpath='{.status.loadBalancer.ingress[0].ip}:{.spec.ports[0].port}')
+browser:
+	python -m webbrowser "$(TRAVEL_UI)"
 
 status:
 	gcloud container clusters list
@@ -42,20 +54,25 @@ status:
 
 shell:
 	# kubectl get pods
-	kubectl exec -it <POD NAME> --container sales-api  -- /bin/sh
+	kubectl exec -it <POD NAME> --container travel-api  -- /bin/sh
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 	@echo ======================================================================
 
 delete:
-	kubectl delete services sales-api
-	kubectl delete deployment sales-api	
+	kubectl delete -f deploy-dgraph.yaml
+	kubectl delete pvc -l 'app in (dgraph-zero, dgraph-alpha)'
+	kubectl delete -f deploy-travel-api.yaml
+	kubectl delete -f deploy-travel-ui.yaml
+	kubectl delete -f expose-dgraph.yaml
+	kubectl delete -f expose-travel-api.yaml
+	kubectl delete -f expose-travel-ui.yaml
 	gcloud container clusters delete $(CLUSTER)
-	gcloud projects delete sales-api
-	gcloud container images delete gcr.io/$(PROJECT)/sales-api-amd64:1.0 --force-delete-tags
-	gcloud container images delete gcr.io/$(PROJECT)/metrics-amd64:1.0 --force-delete-tags
-	docker image remove gcr.io/sales-api/sales-api-amd64:1.0
-	docker image remove gcr.io/sales-api/metrics-amd64:1.0
+	# gcloud projects delete $(PROJECT)
+	gcloud container images delete gcr.io/$(PROJECT)/travel-api-amd64:1.0 --force-delete-tags
+	gcloud container images delete gcr.io/$(PROJECT)/travel-ui-amd64:1.0 --force-delete-tags
+	docker image remove gcr.io/$(PROJECT)/travel-api-amd64:1.0
+	docker image remove gcr.io/$(PROJECT)/travel-ui-amd64:1.0
 	@echo ======================================================================
 
 #===============================================================================
