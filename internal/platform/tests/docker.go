@@ -25,7 +25,6 @@ func startDBContainer(t *testing.T, image string) *DBContainer {
 	}
 
 	id := out.String()[:12]
-	t.Log("DB ContainerID:", id)
 
 	cmd = exec.Command("docker", "inspect", id)
 	out.Reset()
@@ -55,8 +54,9 @@ func startDBContainer(t *testing.T, image string) *DBContainer {
 		URL: fmt.Sprintf("http://%s", net.JoinHostPort(endpoint.HostIP, endpoint.HostPort)),
 	}
 
+	t.Logf("Image:          %s", image)
 	t.Logf("DB ContainerID: %s", c.ID)
-	t.Logf("Endpoint: %s", c.URL)
+	t.Logf("URL:            %s", c.URL)
 	return &c
 }
 

@@ -70,6 +70,25 @@ type Weather {
 	wind_speed: Float
 }`
 
+// Waiting on Dgraph to support this in a stable version.
+/*
+	const gQLCustomFunctions = `
+	type EmailResponse @remote {
+		id: ID!
+		email: String
+		subject: String
+		err: String
+	}
+
+	type Query{
+		sendEmail(email: String!, subject: String!): EmailResponse @custom(http:{
+			url: "http://0.0.0.0:3000/v1/email",
+			method: "POST",
+			body: "{ email: $email, subject: $subject }"
+		})
+	}`
+*/
+
 type schema struct {
 	graphql *graphql.GraphQL
 }
