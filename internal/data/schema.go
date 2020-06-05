@@ -115,8 +115,8 @@ func (s *schema) Create(ctx context.Context) error {
 		}
 	}`
 	vars := map[string]interface{}{"schema": gQLSchema}
-	// mostly it works after 2 retries, but once it took 7 tries to succeed. So, choosing a
-	// higher value to be safe.
+
+	// Give the database 10 seconds to accept the schema.
 	numRetries := 10
 	for i := 1; i <= numRetries; i++ {
 		if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {

@@ -59,7 +59,7 @@ browser-local:
 	python -m webbrowser "http://localhost:81"
 
 logs-local:
-	docker logs -f
+	docker logs -f $(FILES)
 
 # Running from within the local with Slash
 
