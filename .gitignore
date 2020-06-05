@@ -8,9 +8,6 @@ cmd/travel-auth/travel-auth
 .keys
 .slash
 
-# pem files
-*.pem
-
 # Mac
 .DS_Store
 
