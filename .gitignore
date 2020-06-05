@@ -2,10 +2,14 @@
 cmd/travel-data/travel-data
 cmd/travel-api/travel-api
 cmd/travel-ui/travel-ui
+cmd/travel-auth/travel-auth
 
 # keys
 .keys
 .slash
+
+# pem files
+*.pem
 
 # Mac
 .DS_Store

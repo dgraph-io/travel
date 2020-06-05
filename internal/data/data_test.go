@@ -73,7 +73,7 @@ func seedCity(t *testing.T, ctx context.Context, testID int, url string, city da
 
 // seedUser is a support test help function to consolidate the seeding of a
 // user since so many data tests need this functionality.
-func seedUser(t *testing.T, ctx context.Context, testID int, url string, user data.User) (*data.DB, data.User) {
+func seedUser(t *testing.T, ctx context.Context, testID int, url string, newUser data.NewUser, now time.Time) (*data.DB, data.User) {
 	db := ready(t, ctx, testID, url)
 
 	if err := db.Schema.DropAll(ctx); err != nil {
@@ -86,7 +86,7 @@ func seedUser(t *testing.T, ctx context.Context, testID int, url string, user da
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
 
-	userAdd, err := db.Mutate.AddUser(ctx, user)
+	userAdd, err := db.Mutate.AddUser(ctx, newUser, now)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a user: %v", tests.Failed, testID, err)
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/platform/tests"
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // addUser validates a user node can be added to the database.
@@ -23,15 +24,14 @@ func addUser(apiHost string) func(t *testing.T) {
 
 				now := time.Date(2020, time.June, 1, 0, 0, 0, 0, time.UTC)
 
-				userAdd := data.User{
-					Name:         "Bill Kennedy",
-					Email:        "bill@ardanlabs.com",
-					Roles:        []string{data.RoleQuery, data.RoleMutate},
-					PasswordHash: "$2a$10$1ggfMVZV6Js0ybvJufLRUOWHS5f6KneuP0XwwHpJ8L8ipdry9f2/a",
-					DateCreated:  now,
-					DateUpdated:  now,
+				newUser := data.NewUser{
+					Name:            "Bill Kennedy",
+					Email:           "bill@ardanlabs.com",
+					Roles:           []string{"QUERY", "MUTATE"},
+					Password:        "gophers",
+					PasswordConfirm: "gophers",
 				}
-				db, userAdd := seedUser(t, ctx, testID, apiHost, userAdd)
+				db, userAdd := seedUser(t, ctx, testID, apiHost, newUser, now)
 
 				user, err := db.Query.User(ctx, userAdd.ID)
 				if err != nil {
@@ -44,6 +44,11 @@ func addUser(apiHost string) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same user.", tests.Success, testID)
 
+				if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(newUser.Password)); err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould get back the same password hash: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould get back the same password hash.", tests.Success, testID)
+
 				userByEmail, err := db.Query.UserByEmail(ctx, userAdd.Email)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user by email: %v", tests.Failed, testID, err)
@@ -55,8 +60,7 @@ func addUser(apiHost string) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same user by email.", tests.Success, testID)
 
-				userAdd.ID = ""
-				_, err = db.Mutate.AddUser(ctx, userAdd)
+				_, err = db.Mutate.AddUser(ctx, newUser, now)
 				if err == nil {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same user twice.", tests.Failed, testID)
 				}

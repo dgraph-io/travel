@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf"
+	"github.com/dgraph-io/travel/cmd/travel-auth/internal/commands"
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
@@ -68,18 +69,39 @@ func run() error {
 		AuthToken:      cfg.Dgraph.AuthToken,
 	}
 
-	var err error
 	switch cfg.Args.Num(0) {
-	case "useradd":
-		err = useradd(dbConfig, cfg.Args.Num(1), cfg.Args.Num(2))
-	case "keygen":
-		err = keygen(cfg.Args.Num(1))
-	default:
-		err = errors.New("Must specify a command")
-	}
+	case "adduser":
+		newUser := data.NewUser{
+			Name:     cfg.Args.Num(1),
+			Email:    cfg.Args.Num(2),
+			Password: cfg.Args.Num(3),
+			Roles:    []string{cfg.Args.Num(4)},
+		}
 
-	if err != nil {
-		return err
+		if err := commands.AddUser(dgraph, newUser); err != nil {
+			return errors.Wrap(err, "adding user")
+		}
+
+	case "getuser":
+		email := cfg.Args.Num(1)
+		if err := commands.GetUser(dgraph, email); err != nil {
+			return errors.Wrap(err, "getting user")
+		}
+
+	case "genkeys":
+		if err := commands.GenerateKeys(); err != nil {
+			return errors.Wrap(err, "generating keys")
+		}
+
+	case "gentoken":
+		email := cfg.Args.Num(1)
+		privateKeyFile := cfg.Args.Num(2)
+		if err := commands.GenerateToken(dgraph, email, privateKeyFile); err != nil {
+			return errors.Wrap(err, "generating token")
+		}
+
+	default:
+		return errors.New("must specify a value command: [useradd,getuser,genkeys,gentoken]")
 	}
 
 	return nil

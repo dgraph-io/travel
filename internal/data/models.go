@@ -21,6 +21,15 @@ type User struct {
 	DateUpdated  time.Time `json:"date_updated"`
 }
 
+// NewUser contains information needed to create a new User.
+type NewUser struct {
+	Name            string   `json:"name"`
+	Email           string   `json:"email"`
+	Roles           []string `json:"roles"`
+	Password        string   `json:"password"`
+	PasswordConfirm string   `json:"password_confirm"`
+}
+
 // City represents a city and its coordinates.
 type City struct {
 	ID   string  `json:"id,omitempty"`

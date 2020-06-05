@@ -7,24 +7,27 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
+	"github.com/dgraph-io/travel/internal/data"
+	"github.com/dgraph-io/travel/internal/platform/auth"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
-func useradd(dgraph data.Dgraph, email, password string) error {
-	db, err := database.Open(cfg)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	if email == "" || password == "" {
-		return errors.New("useradd command must be called with two additional arguments for email and password")
+// AddUser handles the creation of users.
+func AddUser(dgraph data.Dgraph, newUser data.NewUser) error {
+	if newUser.Name == "" ||
+		newUser.Email == "" ||
+		newUser.Password == "" ||
+		newUser.Roles == nil {
+		return errors.New("adduser command requires an name, email, password and role")
 	}
 
-	fmt.Printf("Admin user will be created with email %q and password %q\n", email, password)
+	fmt.Printf("Admin user will be created with email %q and password %q\n", newUser.Email, newUser.Password)
 	fmt.Print("Continue? (1/0) ")
 
 	var confirm bool
@@ -37,53 +40,129 @@ func useradd(dgraph data.Dgraph, email, password string) error {
 		return nil
 	}
 
-	ctx := context.Background()
-
-	nu := data.NewUser{
-		Email:           email,
-		Password:        password,
-		PasswordConfirm: password,
-		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
+	db, err := data.NewDB(dgraph)
+	if err != nil {
+		return errors.Wrap(err, "init database")
 	}
 
-	u, err := data.Create.User(ctx, db, nu, time.Now())
+	ctx := context.Background()
+
+	u, err := db.Mutate.AddUser(ctx, newUser, time.Now())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "adding user")
 	}
 
 	fmt.Println("User created with id:", u.ID)
 	return nil
 }
 
-// keygen creates an x509 private key for signing auth tokens.
-func keygen(path string) error {
-	if path == "" {
-		return errors.New("keygen missing argument for key path")
+// GetUser returns information about a user by email.
+func GetUser(dgraph data.Dgraph, email string) error {
+	if email == "" {
+		return errors.New("getuser command requires an email")
 	}
 
+	db, err := data.NewDB(dgraph)
+	if err != nil {
+		log.Printf("feed: Work: New Data: ERROR: %v", err)
+		return errors.Wrap(err, "init database")
+	}
+
+	ctx := context.Background()
+
+	u, err := db.Query.UserByEmail(ctx, email)
+	if err != nil {
+		return errors.Wrap(err, "getting user")
+	}
+
+	fmt.Printf("User: %#v\n", u)
+	return nil
+}
+
+// GenerateKeys creates an x509 private key for signing auth tokens.
+func GenerateKeys() error {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return errors.Wrap(err, "generating keys")
 	}
 
-	file, err := os.Create(path)
+	privateFile, err := os.Create("private.pem")
 	if err != nil {
 		return errors.Wrap(err, "creating private file")
 	}
-	defer file.Close()
+	defer privateFile.Close()
 
-	block := pem.Block{
+	privateBlock := pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}
 
-	if err := pem.Encode(file, &block); err != nil {
+	if err := pem.Encode(privateFile, &privateBlock); err != nil {
 		return errors.Wrap(err, "encoding to private file")
 	}
 
-	if err := file.Close(); err != nil {
-		return errors.Wrap(err, "closing private file")
+	publicFile, err := os.Create("public.pem")
+	if err != nil {
+		return errors.Wrap(err, "creating public file")
+	}
+	defer privateFile.Close()
+
+	publicBlock := pem.Block{
+		Type:  "RSA PUBLIC KEY",
+		Bytes: x509.MarshalPKCS1PublicKey(&key.PublicKey),
 	}
 
+	if err := pem.Encode(publicFile, &publicBlock); err != nil {
+		return errors.Wrap(err, "encoding to public file")
+	}
+
+	return nil
+}
+
+// GenerateToken generates a JWT for the specified user.
+func GenerateToken(dgraph data.Dgraph, email string, privateKeyFile string) error {
+	if email == "" {
+		return errors.New("gentoken command requires an email")
+	}
+
+	db, err := data.NewDB(dgraph)
+	if err != nil {
+		log.Printf("feed: Work: New Data: ERROR: %v", err)
+		return errors.Wrap(err, "init database")
+	}
+
+	ctx := context.Background()
+
+	user, err := db.Query.UserByEmail(ctx, email)
+	if err != nil {
+		return errors.Wrap(err, "getting user")
+	}
+
+	keyContents, err := ioutil.ReadFile(privateKeyFile)
+	if err != nil {
+		return errors.Wrap(err, "reading auth private key")
+	}
+
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
+	if err != nil {
+		return errors.Wrap(err, "parsing auth private key")
+	}
+
+	keyID := "1234"
+	f := auth.NewSimpleKeyLookupFunc(keyID, privateKey.Public().(*rsa.PublicKey))
+	authenticator, err := auth.NewAuthenticator(privateKey, keyID, "RS256", f)
+	if err != nil {
+		return errors.Wrap(err, "constructing authenticator")
+	}
+
+	claims := auth.Claims{
+		Roles: user.Roles,
+	}
+	token, err := authenticator.GenerateToken(claims)
+	if err != nil {
+		return errors.Wrap(err, "generating token")
+	}
+
+	fmt.Printf("-----BEGIN TOKEN-----\n%s\n-----BEGIN TOKEN-----\n", token)
 	return nil
 }

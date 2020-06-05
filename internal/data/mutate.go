@@ -2,9 +2,11 @@ package data
 
 import (
 	"context"
+	"time"
 
 	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Set of error variables for CRUD operations.
@@ -23,12 +25,26 @@ type mutate struct {
 // AddUser adds a new user to the database. If the user already exists
 // this function will fail but the found user is returned. If the user is
 // being added, the user with the id from the database is returned.
-func (m *mutate) AddUser(ctx context.Context, user User) (User, error) {
-	if user, err := m.query.UserByEmail(ctx, user.Email); err == nil {
+func (m *mutate) AddUser(ctx context.Context, newUser NewUser, now time.Time) (User, error) {
+	if user, err := m.query.UserByEmail(ctx, newUser.Email); err == nil {
 		return user, ErrUserExists
 	}
 
-	user, err := mutUser.add(ctx, m.graphql, user)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return User{}, errors.Wrap(err, "generating password hash")
+	}
+
+	user := User{
+		Name:         newUser.Name,
+		Email:        newUser.Email,
+		Roles:        newUser.Roles,
+		PasswordHash: string(hash),
+		DateCreated:  now,
+		DateUpdated:  now,
+	}
+
+	user, err = mutUser.add(ctx, m.graphql, user)
 	if err != nil {
 		return User{}, errors.Wrap(err, "adding user to database")
 	}
