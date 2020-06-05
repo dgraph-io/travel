@@ -7,6 +7,9 @@ github.com/ardanlabs/conf
 # github.com/ardanlabs/graphql v1.4.2
 ## explicit
 github.com/ardanlabs/graphql
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+## explicit
+github.com/dgrijalva/jwt-go
 # github.com/dimfeld/httptreemux/v5 v5.2.2
 ## explicit
 github.com/dimfeld/httptreemux/v5
@@ -48,6 +51,10 @@ go.opencensus.io/stats
 go.opencensus.io/stats/internal
 go.opencensus.io/stats/view
 go.opencensus.io/tag
+# golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+## explicit
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 # golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 golang.org/x/time/rate
 # googlemaps.github.io/maps v1.2.0

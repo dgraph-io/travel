@@ -20,6 +20,7 @@ func TestData(t *testing.T) {
 
 	t.Run("readiness", readiness(url))
 	t.Run("schema", schema(url))
+	t.Run("user", addUser(url))
 	t.Run("city", addCity(url))
 	t.Run("place", addPlace(url))
 	t.Run("advisory", replaceAdvisory(url))
@@ -68,4 +69,28 @@ func seedCity(t *testing.T, ctx context.Context, testID int, url string, city da
 	t.Logf("\t%s\tTest %d:\tShould be able to add a city.", tests.Success, testID)
 
 	return db, cityAdd
+}
+
+// seedUser is a support test help function to consolidate the seeding of a
+// user since so many data tests need this functionality.
+func seedUser(t *testing.T, ctx context.Context, testID int, url string, newUser data.NewUser, now time.Time) (*data.DB, data.User) {
+	db := ready(t, ctx, testID, url)
+
+	if err := db.Schema.DropAll(ctx); err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
+
+	if err := db.Schema.Create(ctx); err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
+
+	userAdd, err := db.Mutate.AddUser(ctx, newUser, now)
+	if err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to add a user: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to add a user.", tests.Success, testID)
+
+	return db, userAdd
 }

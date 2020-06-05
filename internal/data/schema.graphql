@@ -1,11 +1,20 @@
 directive @hasInverse(field: String!) on FIELD_DEFINITION
 directive @search(by: [DgraphIndex!]) on FIELD_DEFINITION
+directive @id on FIELD_DEFINITION
+directive @remote on OBJECT | INTERFACE
 directive @dgraph(
   type: String
   pred: String
 ) on OBJECT | INTERFACE | FIELD_DEFINITION
-directive @id on FIELD_DEFINITION
 directive @secret(field: String!, pred: String) on OBJECT | INTERFACE
+directive @auth(
+  query: AuthRule
+  add: AuthRule
+  update: AuthRule
+  delete: AuthRule
+) on OBJECT
+directive @custom(http: CustomHTTP) on FIELD_DEFINITION
+directive @cascade on FIELD
 input AddAdvisoryInput {
   continent: String!
   country: String!
@@ -27,11 +36,11 @@ type AddAdvisoryPayload {
 }
 
 input AddCityInput {
-  advisory: AdvisoryRef
+  name: String!
   lat: Float!
   lng: Float!
-  name: String!
   places: [PlaceRef]
+  advisory: AdvisoryRef
   weather: WeatherRef
 }
 
@@ -63,6 +72,20 @@ type AddPlacePayload {
     first: Int
     offset: Int
   ): [Place]
+  numUids: Int
+}
+
+input AddUserInput {
+  name: String!
+  email: String!
+  roles: [Roles]!
+  password_hash: String!
+  date_created: DateTime!
+  date_updated: DateTime!
+}
+
+type AddUserPayload {
+  user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
   numUids: Int
 }
 
@@ -145,18 +168,25 @@ input AdvisoryRef {
   source: String
 }
 
+input AuthRule {
+  and: [AuthRule]
+  or: [AuthRule]
+  not: AuthRule
+  rule: String
+}
+
 type City {
   id: ID!
-  advisory(filter: AdvisoryFilter): Advisory
+  name: String!
   lat: Float!
   lng: Float!
-  name: String!
   places(
     filter: PlaceFilter
     order: PlaceOrder
     first: Int
     offset: Int
   ): [Place]
+  advisory(filter: AdvisoryFilter): Advisory
   weather(filter: WeatherFilter): Weather
 }
 
@@ -175,28 +205,39 @@ input CityOrder {
 }
 
 enum CityOrderable {
+  name
   lat
   lng
-  name
 }
 
 input CityPatch {
-  advisory: AdvisoryRef
+  name: String
   lat: Float
   lng: Float
-  name: String
   places: [PlaceRef]
+  advisory: AdvisoryRef
   weather: WeatherRef
 }
 
 input CityRef {
   id: ID
-  advisory: AdvisoryRef
+  name: String
   lat: Float
   lng: Float
-  name: String
   places: [PlaceRef]
+  advisory: AdvisoryRef
   weather: WeatherRef
+}
+
+input CustomHTTP {
+  url: String!
+  method: HTTPMethod!
+  body: String
+  graphql: String
+  mode: Mode
+  forwardHeaders: [String!]
+  secretHeaders: [String!]
+  skipIntrospection: Boolean
 }
 
 scalar DateTime
@@ -224,6 +265,11 @@ type DeletePlacePayload {
   numUids: Int
 }
 
+type DeleteUserPayload {
+  msg: String
+  numUids: Int
+}
+
 type DeleteWeatherPayload {
   msg: String
   numUids: Int
@@ -245,12 +291,27 @@ enum DgraphIndex {
   hour
 }
 
+type EmailResponse {
+  id: ID!
+  email: String
+  subject: String
+  err: String
+}
+
 input FloatFilter {
   eq: Float
   le: Float
   lt: Float
   ge: Float
   gt: Float
+}
+
+enum HTTPMethod {
+  GET
+  POST
+  PUT
+  PATCH
+  DELETE
 }
 
 input IntFilter {
@@ -261,7 +322,15 @@ input IntFilter {
   gt: Int
 }
 
+enum Mode {
+  BATCH
+  SINGLE
+}
+
 type Mutation {
+  addUser(input: [AddUserInput!]!): AddUserPayload
+  updateUser(input: UpdateUserInput!): UpdateUserPayload
+  deleteUser(filter: UserFilter!): DeleteUserPayload
   addCity(input: [AddCityInput!]!): AddCityPayload
   updateCity(input: UpdateCityInput!): UpdateCityPayload
   deleteCity(filter: CityFilter!): DeleteCityPayload
@@ -357,6 +426,14 @@ input PlaceRef {
 }
 
 type Query {
+  sendEmail(email: String!, subject: String!): EmailResponse
+  getUser(id: ID!): User
+  queryUser(
+    filter: UserFilter
+    order: UserOrder
+    first: Int
+    offset: Int
+  ): [User]
   getCity(id: ID!): City
   queryCity(
     filter: CityFilter
@@ -385,6 +462,13 @@ type Query {
     first: Int
     offset: Int
   ): [Weather]
+}
+
+enum Roles {
+  Admin
+  Email
+  Mutate
+  Query
 }
 
 input StringExactFilter {
@@ -456,6 +540,17 @@ type UpdatePlacePayload {
   numUids: Int
 }
 
+input UpdateUserInput {
+  filter: UserFilter!
+  set: UserPatch
+  remove: UserPatch
+}
+
+type UpdateUserPayload {
+  user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+  numUids: Int
+}
+
 input UpdateWeatherInput {
   filter: WeatherFilter!
   set: WeatherPatch
@@ -470,6 +565,54 @@ type UpdateWeatherPayload {
     offset: Int
   ): [Weather]
   numUids: Int
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  roles(first: Int, offset: Int): [Roles]!
+  password_hash: String!
+  date_created: DateTime!
+  date_updated: DateTime!
+}
+
+input UserFilter {
+  id: [ID!]
+  not: UserFilter
+}
+
+input UserOrder {
+  asc: UserOrderable
+  desc: UserOrderable
+  then: UserOrder
+}
+
+enum UserOrderable {
+  name
+  email
+  password_hash
+  date_created
+  date_updated
+}
+
+input UserPatch {
+  name: String
+  email: String
+  roles: [Roles]
+  password_hash: String
+  date_created: DateTime
+  date_updated: DateTime
+}
+
+input UserRef {
+  id: ID
+  name: String
+  email: String
+  roles: [Roles]
+  password_hash: String
+  date_created: DateTime
+  date_updated: DateTime
 }
 
 type Weather {

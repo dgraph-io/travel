@@ -43,7 +43,7 @@ logs-compose:
 run-local: up-local seed browser-local ui-local
 
 up-local:
-	docker run -it -d -p 8080:8080 dgraph/standalone:v20.03.1
+	docker run -it -d -p 8080:8080 dgraph/standalone:master
 
 ui-local:
 	cd cmd/travel-ui; \

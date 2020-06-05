@@ -8,7 +8,82 @@ import (
 	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/platform/tests"
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/crypto/bcrypt"
 )
+
+// addUser validates a user node can be added to the database.
+func addUser(apiHost string) func(t *testing.T) {
+	tf := func(t *testing.T) {
+		t.Log("Given the need to be able to validate storing a user.")
+		{
+			testID := 0
+			t.Logf("\tTest %d:\tWhen handling a single user.", testID)
+			{
+				ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+				defer cancel()
+
+				now := time.Date(2020, time.June, 1, 0, 0, 0, 0, time.UTC)
+
+				newUser := data.NewUser{
+					Name:            "Bill Kennedy",
+					Email:           "bill@ardanlabs.com",
+					Roles:           []string{"QUERY", "MUTATE"},
+					Password:        "gophers",
+					PasswordConfirm: "gophers",
+				}
+				db, userAdd := seedUser(t, ctx, testID, apiHost, newUser, now)
+
+				user, err := db.Query.User(ctx, userAdd.ID)
+				if err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould be able to query for the user.", tests.Success, testID)
+
+				if diff := cmp.Diff(userAdd, user); diff != "" {
+					t.Fatalf("\t%s\tTest %d:\tShould get back the same user. Diff:\n%s", tests.Failed, testID, diff)
+				}
+				t.Logf("\t%s\tTest %d:\tShould get back the same user.", tests.Success, testID)
+
+				if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(newUser.Password)); err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould get back the same password hash: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould get back the same password hash.", tests.Success, testID)
+
+				userByEmail, err := db.Query.UserByEmail(ctx, userAdd.Email)
+				if err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user by email: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould be able to query for the user by email.", tests.Success, testID)
+
+				if diff := cmp.Diff(userAdd, userByEmail); diff != "" {
+					t.Fatalf("\t%s\tTest %d:\tShould get back the same user by email. Diff:\n%s", tests.Failed, testID, diff)
+				}
+				t.Logf("\t%s\tTest %d:\tShould get back the same user by email.", tests.Success, testID)
+
+				_, err = db.Mutate.AddUser(ctx, newUser, now)
+				if err == nil {
+					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same user twice.", tests.Failed, testID)
+				}
+				t.Logf("\t%s\tTest %d:\tShould not be able to add the same user twice: %v", tests.Success, testID, err)
+
+				err = db.Mutate.DeleteUser(ctx, user.ID)
+				if err != nil {
+					t.Logf("\t%s\tTest %d:\tShould be able to delete the user: %v.", tests.Failed, testID, err)
+				} else {
+					t.Logf("\t%s\tTest %d:\tShould be able to delete the user.", tests.Success, testID)
+				}
+
+				_, err = db.Query.User(ctx, user.ID)
+				if err == nil {
+					t.Fatalf("\t%s\tTest %d:\tShould not be able to query for the user.", tests.Failed, testID)
+				}
+				t.Logf("\t%s\tTest %d:\tShould not be able to query for the user.", tests.Success, testID)
+
+			}
+		}
+	}
+	return tf
+}
 
 // addCity validates a city node can be added to the database.
 func addCity(apiHost string) func(t *testing.T) {
