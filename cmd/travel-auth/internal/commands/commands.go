@@ -121,8 +121,8 @@ func GenerateKeys() error {
 
 // GenerateToken generates a JWT for the specified user.
 func GenerateToken(dgraph data.Dgraph, email string, privateKeyFile string) error {
-	if email == "" {
-		return errors.New("gentoken command requires an email")
+	if email == "" || privateKeyFile == "" {
+		return errors.New("gentoken command requires an email and privatekeyfile")
 	}
 
 	db, err := data.NewDB(dgraph)
@@ -156,6 +156,9 @@ func GenerateToken(dgraph data.Dgraph, email string, privateKeyFile string) erro
 	}
 
 	claims := auth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Subject: user.ID,
+		},
 		Roles: user.Roles,
 	}
 	token, err := authenticator.GenerateToken(claims)
