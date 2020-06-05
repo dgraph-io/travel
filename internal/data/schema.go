@@ -115,12 +115,15 @@ func (s *schema) Create(ctx context.Context) error {
 		}
 	}`
 	vars := map[string]interface{}{"schema": gQLSchema}
-	for i := 0; i < 2; i++ {
+	// mostly it works after 2 retries, but once it took 7th trial for success. So, choosing a
+	// higher value to be safe.
+	numRetries := 10
+	for i := 1; i <= numRetries; i++ {
 		if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {
 
-			// Dgraph can fail because it's not ready to accept a schema
-			// yet. Just retry once if this is the case.
-			if i == 0 {
+			// Dgraph can fail because it's not ready to accept a schema yet or if indexing is going
+			// on in background. Just retry a few times if this is the case.
+			if i < numRetries {
 				time.Sleep(time.Second)
 				continue
 			}
