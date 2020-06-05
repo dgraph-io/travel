@@ -15,13 +15,30 @@ import (
 // and maintained for wider use. In these cases I would use gogenerate
 // to hardcode the contents into the binary.
 const gQLSchema = `
+enum Roles {
+	ADMIN
+	EMAIL
+	MUTATE
+	QUERY
+}
+
+type User {
+	id: ID!
+	email: String! @search(by: [exact])
+	name: String!
+	roles: [Roles]!
+	password_hash: String!
+	date_created: DateTime!
+	date_updated: DateTime!
+}
+
 type City {
 	id: ID!
-	advisory: Advisory
+	name: String! @search(by: [exact])
 	lat: Float!
 	lng: Float!
-	name: String! @search(by: [exact])
 	places: [Place] @hasInverse(field: city)
+	advisory: Advisory
 	weather: Weather
 }
 
@@ -68,35 +85,32 @@ type Weather {
 	visibility: String
 	wind_direction: Int
 	wind_speed: Float
+}
+
+type EmailResponse @remote {
+	id: ID!
+	email: String
+	subject: String
+	err: String
+}
+
+type Query{
+	sendEmail(email: String!, subject: String!): EmailResponse @custom(http:{
+		url: "http://0.0.0.0:3000/v1/email",
+		method: "POST",
+		body: "{ email: $email, subject: $subject }"
+	})
 }`
-
-// Waiting on Dgraph to support this in a stable version.
-/*
-	const gQLCustomFunctions = `
-	type EmailResponse @remote {
-		id: ID!
-		email: String
-		subject: String
-		err: String
-	}
-
-	type Query{
-		sendEmail(email: String!, subject: String!): EmailResponse @custom(http:{
-			url: "http://0.0.0.0:3000/v1/email",
-			method: "POST",
-			body: "{ email: $email, subject: $subject }"
-		})
-	}`
-*/
 
 type schema struct {
 	graphql *graphql.GraphQL
 }
 
-// QuerySchema performs a schema query operation against the configured server.
-func (s *schema) QuerySchema(ctx context.Context, response interface{}) error {
-	query := `query { getGQLSchema { schema }}`
-	return s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, nil, response)
+// DropAll perform an alter operatation against the configured server
+// to remove all the data and schema.
+func (s *schema) DropAll(ctx context.Context) error {
+	query := strings.NewReader(`{"drop_all": true}`)
+	return s.graphql.Do(ctx, "alter", query, nil)
 }
 
 // Create is used create the schema in the database.
@@ -116,18 +130,20 @@ func (s *schema) Create(ctx context.Context) error {
 	}`
 	vars := map[string]interface{}{"schema": gQLSchema}
 
-	// Give the database 10 seconds to accept the schema.
-	numRetries := 10
-	for i := 1; i <= numRetries; i++ {
+	var dataErrors Errors
+	for {
 		if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {
+			dataErrors = append(dataErrors, err)
 
-			// Dgraph can fail because it's not ready to accept a schema yet or if indexing is going
-			// on in background. Just retry a few times if this is the case.
-			if i < numRetries {
-				time.Sleep(time.Second)
-				continue
+			// If the context deadline exceeded then we are done trying.
+			if ctx.Err() != nil {
+				return errors.Wrap(dataErrors, "updating schema")
 			}
-			return errors.Wrap(err, "updating schema")
+
+			// Dgraph can fail for too many reasons. Keep trying until the
+			// context deadline exceeds.
+			time.Sleep(5 * time.Second)
+			continue
 		}
 		break
 	}
@@ -137,14 +153,15 @@ func (s *schema) Create(ctx context.Context) error {
 
 // Query returns the current schema in graphql format.
 func (s *schema) Query(ctx context.Context) (string, error) {
+	query := `query { getGQLSchema { schema }}`
 	result := make(map[string]interface{})
-	if err := s.QuerySchema(ctx, &result); err != nil {
+	if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, nil, &result); err != nil {
 		return "", errors.Wrap(err, "query schema")
 	}
 
 	data, err := json.Marshal(result)
 	if err != nil {
-		return "", errors.Wrap(err, "validate schema")
+		return "", errors.Wrap(err, "marshal schema")
 	}
 
 	return string(data), nil
@@ -177,11 +194,4 @@ func (s *schema) Validate(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// DropAll perform an alter operatation against the configured server
-// to remove all the data and schema.
-func (s *schema) DropAll(ctx context.Context) error {
-	query := strings.NewReader(`{"drop_all": true}`)
-	return s.graphql.Do(ctx, "alter", query, nil)
 }

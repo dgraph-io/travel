@@ -117,8 +117,8 @@ mutation {
 	return mutation, result
 }
 
-func (advisoryMarshal) delete(advisoryID string) (string, deleteAdvisoryResult) {
-	var result deleteAdvisoryResult
+func (advisoryMarshal) delete(advisoryID string) (string, advisoryDeleteResult) {
+	var result advisoryDeleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteAdvisory(filter: { id: [%q] })
@@ -144,14 +144,14 @@ func (advisoryIDResult) marshal() string {
 	}`
 }
 
-type deleteAdvisoryResult struct {
+type advisoryDeleteResult struct {
 	DeleteAdvisory struct {
 		Msg     string
 		NumUids int
 	} `json:"deleteAdvisory"`
 }
 
-func (deleteAdvisoryResult) marshal() string {
+func (advisoryDeleteResult) marshal() string {
 	return `{
 		msg,
 		numUids,

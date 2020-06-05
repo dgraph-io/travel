@@ -3,10 +3,23 @@ package data
 import (
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ardanlabs/graphql"
 )
+
+// Errors represents a group of errors.
+type Errors []error
+
+// Error implements the error interface.
+func (errors Errors) Error() string {
+	var sb strings.Builder
+	for _, err := range errors {
+		sb.WriteString(err.Error() + "\n")
+	}
+	return sb.String()
+}
 
 // Dgraph represents the IP and Ports we need to talk to the
 // server for the different functions we need to perform.

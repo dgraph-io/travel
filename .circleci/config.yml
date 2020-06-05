@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Download the DB image
           command: |
-              docker pull dgraph/standalone:v20.03.1
+              docker pull dgraph/standalone:master
       - run:
           name: Run tests
           command: |

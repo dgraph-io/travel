@@ -1,5 +1,26 @@
 package data
 
+import "time"
+
+// These constants represet the set of roles.
+const (
+	RoleAdmin  = "ADMIN"
+	RoleEmail  = "EMAIL"
+	RoleMutate = "MUTATE"
+	RoleQuery  = "QUERY"
+)
+
+// User represents someone with access to the system.
+type User struct {
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Email        string    `json:"email"`
+	Roles        []string  `json:"roles"`
+	PasswordHash string    `json:"password_hash"`
+	DateCreated  time.Time `json:"date_created"`
+	DateUpdated  time.Time `json:"date_updated"`
+}
+
 // City represents a city and its coordinates.
 type City struct {
 	ID   string  `json:"id,omitempty"`

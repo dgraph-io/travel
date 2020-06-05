@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       containers:
       - name: zero
-        image: dgraph/dgraph:v20.03.1
+        image: dgraph/dgraph:master
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5080
@@ -98,7 +98,7 @@ spec:
       hostNetwork: true
       containers:
       - name: alpha
-        image: dgraph/dgraph:v20.03.1
+        image: dgraph/dgraph:master
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 7080

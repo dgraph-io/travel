@@ -22,6 +22,11 @@ func schema(apiHost string) func(t *testing.T) {
 
 				db := ready(t, ctx, 0, apiHost)
 
+				if err := db.Schema.DropAll(ctx); err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
+
 				if err := db.Schema.Create(ctx); err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to perform the schema operation: %v", tests.Failed, testID, err)
 				}

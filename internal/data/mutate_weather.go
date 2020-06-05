@@ -131,8 +131,8 @@ mutation {
 	return mutation, result
 }
 
-func (weatherMarshal) delete(weatherID string) (string, deleteWeatherResult) {
-	var result deleteWeatherResult
+func (weatherMarshal) delete(weatherID string) (string, weatherDeleteResult) {
+	var result weatherDeleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteWeather(filter: { id: [%q] })
@@ -158,14 +158,14 @@ func (weatherIDResult) graphql() string {
 	}`
 }
 
-type deleteWeatherResult struct {
+type weatherDeleteResult struct {
 	DeleteWeather struct {
 		Msg     string
 		NumUids int
 	} `json:"deleteWeather"`
 }
 
-func (deleteWeatherResult) graphql() string {
+func (weatherDeleteResult) graphql() string {
 	return `{
 		msg,
 		numUids,
