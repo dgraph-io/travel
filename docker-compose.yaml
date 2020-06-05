@@ -12,7 +12,7 @@ services:
     container_name: dgraph-zero
     networks:
       - shared-network
-    image: dgraph/dgraph:master
+    image: dgraph/dgraph:v20.03.1
     environment:
       - DGRAPH_ZERO_MY=dgraph-zero:5080
     command: dgraph zero
@@ -20,7 +20,7 @@ services:
     container_name: dgraph-alpha
     networks:
       - shared-network
-    image: dgraph/dgraph:master
+    image: dgraph/dgraph:v20.03.1
     ports:
       - 8080:8080
     depends_on:
@@ -58,7 +58,7 @@ services:
     depends_on:
       - dgraph-alpha
     environment:
-      - TRAVEL_API_KEYS_MAPS_KEY=AIzaSyBx3dh67ys5kfYlZHaE8ZdAEMUFidxtnHs
+      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
       - TRAVEL_DGRAPH_URL=http://dgraph-alpha:8080
       # - GODEBUG=gctrace=1
 
