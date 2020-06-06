@@ -22,7 +22,7 @@ regexs = {
 
 files_modified_arr.each do |file|
     regexs.each_pair do |key_name, regex|
-        if ((file == "go.sum") || (file.include? "_test"))
+        if ((file == "go.sum") || (file.include? "_test") || (file.include? "_models.go"))
             next
         end
         grep_command = "grep -iE \"#{regex}\" #{file}"

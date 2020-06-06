@@ -103,7 +103,7 @@ func run() error {
 		}
 
 	default:
-		fmt.Println("useradd: add a new user to the system")
+		fmt.Println("adduser: add a new user to the system")
 		fmt.Println("getuser: retrieve information about a user")
 		fmt.Println("keygen: generate a set of private/public key files")
 		fmt.Println("gentoken: generate a JWT for a user with claims")
