@@ -16,7 +16,9 @@ var build = "develop"
 
 func main() {
 	if err := run(); err != nil {
-		log.Printf("error: %s", err)
+		if errors.Cause(err) != commands.ErrHelp {
+			log.Printf("error: %s", err)
+		}
 		os.Exit(1)
 	}
 }
@@ -88,20 +90,26 @@ func run() error {
 			return errors.Wrap(err, "getting user")
 		}
 
-	case "genkeys":
-		if err := commands.GenerateKeys(); err != nil {
+	case "keygen":
+		if err := commands.KeyGen(); err != nil {
 			return errors.Wrap(err, "generating keys")
 		}
 
 	case "gentoken":
 		email := cfg.Args.Num(1)
 		privateKeyFile := cfg.Args.Num(2)
-		if err := commands.GenerateToken(dgraph, email, privateKeyFile); err != nil {
+		algorithm := cfg.Args.Num(3)
+		if err := commands.GenToken(dgraph, email, privateKeyFile, algorithm); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 
 	default:
-		return errors.New("must specify a value command: [useradd,getuser,genkeys,gentoken]")
+		fmt.Println("useradd: add a new user to the system")
+		fmt.Println("getuser: retrieve information about a user")
+		fmt.Println("keygen: generate a set of private/public key files")
+		fmt.Println("gentoken: generate a JWT for a user with claims")
+		fmt.Println("provide a command to get more help.")
+		return commands.ErrHelp
 	}
 
 	return nil
