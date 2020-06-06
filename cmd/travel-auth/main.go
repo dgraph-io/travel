@@ -37,7 +37,6 @@ func run() error {
 			AuthToken      string
 		}
 	}
-
 	cfg.Version.SVN = build
 	cfg.Version.Desc = "copyright information here"
 

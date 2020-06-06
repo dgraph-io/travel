@@ -35,7 +35,6 @@ func GenToken(dgraph data.Dgraph, email string, privateKeyFile string, algorithm
 		return errors.Wrap(err, "getting user")
 	}
 
-	// Read the private key PEM file.
 	privatePEM, err := ioutil.ReadFile(privateKeyFile)
 	if err != nil {
 		return errors.Wrap(err, "reading PEM private key file")
