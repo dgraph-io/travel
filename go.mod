@@ -17,7 +17,7 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/stretchr/testify v1.5.1 // indirect
 	go.opencensus.io v0.22.3 // indirect
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	googlemaps.github.io/maps v1.2.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0

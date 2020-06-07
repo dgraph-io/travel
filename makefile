@@ -102,4 +102,7 @@ clean:
 # Git support
 
 install-hooks:
-	cp -r .githooks/ .git/hooks/
+	cp -r .githooks/pre-commit .git/hooks/pre-commit
+
+remove-hooks:
+	rm .git/hooks/pre-commit

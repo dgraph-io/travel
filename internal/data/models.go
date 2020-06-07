@@ -2,14 +2,6 @@ package data
 
 import "time"
 
-// These constants represet the set of roles.
-const (
-	RoleAdmin  = "ADMIN"
-	RoleEmail  = "EMAIL"
-	RoleMutate = "MUTATE"
-	RoleQuery  = "QUERY"
-)
-
 // User represents someone with access to the system.
 type User struct {
 	ID           string    `json:"id"`

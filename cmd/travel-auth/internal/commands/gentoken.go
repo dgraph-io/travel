@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/internal/data"
-	"github.com/dgraph-io/travel/internal/platform/auth"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
@@ -64,7 +63,7 @@ func GenToken(dgraph data.Dgraph, email string, privateKeyFile string, algorithm
 	// to the corresponding public key, the algorithms to use (RS256), and the
 	// key lookup function to perform the actual retrieve of the KID to public
 	// key lookup.
-	authenticator, err := auth.NewAuthenticator(privateKey, keyID, algorithm, keyLookupFunc)
+	authenticator, err := data.NewAuthenticator(privateKey, keyID, algorithm, keyLookupFunc)
 	if err != nil {
 		return errors.Wrap(err, "constructing authenticator")
 	}
@@ -80,14 +79,16 @@ func GenToken(dgraph data.Dgraph, email string, privateKeyFile string, algorithm
 	// nbf (not before time): Time before which the JWT must not be accepted for processing
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
-	claims := auth.Claims{
+	claims := data.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "travel project",
 			Subject:   user.ID,
 			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		Roles: user.Roles,
+		Auth: data.StandardClaims{
+			Roles: user.Roles,
+		},
 	}
 
 	// This will generate a JWT with the claims embedded in them. The database
