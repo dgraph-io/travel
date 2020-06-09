@@ -74,8 +74,9 @@ type Weather {
 	visibility: String
 	wind_direction: Int
 	wind_speed: Float
-}
+}`
 
+/*
 type EmailResponse @remote {
 	id: ID!
 	email: String
@@ -93,3 +94,4 @@ type Query{
 
 # Dgraph.Authorization X-Travel-Auth Auth RS256 "-----BEGIN RSA PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnZ/BW/tuLr0uxZFw1Q5m\nP1JpIksU46o+kIaqIXZjSAduma18m+oSgd1L19Fs9otAjfAlkyU8HF1hJNj/PVv8\nMY72vhIWv60xBB4caXuLmflAiJEtvxHfw3WtVR9npQqEowcwrsf7MSSfdHwM4S+F\nbMmcl/mE9c7DUrYJBUgu1IbdI7vrEoPE65GFafjZQHkPLUX8OaRXOt4rkT6HfYv+\nXqaCs6Ie+dt6xL5HiQpO90/89CAJhi2q8AXvhfxqCVVfLxxd3jNJVq2olkCOLJRE\nuJ29Bb460yKOAiDigEUobUpmvT6ggUZNrX71yP0GZxQFBhq9j1IRgPVg4CDA0Pw5FQIDAQAB\n-----END RSA PUBLIC KEY-----"
 `
+*/
