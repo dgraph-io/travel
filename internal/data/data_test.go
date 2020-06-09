@@ -63,11 +63,6 @@ func seedCity(t *testing.T, ctx context.Context, testID int, url string, city da
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
 
-	if err := db.Schema.Validate(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to see the schema matches: %v", tests.Failed, testID, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to see the schema matches.", tests.Success, testID)
-
 	cityAdd, err := db.Mutate.AddCity(ctx, city)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city: %v", tests.Failed, testID, err)
@@ -91,11 +86,6 @@ func seedUser(t *testing.T, ctx context.Context, testID int, url string, newUser
 		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
-
-	if err := db.Schema.Validate(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to see the schema matches: %v", tests.Failed, testID, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to see the schema matches.", tests.Success, testID)
 
 	userAdd, err := db.Mutate.AddUser(ctx, newUser, now)
 	if err != nil {

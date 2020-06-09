@@ -19,7 +19,7 @@ func addUser(apiHost string) func(t *testing.T) {
 			testID := 0
 			t.Logf("\tTest %d:\tWhen handling a single user.", testID)
 			{
-				ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
 				now := time.Date(2020, time.June, 1, 0, 0, 0, 0, time.UTC)
@@ -93,7 +93,7 @@ func addCity(apiHost string) func(t *testing.T) {
 			testID := 0
 			t.Logf("\tTest %d:\tWhen handling a city for Sydney.", testID)
 			{
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
 				cityAdd := data.City{
@@ -145,7 +145,7 @@ func addPlace(apiHost string) func(t *testing.T) {
 			testID := 0
 			t.Logf("\tTest %d:\tWhen handling a place for sydney.", testID)
 			{
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
 				cityAdd := data.City{
@@ -245,7 +245,7 @@ func replaceAdvisory(apiHost string) func(t *testing.T) {
 			testID := 0
 			t.Logf("\tTest %d:\tWhen handling an advisory for sydney.", testID)
 			{
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
 				cityAdd := data.City{
@@ -314,7 +314,7 @@ func replaceWeather(apiHost string) func(t *testing.T) {
 			testID := 0
 			t.Logf("\tTest %d:\tWhen handling weather for sydney.", testID)
 			{
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
 				cityAdd := data.City{
