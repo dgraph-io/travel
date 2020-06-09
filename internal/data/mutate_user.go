@@ -8,20 +8,81 @@ import (
 
 	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type mutateUser struct {
-	marshal userMarshal
+// AddUser adds a new user to the database. If the user already exists
+// this function will fail but the found user is returned. If the user is
+// being added, the user with the id from the database is returned.
+func (m mutate) AddUser(ctx context.Context, newUser NewUser, now time.Time) (User, error) {
+	if user, err := m.query.UserByEmail(ctx, newUser.Email); err == nil {
+		return user, ErrUserExists
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return User{}, errors.Wrap(err, "generating password hash")
+	}
+
+	u := User{
+		Name:         newUser.Name,
+		Email:        newUser.Email,
+		Roles:        newUser.Roles,
+		PasswordHash: string(hash),
+		DateCreated:  now,
+		DateUpdated:  now,
+	}
+
+	u, err = user.add(ctx, m.graphql, u)
+	if err != nil {
+		return User{}, errors.Wrap(err, "adding user to database")
+	}
+
+	return u, nil
 }
 
-var mutUser mutateUser
+// UpdateUser updates a user in the database by its ID. If the user doesn't
+// already exist, this function will fail.
+func (m mutate) UpdateUser(ctx context.Context, usr User) error {
+	if _, err := m.query.User(ctx, usr.ID); err != nil {
+		return ErrUserNotExists
+	}
 
-func (mutateUser) add(ctx context.Context, graphql *graphql.GraphQL, user User) (User, error) {
+	if err := user.update(ctx, m.graphql, usr); err != nil {
+		return errors.Wrap(err, "updating user in database")
+	}
+
+	return nil
+}
+
+// DeleteUser removes a user from the database by its ID. If the user doesn't
+// already exist, this function will fail.
+func (m mutate) DeleteUser(ctx context.Context, userID string) error {
+	if _, err := m.query.User(ctx, userID); err != nil {
+		return ErrUserNotExists
+	}
+
+	if err := user.delete(ctx, m.graphql, userID); err != nil {
+		return errors.Wrap(err, "deleting user in database")
+	}
+
+	return nil
+}
+
+// =============================================================================
+
+type usr struct {
+	prepare userPrepare
+}
+
+var user usr
+
+func (u usr) add(ctx context.Context, graphql *graphql.GraphQL, user User) (User, error) {
 	if user.ID != "" {
 		return User{}, errors.New("user contains id")
 	}
 
-	mutation, result := mutUser.marshal.add(user)
+	mutation, result := u.prepare.add(user)
 	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return User{}, errors.Wrap(err, "failed to add user")
 	}
@@ -34,12 +95,12 @@ func (mutateUser) add(ctx context.Context, graphql *graphql.GraphQL, user User) 
 	return user, nil
 }
 
-func (mutateUser) update(ctx context.Context, graphql *graphql.GraphQL, user User) error {
+func (u usr) update(ctx context.Context, graphql *graphql.GraphQL, user User) error {
 	if user.ID == "" {
 		return errors.New("user missing id")
 	}
 
-	mutation, result := mutUser.marshal.update(user)
+	mutation, result := u.prepare.update(user)
 	if err := graphql.Query(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
@@ -52,12 +113,12 @@ func (mutateUser) update(ctx context.Context, graphql *graphql.GraphQL, user Use
 	return nil
 }
 
-func (mutateUser) delete(ctx context.Context, graphql *graphql.GraphQL, userID string) error {
+func (u usr) delete(ctx context.Context, graphql *graphql.GraphQL, userID string) error {
 	if userID == "" {
 		return errors.New("missing user id")
 	}
 
-	mutation, result := mutUser.marshal.delete(userID)
+	mutation, result := u.prepare.delete(userID)
 	if err := graphql.Query(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to delete user")
 	}
@@ -70,10 +131,12 @@ func (mutateUser) delete(ctx context.Context, graphql *graphql.GraphQL, userID s
 	return nil
 }
 
-type userMarshal struct{}
+// =============================================================================
 
-func (userMarshal) add(user User) (string, userIDResult) {
-	var result userIDResult
+type userPrepare struct{}
+
+func (userPrepare) add(user User) (string, userAddResult) {
+	var result userAddResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addUser(input: [{
@@ -88,12 +151,12 @@ mutation {
 }`, user.Name, user.Email, strings.Join(user.Roles, ","), user.PasswordHash,
 		user.DateCreated.UTC().Format(time.RFC3339),
 		user.DateUpdated.UTC().Format(time.RFC3339),
-		result.marshal())
+		result.document())
 
 	return mutation, result
 }
 
-func (userMarshal) update(user User) (string, userUpdateResult) {
+func (userPrepare) update(user User) (string, userUpdateResult) {
 	var result userUpdateResult
 	mutation := fmt.Sprintf(`
 mutation {
@@ -114,23 +177,23 @@ mutation {
 }`, user.ID, user.Name, user.Email, strings.Join(user.Roles, ","), user.PasswordHash,
 		user.DateCreated.UTC().Format(time.RFC3339),
 		user.DateUpdated.UTC().Format(time.RFC3339),
-		result.marshal())
+		result.document())
 
 	return mutation, result
 }
 
-func (userMarshal) delete(userID string) (string, userDeleteResult) {
+func (userPrepare) delete(userID string) (string, userDeleteResult) {
 	var result userDeleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteUser(filter: { id: [%q] })
 	%s
-}`, userID, result.marshal())
+}`, userID, result.document())
 
 	return mutation, result
 }
 
-type userIDResult struct {
+type userAddResult struct {
 	AddUser struct {
 		User []struct {
 			ID string `json:"id"`
@@ -138,7 +201,7 @@ type userIDResult struct {
 	} `json:"addUser"`
 }
 
-func (userIDResult) marshal() string {
+func (userAddResult) document() string {
 	return `{
 		user {
 			id
@@ -153,7 +216,7 @@ type userUpdateResult struct {
 	} `json:"updateUser"`
 }
 
-func (userUpdateResult) marshal() string {
+func (userUpdateResult) document() string {
 	return `{
 		msg,
 		numUids,
@@ -167,7 +230,7 @@ type userDeleteResult struct {
 	} `json:"deleteUser"`
 }
 
-func (userDeleteResult) marshal() string {
+func (userDeleteResult) document() string {
 	return `{
 		msg,
 		numUids,

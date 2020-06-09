@@ -8,18 +8,41 @@ import (
 	"github.com/pkg/errors"
 )
 
-type mutateWeather struct {
-	marshal weatherMarshal
+// ReplaceWeather replaces a weather in the database and connects it
+// to the specified city.
+func (m mutate) ReplaceWeather(ctx context.Context, cityID string, wth Weather) (Weather, error) {
+	if err := weather.delete(ctx, m.query, m.graphql, cityID); err != nil {
+		if err != ErrWeatherNotFound {
+			return Weather{}, errors.Wrap(err, "deleting weather from database")
+		}
+	}
+
+	wth, err := weather.add(ctx, m.graphql, wth)
+	if err != nil {
+		return Weather{}, errors.Wrap(err, "adding weather to database")
+	}
+
+	if err := weather.updateCity(ctx, m.graphql, cityID, wth); err != nil {
+		return Weather{}, errors.Wrap(err, "replace weather in city")
+	}
+
+	return wth, nil
 }
 
-var mutWeather mutateWeather
+// =============================================================================
 
-func (mutateWeather) add(ctx context.Context, graphql *graphql.GraphQL, weather Weather) (Weather, error) {
+type wth struct {
+	prepare weatherPrepare
+}
+
+var weather wth
+
+func (w wth) add(ctx context.Context, graphql *graphql.GraphQL, weather Weather) (Weather, error) {
 	if weather.ID != "" {
 		return Weather{}, errors.New("weather contains id")
 	}
 
-	mutation, result := mutWeather.marshal.add(weather)
+	mutation, result := w.prepare.add(weather)
 	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return Weather{}, errors.Wrap(err, "failed to add weather")
 	}
@@ -32,12 +55,12 @@ func (mutateWeather) add(ctx context.Context, graphql *graphql.GraphQL, weather 
 	return weather, nil
 }
 
-func (mutateWeather) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, weather Weather) error {
+func (w wth) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, weather Weather) error {
 	if weather.ID == "" {
 		return errors.New("weather missing id")
 	}
 
-	mutation, result := mutWeather.marshal.updCity(cityID, weather)
+	mutation, result := w.prepare.updateCity(cityID, weather)
 	err := graphql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
@@ -46,13 +69,13 @@ func (mutateWeather) updateCity(ctx context.Context, graphql *graphql.GraphQL, c
 	return nil
 }
 
-func (mutateWeather) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
+func (w wth) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
 	weather, err := query.Weather(ctx, cityID)
 	if err != nil {
 		return err
 	}
 
-	mutation, result := mutWeather.marshal.delete(weather.ID)
+	mutation, result := w.prepare.delete(weather.ID)
 	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
@@ -65,10 +88,12 @@ func (mutateWeather) delete(ctx context.Context, query query, graphql *graphql.G
 	return nil
 }
 
-type weatherMarshal struct{}
+// =============================================================================
 
-func (weatherMarshal) add(weather Weather) (string, weatherIDResult) {
-	var result weatherIDResult
+type weatherPrepare struct{}
+
+func (weatherPrepare) add(weather Weather) (string, weatherAddResult) {
+	var result weatherAddResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addWeather(input: [{
@@ -90,13 +115,13 @@ mutation {
 }`, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
 		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
-		weather.WindSpeed, result.graphql())
+		weather.WindSpeed, result.document())
 
 	return mutation, result
 }
 
-func (weatherMarshal) updCity(cityID string, weather Weather) (string, cityIDResult) {
-	var result cityIDResult
+func (weatherPrepare) updateCity(cityID string, weather Weather) (string, cityUpdateResult) {
+	var result cityUpdateResult
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {
@@ -126,23 +151,23 @@ mutation {
 }`, cityID, weather.ID, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
 		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
 		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
-		weather.WindSpeed, result.marshal())
+		weather.WindSpeed, result.document())
 
 	return mutation, result
 }
 
-func (weatherMarshal) delete(weatherID string) (string, weatherDeleteResult) {
+func (weatherPrepare) delete(weatherID string) (string, weatherDeleteResult) {
 	var result weatherDeleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteWeather(filter: { id: [%q] })
 	%s
-}`, weatherID, result.graphql())
+}`, weatherID, result.document())
 
 	return mutation, result
 }
 
-type weatherIDResult struct {
+type weatherAddResult struct {
 	AddWeather struct {
 		Weather []struct {
 			ID string `json:"id"`
@@ -150,7 +175,7 @@ type weatherIDResult struct {
 	} `json:"addWeather"`
 }
 
-func (weatherIDResult) graphql() string {
+func (weatherAddResult) document() string {
 	return `{
 		weather {
 			id
@@ -165,7 +190,7 @@ type weatherDeleteResult struct {
 	} `json:"deleteWeather"`
 }
 
-func (weatherDeleteResult) graphql() string {
+func (weatherDeleteResult) document() string {
 	return `{
 		msg,
 		numUids,

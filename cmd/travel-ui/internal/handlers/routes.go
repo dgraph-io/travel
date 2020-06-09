@@ -16,11 +16,11 @@ import (
 var cities = []string{"miami", "new york", "sydney"}
 
 // UI constructs an http.Handler with all application routes defined.
-func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgraph, browserEndpoint string, mapsKey string) (*web.App, error) {
+func UI(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DBConfig, browserEndpoint string, mapsKey string) (*web.App, error) {
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	// Register the index page for the website.
-	index, err := newIndex(dgraph, browserEndpoint, cities, mapsKey)
+	index, err := newIndex(browserEndpoint, cities, mapsKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading index template")
 	}
@@ -37,14 +37,14 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgra
 
 	// Register health check endpoint.
 	check := check{
-		build:  build,
-		dgraph: dgraph,
+		build:    build,
+		dbConfig: dbConfig,
 	}
 	app.Handle(http.MethodGet, "/health", check.health)
 
 	// Register data load endpoint.
 	fetch := fetch{
-		dgraph: dgraph,
+		dbConfig: dbConfig,
 	}
 	app.Handle("GET", "/data/:city", fetch.data)
 

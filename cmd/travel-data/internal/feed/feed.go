@@ -44,25 +44,34 @@ type URL struct {
 }
 
 // Work retrieves and stores the feed data for this API.
-func Work(log *log.Logger, dgraph data.Dgraph, search Search, keys Keys, url URL) error {
+func Work(log *log.Logger, dbConfig data.DBConfig, schemaConfig data.SchemaConfig, search Search, keys Keys, url URL) error {
 	log.Println("feed: Work: Wait for the database is ready ...")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	err := data.Readiness(ctx, dgraph.URL, 5*time.Second)
+	err := data.Readiness(ctx, dbConfig.URL, 5*time.Second)
 	if err != nil {
 		log.Printf("feed: Work: Readiness: ERROR: %v", err)
 		return ErrFailed
 	}
 
-	db, err := data.NewDB(dgraph)
+	schema, err := data.NewSchema(dbConfig, schemaConfig)
 	if err != nil {
 		log.Printf("feed: Work: New Data: ERROR: %v", err)
 		return ErrFailed
 	}
 
-	ctx = context.Background()
-	if err := db.Schema.Create(ctx); err != nil {
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	if err := schema.Create(ctx); err != nil {
 		log.Printf("feed: Work: Create Schema: ERROR: %v", err)
+		return ErrFailed
+	}
+
+	db, err := data.NewDB(dbConfig)
+	if err != nil {
+		log.Printf("feed: Work: New Data: ERROR: %v", err)
 		return ErrFailed
 	}
 

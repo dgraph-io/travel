@@ -13,13 +13,13 @@ import (
 var ErrHelp = errors.New("provided help")
 
 // AddUser handles the creation of users.
-func AddUser(dgraph data.Dgraph, newUser data.NewUser) error {
+func AddUser(dbConfig data.DBConfig, newUser data.NewUser) error {
 	if newUser.Name == "" || newUser.Email == "" || newUser.Password == "" || newUser.Roles == nil {
 		fmt.Println("help: adduser <name> <email> <password> <role>")
 		return ErrHelp
 	}
 
-	db, err := data.NewDB(dgraph)
+	db, err := data.NewDB(dbConfig)
 	if err != nil {
 		return errors.Wrap(err, "init database")
 	}

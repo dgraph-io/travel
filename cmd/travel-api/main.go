@@ -117,7 +117,7 @@ func run(log *log.Logger) error {
 	log.Println("main : Started : Initializing API support")
 
 	// Capture the configuration for Dgraph.
-	dgraph := data.Dgraph{
+	dbConfig := data.DBConfig{
 		URL:            cfg.Dgraph.URL,
 		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
 		AuthToken:      cfg.Dgraph.AuthToken,
@@ -138,7 +138,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, dgraph, emailConfig),
+		Handler:      handlers.API(build, shutdown, log, dbConfig, emailConfig),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

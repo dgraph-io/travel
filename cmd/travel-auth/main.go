@@ -64,7 +64,7 @@ func run() error {
 	// =========================================================================
 	// Commands
 
-	dgraph := data.Dgraph{
+	dbConfig := data.DBConfig{
 		URL:            cfg.Dgraph.URL,
 		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
 		AuthToken:      cfg.Dgraph.AuthToken,
@@ -79,13 +79,13 @@ func run() error {
 			Roles:    []string{cfg.Args.Num(4)},
 		}
 
-		if err := commands.AddUser(dgraph, newUser); err != nil {
+		if err := commands.AddUser(dbConfig, newUser); err != nil {
 			return errors.Wrap(err, "adding user")
 		}
 
 	case "getuser":
 		email := cfg.Args.Num(1)
-		if err := commands.GetUser(dgraph, email); err != nil {
+		if err := commands.GetUser(dbConfig, email); err != nil {
 			return errors.Wrap(err, "getting user")
 		}
 
@@ -98,7 +98,7 @@ func run() error {
 		email := cfg.Args.Num(1)
 		privateKeyFile := cfg.Args.Num(2)
 		algorithm := cfg.Args.Num(3)
-		if err := commands.GenToken(dgraph, email, privateKeyFile, algorithm); err != nil {
+		if err := commands.GenToken(dbConfig, email, privateKeyFile, algorithm); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 

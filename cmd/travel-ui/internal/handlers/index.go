@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
@@ -20,7 +19,7 @@ type index struct {
 	mapsKey         string
 }
 
-func newIndex(dgraph data.Dgraph, browserEndpoint string, cities []string, mapsKey string) (*index, error) {
+func newIndex(browserEndpoint string, cities []string, mapsKey string) (*index, error) {
 	data, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")

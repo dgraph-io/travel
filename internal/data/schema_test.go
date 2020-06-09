@@ -10,7 +10,7 @@ import (
 
 // schema validates the schema we are storing is what we expect
 // for the application.
-func schema(apiHost string) func(t *testing.T) {
+func schema(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate a schema.")
 		{
@@ -20,14 +20,14 @@ func schema(apiHost string) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				db := ready(t, ctx, 0, apiHost)
+				schema, _ := ready(t, ctx, 0, tc)
 
-				if err := db.Schema.DropAll(ctx); err != nil {
+				if err := schema.DropAll(ctx); err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
 
-				if err := db.Schema.Create(ctx); err != nil {
+				if err := schema.Create(ctx); err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
