@@ -12,7 +12,7 @@ const (
 
 // Configuration for running tests.
 const (
-	dbImage = "dgraph/standalone:v20.03.1"
+	dbImage = "dgraph/standalone:master"
 )
 
 // NewUnit creates a test value with necessary application state to run

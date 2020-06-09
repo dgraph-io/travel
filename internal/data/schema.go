@@ -14,7 +14,7 @@ import (
 // Schema error variables.
 var (
 	ErrNoSchemaExists = errors.New("no schema exists")
-	ErrInvalidSchema  = errors.New("invalid schema")
+	ErrInvalidSchema  = errors.New("schema doesn't match")
 )
 
 type schema struct {
@@ -24,9 +24,9 @@ type schema struct {
 // DropAll perform an alter operatation against the configured server
 // to remove all the data and schema.
 func (s *schema) DropAll(ctx context.Context) error {
-	if _, err := s.retrieve(ctx); err != nil {
-		return errors.Wrap(err, "can't drop schema, db not ready")
-	}
+	// if _, err := s.retrieve(ctx); err != nil {
+	// 	return errors.Wrap(err, "can't drop schema, db not ready")
+	// }
 
 	query := strings.NewReader(`{"drop_all": true}`)
 	if err := s.graphql.Do(ctx, "alter", query, nil); err != nil {
