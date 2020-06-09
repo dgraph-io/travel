@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -139,12 +140,15 @@ func (s *schema) validate(ctx context.Context, schema string) error {
 		return errors.Wrap(err, "regex compile")
 	}
 
-	exp := reg.ReplaceAllString(gQLSchema, "")
+	exp := strings.ReplaceAll(gQLSchema, "\\n", "")
+	exp = reg.ReplaceAllString(exp, "")
 	schema = strings.ReplaceAll(schema[27:], "\\n", "")
 	schema = strings.ReplaceAll(schema, "\\t", "")
 	schema = reg.ReplaceAllString(schema, "")
 
 	if exp != schema {
+		log.Println("exp:", exp)
+		log.Println("got:", schema)
 		return ErrInvalidSchema
 	}
 
