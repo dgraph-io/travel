@@ -279,3 +279,14 @@ function convertKelvin(k) {
     const num = k * 9 / 5 - 459.67;
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
+
+function sendEmail(userID, nodeType, nodeID, email) {
+    var query = querySendEmail(userID, nodeType, nodeID, email);
+    $.post(Dgraph, query, function (o, status) {
+        if (typeof o.data === "undefined") {
+            window.alert("ERROR: " + o.errors[0].message);
+            return;
+        }
+        window.alert(o.data.sendEmail.message)
+    });
+}

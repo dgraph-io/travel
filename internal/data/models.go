@@ -22,6 +22,20 @@ type NewUser struct {
 	PasswordConfirm string   `json:"password_confirm"`
 }
 
+// EmailRequest is the data that will be sent with a sendemail request.
+type EmailRequest struct {
+	UserID   string `json:"userid"`
+	NodeType string `json:"nodetype"`
+	NodeID   string `json:"nodeid"`
+	Email    string `json:"email"`
+}
+
+// EmailResponse is the response for the custom sendemail function.
+type EmailResponse struct {
+	UserID  string `json:"user_id"`
+	Message string `json:"message"`
+}
+
 // City represents a city and its coordinates.
 type City struct {
 	ID   string  `json:"id,omitempty"`

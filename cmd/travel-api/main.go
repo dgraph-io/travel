@@ -53,7 +53,7 @@ func run(log *log.Logger) error {
 			User     string
 			Password string
 			Host     string
-			Port     int `conf:"default:25"`
+			Port     int
 		}
 	}
 	cfg.Version.SVN = build

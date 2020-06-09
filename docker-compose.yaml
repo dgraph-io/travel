@@ -30,7 +30,7 @@ services:
       - DGRAPH_ALPHA_LRU_MB=1024
       - DGRAPH_ALPHA_ZERO=dgraph-zero:5080
       - DGRAPH_ALPHA_WHITELIST=0.0.0.0/0
-    command: dgraph alpha
+    command: dgraph alpha --vmodule=server=3
 
   # This is the core service API.
   travel-api:

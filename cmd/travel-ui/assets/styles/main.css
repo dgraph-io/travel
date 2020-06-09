@@ -17,9 +17,13 @@ tr:nth-child(odd) {
     background: rgb(226, 225, 225);
 }
 .cityinput {
-    width: 100%;
+    width: 95%;
     height: 50px;
     margin: 10px 20px;
+}
+.customfunc {
+    height: 50px;
+    float: right;
 }
 .cityselectionlabel {
     font-size: 26px;
@@ -33,7 +37,7 @@ tr:nth-child(odd) {
     margin: 5px 10px 10px 0px;
     padding: 0px 5px 5px 5px;
 }
-.graphicalBox {
+.graphicalbox {
     width: 50%;
     height: var(--main-height);
     border: 1px solid #333;
@@ -58,6 +62,7 @@ tr:nth-child(odd) {
     overflow: auto;
     padding: 20px 15px;
     border: 1px solid #333;
+    display: none;
 }
 #map {
     height: 100%;
@@ -148,10 +153,23 @@ tr:nth-child(odd) {
     float: left;
     margin-right: 20px;
 }
-.button {
+.tab {
     background-color: #faf9f5;
     border: 1px solid #333;
     border-bottom: none;
+    color: black;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    font-family: verdana;
+    margin: 0px 5px;
+    cursor: pointer;
+}
+.button {
+    background-color: #faf9f5;
+    border: 1px solid #333;
     color: black;
     padding: 10px 15px;
     text-align: center;

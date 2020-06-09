@@ -77,17 +77,15 @@ type Weather {
 }
 
 type EmailResponse @remote {
-	id: ID!
-	email: String
-	subject: String
-	err: String
+	user_id: ID
+	message: String
 }
 
 type Query{
-	sendEmail(email: String!, subject: String!): EmailResponse @custom(http:{
-		url: "http://0.0.0.0:3000/v1/email",
+	sendEmail(userID: String!, nodeType: String!, nodeID: String!, email: String!): EmailResponse @custom(http:{
+		url: "http://travel-api:3000/v1/email",
 		method: "POST",
-		body: "{ email: $email, subject: $subject }"
+		body: "{userid: $userID, nodetype: $nodeType, nodeid: $nodeID, email: $email}"
 	})
 }
 

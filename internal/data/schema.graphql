@@ -1,11 +1,4 @@
 directive @hasInverse(field: String!) on FIELD_DEFINITION
-directive @search(by: [DgraphIndex!]) on FIELD_DEFINITION
-directive @id on FIELD_DEFINITION
-directive @remote on OBJECT | INTERFACE
-directive @dgraph(
-  type: String
-  pred: String
-) on OBJECT | INTERFACE | FIELD_DEFINITION
 directive @secret(field: String!, pred: String) on OBJECT | INTERFACE
 directive @auth(
   query: AuthRule
@@ -13,8 +6,15 @@ directive @auth(
   update: AuthRule
   delete: AuthRule
 ) on OBJECT
-directive @custom(http: CustomHTTP) on FIELD_DEFINITION
 directive @cascade on FIELD
+directive @custom(http: CustomHTTP) on FIELD_DEFINITION
+directive @remote on OBJECT | INTERFACE
+directive @search(by: [DgraphIndex!]) on FIELD_DEFINITION
+directive @dgraph(
+  type: String
+  pred: String
+) on OBJECT | INTERFACE | FIELD_DEFINITION
+directive @id on FIELD_DEFINITION
 input AddAdvisoryInput {
   continent: String!
   country: String!
@@ -76,8 +76,8 @@ type AddPlacePayload {
 }
 
 input AddUserInput {
-  name: String!
   email: String!
+  name: String!
   roles: [Roles]!
   password_hash: String!
   date_created: DateTime!
@@ -292,10 +292,8 @@ enum DgraphIndex {
 }
 
 type EmailResponse {
-  id: ID!
-  email: String
-  subject: String
-  err: String
+  user_id: ID
+  message: String
 }
 
 input FloatFilter {
@@ -426,7 +424,12 @@ input PlaceRef {
 }
 
 type Query {
-  sendEmail(email: String!, subject: String!): EmailResponse
+  sendEmail(
+    userID: String
+    nodeType: String
+    nodeID: String
+    email: String
+  ): EmailResponse
   getUser(id: ID!): User
   queryUser(
     filter: UserFilter
@@ -465,10 +468,10 @@ type Query {
 }
 
 enum Roles {
-  Admin
-  Email
-  Mutate
-  Query
+  ADMIN
+  EMAIL
+  MUTATE
+  QUERY
 }
 
 input StringExactFilter {
@@ -569,8 +572,8 @@ type UpdateWeatherPayload {
 
 type User {
   id: ID!
-  name: String!
   email: String!
+  name: String!
   roles(first: Int, offset: Int): [Roles]!
   password_hash: String!
   date_created: DateTime!
@@ -579,6 +582,9 @@ type User {
 
 input UserFilter {
   id: [ID!]
+  email: StringExactFilter
+  and: UserFilter
+  or: UserFilter
   not: UserFilter
 }
 
@@ -589,16 +595,16 @@ input UserOrder {
 }
 
 enum UserOrderable {
-  name
   email
+  name
   password_hash
   date_created
   date_updated
 }
 
 input UserPatch {
-  name: String
   email: String
+  name: String
   roles: [Roles]
   password_hash: String
   date_created: DateTime
@@ -607,8 +613,8 @@ input UserPatch {
 
 input UserRef {
   id: ID
-  name: String
   email: String
+  name: String
   roles: [Roles]
   password_hash: String
   date_created: DateTime

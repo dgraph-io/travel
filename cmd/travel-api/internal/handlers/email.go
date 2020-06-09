@@ -3,10 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
-	"net/smtp"
 
+	"github.com/dgraph-io/travel/internal/data"
 	"github.com/dgraph-io/travel/internal/platform/web"
 	"github.com/pkg/errors"
 )
@@ -24,22 +23,18 @@ type email struct {
 }
 
 func (e *email) send(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var recipient struct {
-		Email   string `validate:"email"`
-		Subject string `validate:"required"`
-	}
-	if err := web.Decode(r, &recipient); err != nil {
+	var request data.EmailRequest
+	if err := web.Decode(r, &request); err != nil {
 		return errors.Wrap(err, "decoding recipient")
 	}
 
-	auth := smtp.PlainAuth("", e.User, e.Password, e.Host)
-	to := []string{recipient.Email}
-	msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\nThis is the email body.\r\n", recipient.Email, recipient.Subject))
-	addr := net.JoinHostPort(e.Host, e.Port)
+	// Add actual email code here.
 
-	if err := smtp.SendMail(addr, auth, e.User, to, msg); err != nil {
-		return errors.Wrap(err, "sending email")
+	resp := data.EmailResponse{
+		UserID:  request.UserID,
+		Message: fmt.Sprintf("email sent to %q for node type %q with id %q", request.Email, request.NodeType, request.NodeID),
 	}
+	web.Respond(ctx, w, resp, http.StatusOK)
 
 	return nil
 }

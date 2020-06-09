@@ -38,6 +38,9 @@ browser-compose:
 logs-compose:
 	docker-compose logs -f
 
+restart-compose:
+	docker-compose up --detach --build
+
 # Running from within the local computer
 
 run-local: up-local seed browser-local ui-local
@@ -48,6 +51,10 @@ up-local:
 ui-local:
 	cd cmd/travel-ui; \
 	go run main.go --web-ui-host=0.0.0.0:81
+
+api-local:
+	cd cmd/travel-api; \
+	go run main.go
 
 FILES := $(shell docker ps -aq)
 

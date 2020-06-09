@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -147,8 +146,6 @@ func (s *schema) validate(ctx context.Context, schema string) error {
 	schema = reg.ReplaceAllString(schema, "")
 
 	if exp != schema {
-		log.Println("exp:", exp)
-		log.Println("got:", schema)
 		return ErrInvalidSchema
 	}
 

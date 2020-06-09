@@ -130,3 +130,22 @@ function queryPlaceByName(placeName) {
         variables: null
     });
 }
+
+function querySendEmail() {
+
+    // Just using test data to show how to wire up a custom function.
+    let userID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
+    let nodeType = "place"
+    let nodeID = "0x32"
+    let email = "bill@ardanlabs.com"
+
+    return JSON.stringify({
+        query: `query {
+            sendEmail(userID: "` + userID + `", nodeType: "` + nodeType + `", nodeID: "` + nodeID + `", email: "` + email + `") {
+                user_id
+	            message
+            }
+        }`,
+        variables: null
+    })
+}

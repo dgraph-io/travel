@@ -24,11 +24,14 @@
 					<option value="{{$element}}">{{$element}}</option>
 				{{end}}
 			</select>
+			<div class="customfunc">
+				<div type="button" class="button" onclick="sendEmail()">Send Email</div>
+			</div>
 		</div>
-		<div class="graphicalBox">
+		<div class="graphicalbox">
 		<div class="tabbox">
-				<div type="button" id="graphbutton" class="button" onclick="showGraphTab('graph')">Graph</div>
-				<div type="button" id="mapbutton" class="button" onclick="showGraphTab('map')">Map</div>
+				<div type="button" id="graphbutton" class="tab" onclick="showGraphTab('graph')">Graph</div>
+				<div type="button" id="mapbutton" class="tab" onclick="showGraphTab('map')">Map</div>
 			</div>
 			<div class="graphbox"></div>
 			<div class="mapbox">
@@ -37,9 +40,9 @@
 		</div>
 		<div class="infobox">
 			<div class="tabbox">
-				<div type="button" id="nodebutton" class="button" onclick="showInfoTab('node')">Node</div>
-				<div type="button" id="querybutton" class="button" onclick="showInfoTab('query')">Query</div>
-				<div type="button" id="schemabutton" class="button" onclick="showInfoTab('schema')">Schema</div>
+				<div type="button" id="nodebutton" class="tab" onclick="showInfoTab('node')">Node</div>
+				<div type="button" id="querybutton" class="tab" onclick="showInfoTab('query')">Query</div>
+				<div type="button" id="schemabutton" class="tab" onclick="showInfoTab('schema')">Schema</div>
 			</div>
 			<div class="nodebox">
 				<div id="node"></div>
