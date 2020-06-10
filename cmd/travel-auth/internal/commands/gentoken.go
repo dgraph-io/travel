@@ -87,7 +87,7 @@ func GenToken(dbConfig data.DBConfig, email string, privateKeyFile string, algor
 			IssuedAt:  time.Now().Unix(),
 		},
 		Auth: data.StandardClaims{
-			Roles: user.Roles,
+			Role: user.Role,
 		},
 	}
 

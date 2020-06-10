@@ -23,7 +23,7 @@ const Key ctxKey = 1
 
 // StandardClaims represents claims for the applications.
 type StandardClaims struct {
-	Roles []string
+	Role string `json:"ROLE"`
 }
 
 // Claims represents the authorization claims transmitted via a JWT.
@@ -43,11 +43,9 @@ func (c Claims) Valid() error {
 
 // HasRole returns true if the claims has at least one of the provided roles.
 func (c Claims) HasRole(roles ...string) bool {
-	for _, has := range c.Auth.Roles {
-		for _, want := range roles {
-			if has == want {
-				return true
-			}
+	for _, want := range roles {
+		if want == c.Auth.Role {
+			return true
 		}
 	}
 	return false

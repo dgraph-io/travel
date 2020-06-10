@@ -27,7 +27,7 @@ func addUser(tc TestConfig) func(t *testing.T) {
 				newUser := data.NewUser{
 					Name:            "Bill Kennedy",
 					Email:           "bill@ardanlabs.com",
-					Roles:           []string{"QUERY", "MUTATE"},
+					Role:            "ADMIN",
 					Password:        "gophers",
 					PasswordConfirm: "gophers",
 				}

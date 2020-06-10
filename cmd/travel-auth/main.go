@@ -33,7 +33,7 @@ func run() error {
 		Args   conf.Args
 		Dgraph struct {
 			URL            string `conf:"default:http://0.0.0.0:8080"`
-			AuthHeaderName string
+			AuthHeaderName string `conf:"default:X-Travel-Auth"`
 			AuthToken      string
 		}
 	}
@@ -61,6 +61,11 @@ func run() error {
 		return errors.Wrap(err, "parsing config")
 	}
 
+	// For convenience with the training material, an ADMIN token is provided.
+	if cfg.Dgraph.AuthToken == "" {
+		cfg.Dgraph.AuthToken = data.AdminJWT
+	}
+
 	// =========================================================================
 	// Commands
 
@@ -76,7 +81,7 @@ func run() error {
 			Name:     cfg.Args.Num(1),
 			Email:    cfg.Args.Num(2),
 			Password: cfg.Args.Num(3),
-			Roles:    []string{cfg.Args.Num(4)},
+			Role:     cfg.Args.Num(4),
 		}
 
 		if err := commands.AddUser(dbConfig, newUser); err != nil {

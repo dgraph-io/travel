@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/ardanlabs/graphql"
@@ -27,7 +26,7 @@ func (m mutate) AddUser(ctx context.Context, newUser NewUser, now time.Time) (Us
 	u := User{
 		Name:         newUser.Name,
 		Email:        newUser.Email,
-		Roles:        newUser.Roles,
+		Role:         newUser.Role,
 		PasswordHash: string(hash),
 		DateCreated:  now,
 		DateUpdated:  now,
@@ -142,13 +141,13 @@ mutation {
 	addUser(input: [{
 		name: %q
 		email: %q
-		roles: [%s]
+		role: %s
 		password_hash: %q
 		date_created: %q
 		date_updated: %q
 	}])
 	%s
-}`, user.Name, user.Email, strings.Join(user.Roles, ","), user.PasswordHash,
+}`, user.Name, user.Email, user.Role, user.PasswordHash,
 		user.DateCreated.UTC().Format(time.RFC3339),
 		user.DateUpdated.UTC().Format(time.RFC3339),
 		result.document())
@@ -167,14 +166,14 @@ mutation {
 		set: {
 			name: %q
 			email: %q
-  			roles: [%s]
+  			role: %s
   			password_hash: %q
   			date_created: %q
   			date_updated: %q
 		}
 	})
 	%s
-}`, user.ID, user.Name, user.Email, strings.Join(user.Roles, ","), user.PasswordHash,
+}`, user.ID, user.Name, user.Email, user.Role, user.PasswordHash,
 		user.DateCreated.UTC().Format(time.RFC3339),
 		user.DateUpdated.UTC().Format(time.RFC3339),
 		result.document())

@@ -51,7 +51,7 @@ func auth() func(t *testing.T) {
 						IssuedAt:  time.Now().Unix(),
 					},
 					Auth: data.StandardClaims{
-						Roles: []string{"ADMIN"},
+						Role: "ADMIN",
 					},
 				}
 
@@ -67,14 +67,7 @@ func auth() func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to parse the claims.", tests.Success, testID)
 
-				if exp, got := len(claims.Auth.Roles), len(parsedClaims.Auth.Roles); exp != got {
-					t.Logf("\t\tTest %d:\texp: %d", testID, exp)
-					t.Logf("\t\tTest %d:\tgot: %d", testID, got)
-					t.Fatalf("\t%s\tTest %d:\tShould have the expexted number of roles: %v", tests.Failed, testID, err)
-				}
-				t.Logf("\t%s\tTest %d:\tShould have the expexted number of roles.", tests.Success, testID)
-
-				if exp, got := claims.Auth.Roles[0], parsedClaims.Auth.Roles[0]; exp != got {
+				if exp, got := claims.Auth.Role, parsedClaims.Auth.Role; exp != got {
 					t.Logf("\t\tTest %d:\texp: %v", testID, exp)
 					t.Logf("\t\tTest %d:\tgot: %v", testID, got)
 					t.Fatalf("\t%s\tTest %d:\tShould have the expexted roles: %v", tests.Failed, testID, err)

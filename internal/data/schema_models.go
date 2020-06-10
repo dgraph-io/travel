@@ -7,7 +7,7 @@ type User struct {
 	ID           string    `json:"id"`
 	Name         string    `json:"name"`
 	Email        string    `json:"email"`
-	Roles        []string  `json:"roles"`
+	Role         string    `json:"role"`
 	PasswordHash string    `json:"password_hash"`
 	DateCreated  time.Time `json:"date_created"`
 	DateUpdated  time.Time `json:"date_updated"`
@@ -15,11 +15,11 @@ type User struct {
 
 // NewUser contains information needed to create a new User.
 type NewUser struct {
-	Name            string   `json:"name"`
-	Email           string   `json:"email"`
-	Roles           []string `json:"roles"`
-	Password        string   `json:"password"`
-	PasswordConfirm string   `json:"password_confirm"`
+	Name            string `json:"name"`
+	Email           string `json:"email"`
+	Role            string `json:"role"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"password_confirm"`
 }
 
 // EmailRequest is the data that will be sent with a sendemail request.

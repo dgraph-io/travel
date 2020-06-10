@@ -15,7 +15,7 @@ query {
 		id
 		name
 		email
-		roles
+		role
 		password_hash
 		date_created
 		date_updated
@@ -44,7 +44,7 @@ query {
 		id
 		name
 		email
-		roles
+		role
 		password_hash
 		date_created
 		date_updated
@@ -59,7 +59,7 @@ query {
 	}
 
 	if len(result.QueryUser) != 1 {
-		return User{}, ErrPlaceNotFound
+		return User{}, ErrUserNotFound
 	}
 
 	return result.QueryUser[0], nil

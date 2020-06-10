@@ -14,7 +14,7 @@ var ErrHelp = errors.New("provided help")
 
 // AddUser handles the creation of users.
 func AddUser(dbConfig data.DBConfig, newUser data.NewUser) error {
-	if newUser.Name == "" || newUser.Email == "" || newUser.Password == "" || newUser.Roles == nil {
+	if newUser.Name == "" || newUser.Email == "" || newUser.Password == "" || newUser.Role == "" {
 		fmt.Println("help: adduser <name> <email> <password> <role>")
 		return ErrHelp
 	}
