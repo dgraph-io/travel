@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -61,12 +60,10 @@ func run(log *log.Logger) error {
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		CustomFunctions struct {
-			SendEmailURL string `conf:"default:http://0.0.0.0:3000/v1/email"`
+			SendEmailURL string `conf:"default:http://travel-api:3000/v1/email"`
 		}
 		Dgraph struct {
 			URL            string `conf:"default:http://0.0.0.0:8080"`
-			SchemaFile     string `conf:"default:./internal/data/schema.gql"`
-			PublicKeyFile  string `conf:"public.pem"`
 			AuthHeaderName string
 			AuthToken      string
 		}
@@ -98,9 +95,7 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// App Starting
 
-	d, _ := os.Getwd()
 	log.Printf("main: Application initializing: version %q", build)
-	log.Printf("main: Location: %q", d)
 	defer log.Println("main: Completed")
 
 	out, err := conf.String(&cfg)
@@ -108,30 +103,6 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "generating config for output")
 	}
 	log.Printf("main: Config:\n%v\n", out)
-
-	// =========================================================================
-	// Open and read the schema document.
-
-	sf, err := os.Open(cfg.Dgraph.SchemaFile)
-	if err != nil {
-		return errors.Wrapf(err, "opening schema file: %s  error: %v", cfg.Dgraph.SchemaFile, err)
-	}
-	schemaDocument, err := ioutil.ReadAll(sf)
-	if err != nil {
-		return errors.Wrapf(err, "reading schema file: %s  error: %v", cfg.Dgraph.SchemaFile, err)
-	}
-
-	// =========================================================================
-	// Open and read the public key.
-
-	pkf, err := os.Open(cfg.Dgraph.PublicKeyFile)
-	if err != nil {
-		return errors.Wrapf(err, "opening schema file: %s  error: %v", cfg.Dgraph.SchemaFile, err)
-	}
-	publicKey, err := ioutil.ReadAll(pkf)
-	if err != nil {
-		return errors.Wrapf(err, "reading schema file: %s  error: %v", cfg.Dgraph.SchemaFile, err)
-	}
 
 	// =========================================================================
 	// Process the feed
@@ -144,8 +115,6 @@ func run(log *log.Logger) error {
 
 	schemaConfig := data.SchemaConfig{
 		SendEmailURL: cfg.CustomFunctions.SendEmailURL,
-		Document:     string(schemaDocument),
-		PublicKey:    string(publicKey),
 	}
 
 	keys := feed.Keys{

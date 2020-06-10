@@ -1,15 +1,79 @@
 package data
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"net"
+	"net/http"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
 )
+
+// SchemaConfig contains information required for the schema document.
+type SchemaConfig struct {
+	SendEmailURL string
+}
+
+// Schema provides support for schema operations against the database.
+type Schema struct {
+	graphql  *graphql.GraphQL
+	document string
+}
+
+// NewSchema constructs a Schema value for use to manage the schema.
+func NewSchema(dbConfig DBConfig, schemaConfig SchemaConfig) (*Schema, error) {
+
+	// The actual CRLF (\n) must be converted to the characters '\n' so the
+	// entire key sits on one line.
+	publicKey := strings.ReplaceAll(schema.publicKey, "\n", "\\n")
+
+	// Create the final schema document with the variable replacments by
+	// processing the template.
+	tmpl := template.New("schema")
+	if _, err := tmpl.Parse(schema.document); err != nil {
+		return nil, errors.Wrap(err, "parsing template")
+	}
+	var document bytes.Buffer
+	vars := map[string]interface{}{
+		"SendEmailURL": schemaConfig.SendEmailURL,
+		"PublicKey":    publicKey,
+	}
+	if err := tmpl.Execute(&document, vars); err != nil {
+		return nil, errors.Wrap(err, "executing template")
+	}
+
+	client := http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+
+	auth := graphql.WithAuth(dbConfig.AuthHeaderName, dbConfig.AuthToken)
+	graphql := graphql.New(dbConfig.URL, &client, auth)
+
+	schema := Schema{
+		graphql:  graphql,
+		document: document.String(),
+	}
+
+	return &schema, nil
+}
 
 // DropAll perform an alter operatation against the configured server
 // to remove all the data and schema.

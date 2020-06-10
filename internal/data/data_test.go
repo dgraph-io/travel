@@ -2,11 +2,6 @@ package data_test
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"runtime"
 	"testing"
 	"time"
 
@@ -29,27 +24,11 @@ func TestData(t *testing.T) {
 	url, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
 
-	// Locate the physical location of the schema file.
-	_, filename, _, _ := runtime.Caller(0)
-	schemaFile := fmt.Sprintf("%s/schema.gql", path.Dir(filename))
-	f, err := os.Open(schemaFile)
-	if err != nil {
-		t.Fatalf("opening schema file: %s  error: %v", schemaFile, err)
-	}
-
-	// Read the entire contents of the schema file.
-	document, err := ioutil.ReadAll(f)
-	if err != nil {
-		t.Fatalf("reading schema file: %s  error: %v", schemaFile, err)
-	}
-
 	// Configure everything to run the tests.
 	tc := TestConfig{
 		url: url,
 		schema: data.SchemaConfig{
 			SendEmailURL: "http://0.0.0.0:3000/v1/email",
-			Document:     string(document),
-			PublicKey:    publicRSAKey,
 		},
 	}
 

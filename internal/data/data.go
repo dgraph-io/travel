@@ -1,11 +1,8 @@
 package data
 
 import (
-	"bytes"
-	"html/template"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/ardanlabs/graphql"
@@ -79,72 +76,6 @@ func NewDB(dbConfig DBConfig) (*DB, error) {
 	return &db, nil
 }
 
-// =============================================================================
-
-// SchemaConfig contains information required for the schema document.
-type SchemaConfig struct {
-	SendEmailURL string
-	Document     string
-	PublicKey    string
-}
-
-// Schema provides support for schema operations against the database.
-type Schema struct {
-	graphql  *graphql.GraphQL
-	document string
-}
-
-// NewSchema constructs a Schema value for use to manage the schema.
-func NewSchema(dbConfig DBConfig, schemaConfig SchemaConfig) (*Schema, error) {
-
-	// The actual CRLF (\n) must be converted to the characters '\n' so the
-	// entire key sits on one line.
-	publicKey := strings.ReplaceAll(schemaConfig.PublicKey, "\n", "\\n")
-
-	// Create the final schema document with the variable replacments by
-	// processing the template.
-	tmpl := template.New("schema")
-	if _, err := tmpl.Parse(schemaConfig.Document); err != nil {
-		return nil, errors.Wrap(err, "parsing template")
-	}
-	var document bytes.Buffer
-	vars := map[string]interface{}{
-		"SendEmailURL": schemaConfig.SendEmailURL,
-		"PublicKey":    publicKey,
-	}
-	if err := tmpl.Execute(&document, vars); err != nil {
-		return nil, errors.Wrap(err, "executing template")
-	}
-
-	client := http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-	}
-
-	auth := graphql.WithAuth(dbConfig.AuthHeaderName, dbConfig.AuthToken)
-	graphql := graphql.New(dbConfig.URL, &client, auth)
-
-	schema := Schema{
-		graphql:  graphql,
-		document: document.String(),
-	}
-
-	return &schema, nil
-}
-
-// =============================================================================
-
 // query represents the set of queries that can be performed.
 type query struct {
 	graphql *graphql.GraphQL
@@ -157,7 +88,7 @@ func newQuery(graphql *graphql.GraphQL) query {
 	}
 }
 
-// =============================================================================
+// Method set can be found in the set of files named query.
 
 type mutate struct {
 	graphql *graphql.GraphQL
@@ -170,3 +101,5 @@ func newMutate(graphql *graphql.GraphQL, query query) mutate {
 		query:   newQuery(graphql),
 	}
 }
+
+// Method set can be found in the set of files named mutate.
