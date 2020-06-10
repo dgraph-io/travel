@@ -12,7 +12,8 @@ down:
 	kind delete cluster --name dgraph-travel-cluster
 
 seed:
-	(cd ../.. && make seed)
+	cd ../..; \
+	go run cmd/travel-data/main.go --custom-functions-send-email-url=http://localhost:3000/v1/email
 
 browser:
 	(cd ../.. && make browser-compose)
