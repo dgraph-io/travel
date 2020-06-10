@@ -59,6 +59,9 @@ func run(log *log.Logger) error {
 			Advisory string `conf:"default:https://www.travel-advisory.info/api"`
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
+		CustomFunctions struct {
+			SendEmailURL string `conf:"default:http://travel-api:3000/v1/email"`
+		}
 		Dgraph struct {
 			URL            string `conf:"default:http://0.0.0.0:8080"`
 			AuthHeaderName string
@@ -92,7 +95,7 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// App Starting
 
-	log.Printf("main: Application initializing : version %q", build)
+	log.Printf("main: Application initializing: version %q", build)
 	defer log.Println("main: Completed")
 
 	out, err := conf.String(&cfg)
@@ -104,10 +107,14 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Process the feed
 
-	dgraph := data.Dgraph{
+	dbConfig := data.DBConfig{
 		URL:            cfg.Dgraph.URL,
 		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
 		AuthToken:      cfg.Dgraph.AuthToken,
+	}
+
+	schemaConfig := data.SchemaConfig{
+		SendEmailURL: cfg.CustomFunctions.SendEmailURL,
 	}
 
 	keys := feed.Keys{
@@ -129,7 +136,7 @@ func run(log *log.Logger) error {
 			Categories:  cfg.Search.Categories,
 			Radius:      uint(cfg.Search.Radius),
 		}
-		if err := feed.Work(log, dgraph, search, keys, url); err != nil {
+		if err := feed.Work(log, dbConfig, schemaConfig, search, keys, url); err != nil {
 			return err
 		}
 	}

@@ -10,13 +10,13 @@ import (
 )
 
 // GetUser returns information about a user by email.
-func GetUser(dgraph data.Dgraph, email string) error {
+func GetUser(dbConfig data.DBConfig, email string) error {
 	if email == "" {
 		fmt.Println("help: getuser <email>")
 		return ErrHelp
 	}
 
-	db, err := data.NewDB(dgraph)
+	db, err := data.NewDB(dbConfig)
 	if err != nil {
 		return errors.Wrap(err, "init database")
 	}

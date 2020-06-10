@@ -117,7 +117,7 @@ func run(log *log.Logger) error {
 	log.Println("main: Initializing UI support")
 
 	// Capture the configuration for Dgraph.
-	dgraph := data.Dgraph{
+	dbConfig := data.DBConfig{
 		URL:            cfg.Dgraph.URL,
 		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
 		AuthToken:      cfg.Dgraph.AuthToken,
@@ -129,7 +129,7 @@ func run(log *log.Logger) error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log, dgraph, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
+	handler, err := handlers.UI(build, shutdown, log, dbConfig, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}

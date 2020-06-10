@@ -11,15 +11,15 @@ import (
 )
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, dgraph data.Dgraph, emailConfig EmailConfig) *web.App {
+func API(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DBConfig, emailConfig EmailConfig) *web.App {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	// Register health check endpoint.
 	check := check{
-		build:  build,
-		dgraph: dgraph,
+		build:    build,
+		dbConfig: dbConfig,
 	}
 	app.Handle(http.MethodGet, "/v1/health", check.health)
 

@@ -10,8 +10,8 @@ import (
 )
 
 type check struct {
-	build  string
-	dgraph data.Dgraph
+	build    string
+	dbConfig data.DBConfig
 }
 
 func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -26,7 +26,7 @@ func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	if err := data.Readiness(ctx, c.dgraph.URL, 100*time.Millisecond); err != nil {
+	if err := data.Readiness(ctx, c.dbConfig.URL, 100*time.Millisecond); err != nil {
 
 		// If the database is not ready we will tell the client and use a 500
 		// status. Do not respond by just returning an error because further up in

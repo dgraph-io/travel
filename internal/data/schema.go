@@ -1,29 +1,83 @@
 package data
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"net"
+	"net/http"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
 )
 
-// Schema error variables.
-var (
-	ErrNoSchemaExists = errors.New("no schema exists")
-	ErrInvalidSchema  = errors.New("schema doesn't match")
-)
+// SchemaConfig contains information required for the schema document.
+type SchemaConfig struct {
+	SendEmailURL string
+}
 
-type schema struct {
-	graphql *graphql.GraphQL
+// Schema provides support for schema operations against the database.
+type Schema struct {
+	graphql  *graphql.GraphQL
+	document string
+}
+
+// NewSchema constructs a Schema value for use to manage the schema.
+func NewSchema(dbConfig DBConfig, schemaConfig SchemaConfig) (*Schema, error) {
+
+	// The actual CRLF (\n) must be converted to the characters '\n' so the
+	// entire key sits on one line.
+	publicKey := strings.ReplaceAll(schema.publicKey, "\n", "\\n")
+
+	// Create the final schema document with the variable replacments by
+	// processing the template.
+	tmpl := template.New("schema")
+	if _, err := tmpl.Parse(schema.document); err != nil {
+		return nil, errors.Wrap(err, "parsing template")
+	}
+	var document bytes.Buffer
+	vars := map[string]interface{}{
+		"SendEmailURL": schemaConfig.SendEmailURL,
+		"PublicKey":    publicKey,
+	}
+	if err := tmpl.Execute(&document, vars); err != nil {
+		return nil, errors.Wrap(err, "executing template")
+	}
+
+	client := http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+
+	auth := graphql.WithAuth(dbConfig.AuthHeaderName, dbConfig.AuthToken)
+	graphql := graphql.New(dbConfig.URL, &client, auth)
+
+	schema := Schema{
+		graphql:  graphql,
+		document: document.String(),
+	}
+
+	return &schema, nil
 }
 
 // DropAll perform an alter operatation against the configured server
 // to remove all the data and schema.
-func (s *schema) DropAll(ctx context.Context) error {
+func (s *Schema) DropAll(ctx context.Context) error {
 	// if _, err := s.retrieve(ctx); err != nil {
 	// 	return errors.Wrap(err, "can't drop schema, db not ready")
 	// }
@@ -46,7 +100,7 @@ func (s *schema) DropAll(ctx context.Context) error {
 }
 
 // Create is used create the schema in the database.
-func (s *schema) Create(ctx context.Context) error {
+func (s *Schema) Create(ctx context.Context) error {
 	schema, err := s.retrieve(ctx)
 	if err != nil {
 		return errors.Wrap(err, "can't create schema, db not ready")
@@ -67,7 +121,7 @@ func (s *schema) Create(ctx context.Context) error {
 			}
 		}
 	}`
-	vars := map[string]interface{}{"schema": gQLSchema}
+	vars := map[string]interface{}{"schema": s.document}
 
 	if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, vars, nil); err != nil {
 		return errors.Wrap(err, "create schema")
@@ -87,7 +141,7 @@ func (s *schema) Create(ctx context.Context) error {
 
 // retrieve queries the database for the schema and handles situations
 // when the database is not ready for schema operations.
-func (s *schema) retrieve(ctx context.Context) (string, error) {
+func (s *Schema) retrieve(ctx context.Context) (string, error) {
 	for {
 		schema, err := s.query(ctx)
 		if err != nil {
@@ -110,7 +164,7 @@ func (s *schema) retrieve(ctx context.Context) (string, error) {
 	}
 }
 
-func (s *schema) query(ctx context.Context) (string, error) {
+func (s *Schema) query(ctx context.Context) (string, error) {
 	query := `query { getGQLSchema { schema }}`
 	result := make(map[string]interface{})
 	if err := s.graphql.QueryWithVars(ctx, graphql.CmdAdmin, query, nil, &result); err != nil {
@@ -125,7 +179,7 @@ func (s *schema) query(ctx context.Context) (string, error) {
 	return string(data), nil
 }
 
-func (s *schema) validate(ctx context.Context, schema string) error {
+func (s *Schema) validate(ctx context.Context, schema string) error {
 	if schema == `{"getGQLSchema":null}` || schema == `{"getGQLSchema":{"schema":""}}` {
 		return ErrNoSchemaExists
 	}
@@ -139,7 +193,7 @@ func (s *schema) validate(ctx context.Context, schema string) error {
 		return errors.Wrap(err, "regex compile")
 	}
 
-	exp := strings.ReplaceAll(gQLSchema, "\\n", "")
+	exp := strings.ReplaceAll(s.document, "\\n", "")
 	exp = reg.ReplaceAllString(exp, "")
 	schema = strings.ReplaceAll(schema[27:], "\\n", "")
 	schema = strings.ReplaceAll(schema, "\\t", "")

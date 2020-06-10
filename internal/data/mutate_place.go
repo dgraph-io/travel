@@ -9,13 +9,35 @@ import (
 	"github.com/pkg/errors"
 )
 
-type mutatePlace struct {
-	marshal placeMarshal
+// AddPlace adds a new place to the database. If the place already exists
+// this function will fail but the found place is returned. If the city is
+// being added, the city with the id from the database is returned.
+func (m mutate) AddPlace(ctx context.Context, plc Place) (Place, error) {
+	if place, err := m.query.PlaceByName(ctx, plc.Name); err == nil {
+		return place, ErrPlaceExists
+	}
+
+	plc, err := place.add(ctx, m.graphql, plc)
+	if err != nil {
+		return Place{}, errors.Wrap(err, "adding place to database")
+	}
+
+	if err := place.updateCity(ctx, m.graphql, plc.CityID.ID, plc.ID); err != nil {
+		return Place{}, errors.Wrap(err, "adding place to city in database")
+	}
+
+	return plc, nil
 }
 
-var mutPlace mutatePlace
+// =============================================================================
 
-func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Place) (Place, error) {
+type plc struct {
+	prepare placePrepare
+}
+
+var place plc
+
+func (p plc) add(ctx context.Context, graphql *graphql.GraphQL, place Place) (Place, error) {
 	if place.ID != "" {
 		return Place{}, errors.New("place contains id")
 	}
@@ -29,7 +51,7 @@ func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Plac
 		}
 	}
 
-	mutation, result := mutPlace.marshal.add(place)
+	mutation, result := p.prepare.add(place)
 	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return Place{}, errors.Wrap(err, "failed to add place")
 	}
@@ -42,8 +64,8 @@ func (mutatePlace) add(ctx context.Context, graphql *graphql.GraphQL, place Plac
 	return place, nil
 }
 
-func (mutatePlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, placeID string) error {
-	mutation, result := mutPlace.marshal.updCity(cityID, placeID)
+func (p plc) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, placeID string) error {
+	mutation, result := p.prepare.updateCity(cityID, placeID)
 	err := graphql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
@@ -52,10 +74,12 @@ func (mutatePlace) updateCity(ctx context.Context, graphql *graphql.GraphQL, cit
 	return nil
 }
 
-type placeMarshal struct{}
+// =============================================================================
 
-func (placeMarshal) add(place Place) (string, placeIDResult) {
-	var result placeIDResult
+type placePrepare struct{}
+
+func (placePrepare) add(place Place) (string, placeAddResult) {
+	var result placeAddResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addPlace(input: [{
@@ -79,13 +103,13 @@ mutation {
 }`, place.Address, place.AvgUserRating, place.Category, place.CityID.ID, place.CityName, place.GmapsURL,
 		place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
 		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID,
-		result.marshal())
+		result.document())
 
 	return mutation, result
 }
 
-func (placeMarshal) updCity(cityID string, placeID string) (string, cityIDResult) {
-	var result cityIDResult
+func (placePrepare) updateCity(cityID string, placeID string) (string, cityUpdateResult) {
+	var result cityUpdateResult
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {
@@ -99,12 +123,12 @@ mutation {
 		}
 	})
 	%s
-}`, cityID, placeID, result.marshal())
+}`, cityID, placeID, result.document())
 
 	return mutation, result
 }
 
-type placeIDResult struct {
+type placeAddResult struct {
 	AddPlace struct {
 		Place []struct {
 			ID string `json:"id"`
@@ -112,7 +136,7 @@ type placeIDResult struct {
 	} `json:"addPlace"`
 }
 
-func (placeIDResult) marshal() string {
+func (placeAddResult) document() string {
 	return `{
 		place {
 			id

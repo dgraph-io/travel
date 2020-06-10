@@ -13,14 +13,14 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(dgraph data.Dgraph, email string, privateKeyFile string, algorithm string) error {
+func GenToken(dbConfig data.DBConfig, email string, privateKeyFile string, algorithm string) error {
 	if email == "" || privateKeyFile == "" || algorithm == "" {
 		fmt.Println("help: gentoken <email> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")
 		return ErrHelp
 	}
 
-	db, err := data.NewDB(dgraph)
+	db, err := data.NewDB(dbConfig)
 	if err != nil {
 		return errors.Wrap(err, "init database")
 	}

@@ -13,11 +13,11 @@ import (
 )
 
 type fetch struct {
-	dgraph data.Dgraph
+	dbConfig data.DBConfig
 }
 
 func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	db, err := data.NewDB(f.dgraph)
+	db, err := data.NewDB(f.dbConfig)
 	if err != nil {
 		return errors.Wrap(err, "new db")
 	}

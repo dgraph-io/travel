@@ -8,18 +8,41 @@ import (
 	"github.com/pkg/errors"
 )
 
-type mutateAdvisory struct {
-	marshal advisoryMarshal
+// ReplaceAdvisory replaces an advisory in the database and connects it
+// to the specified city.
+func (m mutate) ReplaceAdvisory(ctx context.Context, cityID string, adv Advisory) (Advisory, error) {
+	if err := advisory.delete(ctx, m.query, m.graphql, cityID); err != nil {
+		if err != ErrAdvisoryNotFound {
+			return Advisory{}, errors.Wrap(err, "deleting advisory from database")
+		}
+	}
+
+	adv, err := advisory.add(ctx, m.graphql, adv)
+	if err != nil {
+		return Advisory{}, errors.Wrap(err, "adding advisory to database")
+	}
+
+	if err := advisory.updateCity(ctx, m.graphql, cityID, adv); err != nil {
+		return Advisory{}, errors.Wrap(err, "replace advisory in city")
+	}
+
+	return adv, nil
 }
 
-var mutAdvisory mutateAdvisory
+// =============================================================================
 
-func (mutateAdvisory) add(ctx context.Context, graphql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
+type adv struct {
+	prepare advisoryPrepare
+}
+
+var advisory adv
+
+func (a adv) add(ctx context.Context, graphql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
 	if advisory.ID != "" {
 		return Advisory{}, errors.New("advisory contains id")
 	}
 
-	mutation, result := mutAdvisory.marshal.add(advisory)
+	mutation, result := a.prepare.add(advisory)
 	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return Advisory{}, errors.Wrap(err, "failed to add place")
 	}
@@ -32,12 +55,12 @@ func (mutateAdvisory) add(ctx context.Context, graphql *graphql.GraphQL, advisor
 	return advisory, nil
 }
 
-func (mutateAdvisory) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, advisory Advisory) error {
+func (a adv) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, advisory Advisory) error {
 	if advisory.ID == "" {
 		return errors.New("advisory missing id")
 	}
 
-	mutation, result := mutAdvisory.marshal.updCity(cityID, advisory)
+	mutation, result := a.prepare.updateCity(cityID, advisory)
 	err := graphql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
@@ -46,13 +69,13 @@ func (mutateAdvisory) updateCity(ctx context.Context, graphql *graphql.GraphQL, 
 	return nil
 }
 
-func (mutateAdvisory) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
+func (a adv) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
 	advisory, err := query.Advisory(ctx, cityID)
 	if err != nil {
 		return err
 	}
 
-	mutation, result := mutAdvisory.marshal.delete(advisory.ID)
+	mutation, result := a.prepare.delete(advisory.ID)
 	if err := graphql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}
@@ -65,10 +88,12 @@ func (mutateAdvisory) delete(ctx context.Context, query query, graphql *graphql.
 	return nil
 }
 
-type advisoryMarshal struct{}
+// =============================================================================
 
-func (advisoryMarshal) add(advisory Advisory) (string, advisoryIDResult) {
-	var result advisoryIDResult
+type advisoryPrepare struct{}
+
+func (advisoryPrepare) add(advisory Advisory) (string, advisoryAddResult) {
+	var result advisoryAddResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addAdvisory(input: [{
@@ -83,13 +108,13 @@ mutation {
 	%s
 }`, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
-		result.marshal())
+		result.document())
 
 	return mutation, result
 }
 
-func (advisoryMarshal) updCity(cityID string, advisory Advisory) (string, cityIDResult) {
-	var result cityIDResult
+func (advisoryPrepare) updateCity(cityID string, advisory Advisory) (string, cityUpdateResult) {
+	var result cityUpdateResult
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {
@@ -112,23 +137,23 @@ mutation {
 	%s
 }`, cityID, advisory.ID, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
-		result.marshal())
+		result.document())
 
 	return mutation, result
 }
 
-func (advisoryMarshal) delete(advisoryID string) (string, advisoryDeleteResult) {
+func (advisoryPrepare) delete(advisoryID string) (string, advisoryDeleteResult) {
 	var result advisoryDeleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteAdvisory(filter: { id: [%q] })
 	%s
-}`, advisoryID, result.marshal())
+}`, advisoryID, result.document())
 
 	return mutation, result
 }
 
-type advisoryIDResult struct {
+type advisoryAddResult struct {
 	AddAdvisory struct {
 		Advisory []struct {
 			ID string `json:"id"`
@@ -136,7 +161,7 @@ type advisoryIDResult struct {
 	} `json:"addAdvisory"`
 }
 
-func (advisoryIDResult) marshal() string {
+func (advisoryAddResult) document() string {
 	return `{
 		advisory {
 			id
@@ -151,7 +176,7 @@ type advisoryDeleteResult struct {
 	} `json:"deleteAdvisory"`
 }
 
-func (advisoryDeleteResult) marshal() string {
+func (advisoryDeleteResult) document() string {
 	return `{
 		msg,
 		numUids,

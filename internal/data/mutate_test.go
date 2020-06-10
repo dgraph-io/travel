@@ -12,7 +12,7 @@ import (
 )
 
 // addUser validates a user node can be added to the database.
-func addUser(apiHost string) func(t *testing.T) {
+func addUser(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate storing a user.")
 		{
@@ -31,7 +31,7 @@ func addUser(apiHost string) func(t *testing.T) {
 					Password:        "gophers",
 					PasswordConfirm: "gophers",
 				}
-				db, userAdd := seedUser(t, ctx, testID, apiHost, newUser, now)
+				db, userAdd := seedUser(t, ctx, testID, tc, newUser, now)
 
 				user, err := db.Query.User(ctx, userAdd.ID)
 				if err != nil {
@@ -86,7 +86,7 @@ func addUser(apiHost string) func(t *testing.T) {
 }
 
 // addCity validates a city node can be added to the database.
-func addCity(apiHost string) func(t *testing.T) {
+func addCity(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate storing a city.")
 		{
@@ -101,7 +101,7 @@ func addCity(apiHost string) func(t *testing.T) {
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
-				db, cityAdd := seedCity(t, ctx, testID, apiHost, cityAdd)
+				db, cityAdd := seedCity(t, ctx, testID, tc, cityAdd)
 
 				city, err := db.Query.City(ctx, cityAdd.ID)
 				if err != nil {
@@ -138,7 +138,7 @@ func addCity(apiHost string) func(t *testing.T) {
 }
 
 // addPlace validates a place can be added to the database.
-func addPlace(apiHost string) func(t *testing.T) {
+func addPlace(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate storing a place.")
 		{
@@ -153,7 +153,7 @@ func addPlace(apiHost string) func(t *testing.T) {
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
-				db, cityAdd := seedCity(t, ctx, testID, apiHost, cityAdd)
+				db, cityAdd := seedCity(t, ctx, testID, tc, cityAdd)
 
 				places := []data.Place{
 					{
@@ -238,7 +238,7 @@ func addPlace(apiHost string) func(t *testing.T) {
 }
 
 // replaceAdvisory validates an advisory can be stored in the database.
-func replaceAdvisory(apiHost string) func(t *testing.T) {
+func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate replacing an advisory.")
 		{
@@ -253,7 +253,7 @@ func replaceAdvisory(apiHost string) func(t *testing.T) {
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
-				db, cityAdd := seedCity(t, ctx, testID, apiHost, cityAdd)
+				db, cityAdd := seedCity(t, ctx, testID, tc, cityAdd)
 
 				addAdvisory := data.Advisory{
 					Country:     "Australia",
@@ -307,7 +307,7 @@ func replaceAdvisory(apiHost string) func(t *testing.T) {
 }
 
 // replaceWeather validates weather can be stored in the database.
-func replaceWeather(apiHost string) func(t *testing.T) {
+func replaceWeather(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate storing weather.")
 		{
@@ -322,7 +322,7 @@ func replaceWeather(apiHost string) func(t *testing.T) {
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
-				db, cityAdd := seedCity(t, ctx, testID, apiHost, cityAdd)
+				db, cityAdd := seedCity(t, ctx, testID, tc, cityAdd)
 
 				addWeather := data.Weather{
 					CityName:      "Sydney",
