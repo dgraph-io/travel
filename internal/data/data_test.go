@@ -51,7 +51,9 @@ func ready(t *testing.T, ctx context.Context, testID int, tc TestConfig) (*data.
 	t.Logf("\t%s\tTest %d:\tShould be able to to see Dgraph is ready.", tests.Success, testID)
 
 	dbConfig := data.DBConfig{
-		URL: tc.url,
+		URL:            tc.url,
+		AuthHeaderName: "X-Travel-Auth",
+		AuthToken:      data.AdminJWT,
 	}
 	schema, err := data.NewSchema(dbConfig, tc.schema)
 	if err != nil {
