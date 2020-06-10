@@ -43,8 +43,8 @@ type URL struct {
 	Weather  string
 }
 
-// Work retrieves and stores the feed data for this API.
-func Work(log *log.Logger, dbConfig data.DBConfig, schemaConfig data.SchemaConfig, search Search, keys Keys, url URL) error {
+// Schema creates/updates the schema for the database.
+func Schema(log *log.Logger, dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error {
 	log.Println("feed: Work: Wait for the database is ready ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -61,13 +61,18 @@ func Work(log *log.Logger, dbConfig data.DBConfig, schemaConfig data.SchemaConfi
 		return ErrFailed
 	}
 
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
 	if err := schema.Create(ctx); err != nil {
 		log.Printf("feed: Work: Create Schema: ERROR: %v", err)
 		return ErrFailed
 	}
+
+	return nil
+}
+
+// Work retrieves and stores the feed data for this API.
+func Work(log *log.Logger, dbConfig data.DBConfig, search Search, keys Keys, url URL) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
 	db, err := data.NewDB(dbConfig)
 	if err != nil {

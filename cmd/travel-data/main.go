@@ -127,6 +127,15 @@ func run(log *log.Logger) error {
 		Weather:  cfg.URL.Weather,
 	}
 
+	if err := feed.Schema(log, dbConfig, schemaConfig); err != nil {
+		return err
+	}
+
+	if cfg.APIKeys.MapsKey == "" {
+		log.Print("main: Missing map key, creating schema only")
+		return nil
+	}
+
 	for _, city := range cities {
 		search := feed.Search{
 			CityName:    city.Name,
@@ -136,7 +145,7 @@ func run(log *log.Logger) error {
 			Categories:  cfg.Search.Categories,
 			Radius:      uint(cfg.Search.Radius),
 		}
-		if err := feed.Work(log, dbConfig, schemaConfig, search, keys, url); err != nil {
+		if err := feed.Work(log, dbConfig, search, keys, url); err != nil {
 			return err
 		}
 	}
