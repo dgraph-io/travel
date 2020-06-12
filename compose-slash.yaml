@@ -21,7 +21,8 @@ services:
     environment:
       - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
       - TRAVEL_DGRAPH_URL=<ENTER_SLASH_URL_HERE>
-      # - GODEBUG=gctrace=1
+      - TRAVEL_DGRAPH_AUTH_HEADER_NAME="X-Auth-Token"
+      - TRAVEL_DGRAPH_AUTH_TOKEN=<ENTER_TOKEN_HERE>
 
   # This is the core service API.
   travel-ui:
@@ -37,5 +38,6 @@ services:
     environment:
       - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
       - TRAVEL_DGRAPH_URL=<ENTER_SLASH_URL_HERE>
-      # - GODEBUG=gctrace=1
-
+      - TRAVEL_DGRAPH_AUTH_HEADER_NAME="X-Auth-Token"
+      - TRAVEL_DGRAPH_AUTH_TOKEN=<ENTER_TOKEN_HERE>
+      - TRAVEL_DGRAPH_BROWSER_URL="<ENTER_URL_HERE>"

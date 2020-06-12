@@ -40,7 +40,7 @@ logs:
 
 # Running from within the local with Slash
 
-slash-run: seed browser-local ui-local
+slash-run: slash-up seed slash-browse
 
 slash-up:
 	docker-compose -f compose-slash.yaml up --detach --remove-orphans
