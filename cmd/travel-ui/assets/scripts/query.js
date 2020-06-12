@@ -134,14 +134,18 @@ function queryPlaceByName(placeName) {
 function queryUploadFeed() {
 
     // Just using test data to show how to wire up a custom function.
-    let userID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-    let cityName = "Los Angeles"
+    let countryCode = "US"
+    let cityName = "Beverly Hills"
+    let lat = 34.0736
+    let lng = -118.4004
 
     return JSON.stringify({
         query: `query {
-            uploadFeed(userID: "` + userID + `", cityName: "` + cityName + `") {
-                user_id
+            uploadFeed(countryCode: "` + countryCode + `", cityName: "` + cityName + `", lat: ` + lat + `, lng: ` + lng + `) {
+                country_code
                 city_name
+                lat
+                lng
 	            message
             }
         }`,

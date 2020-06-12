@@ -25,9 +25,11 @@ func (l *feed) upload(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	// Load the data here!!
 
 	resp := data.UploadFeedResponse{
-		UserID:   request.UserID,
-		CityName: request.CityName,
-		Message:  fmt.Sprintf("Uploading data for city %q by user %q", request.CityName, request.UserID),
+		CountryCode: request.CountryCode,
+		CityName:    request.CityName,
+		Lat:         request.Lat,
+		Lng:         request.Lng,
+		Message:     fmt.Sprintf("Uploading data for city %q [%f,%f] in country %q", request.CityName, request.Lat, request.Lng, request.CountryCode),
 	}
 	return web.Respond(ctx, w, resp, http.StatusOK)
 }

@@ -113,16 +113,18 @@ type Weather {
 }
 
 type UploadFeedResponse @remote {
-	user_id: ID
+	country_code: String
 	city_name: String
+	lat: Float
+	lng: Float
 	message: String
 }
 
 type Query{
-	uploadFeed(userID: String!, cityName: String!) : UploadFeedResponse @custom(http:{
+	uploadFeed(countryCode: String!, cityName: String!, lat: Float!, lng: Float!): UploadFeedResponse @custom(http:{
 		url: "{{.UploadFeedURL}}",
 		method: "POST",
-		body: "{userid: $userID, cityname: $cityName}"
+		body: "{countrycode: $countryCode, cityname: $cityName, lat: $lat, lng: $lng}"
 	})
 }
 

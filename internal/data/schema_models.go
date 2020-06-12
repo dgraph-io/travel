@@ -85,13 +85,17 @@ type Weather struct {
 
 // UploadFeedRequest is the data required to make a feed/upload request.
 type UploadFeedRequest struct {
-	UserID   string `json:"userid"`
-	CityName string `json:"cityname"`
+	CountryCode string  `json:"countrycode"`
+	CityName    string  `json:"cityname"`
+	Lat         float64 `json:"lat"`
+	Lng         float64 `json:"lng"`
 }
 
 // UploadFeedResponse is the response from the feed/upload request.
 type UploadFeedResponse struct {
-	UserID   string `json:"user_id"`
-	CityName string `json:"city_name"`
-	Message  string `json:"message"`
+	CountryCode string  `json:"country_code"`
+	CityName    string  `json:"city_name"`
+	Lat         float64 `json:"lat"`
+	Lng         float64 `json:"lng"`
+	Message     string  `json:"message"`
 }
