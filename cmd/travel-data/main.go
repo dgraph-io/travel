@@ -119,17 +119,23 @@ func run(log *log.Logger) error {
 		},
 	}
 
-	keys := loader.Keys{
-		MapKey:     cfg.APIKeys.MapsKey,
-		WeatherKey: cfg.APIKeys.WeatherKey,
+	config := loader.Config{
+		Filter: loader.Filter{
+			Categories: cfg.Search.Categories,
+			Radius:     uint(cfg.Search.Radius),
+		},
+		Keys: loader.Keys{
+			MapKey:     cfg.APIKeys.MapsKey,
+			WeatherKey: cfg.APIKeys.WeatherKey,
+		},
+		URL: loader.URL{
+			Advisory: cfg.URL.Advisory,
+			Weather:  cfg.URL.Weather,
+		},
 	}
 
-	url := loader.URL{
-		Advisory: cfg.URL.Advisory,
-		Weather:  cfg.URL.Weather,
-	}
-
-	if err := loader.UpdateSchema(log, dbConfig, schemaConfig); err != nil {
+	log.Println("main: Updating schema")
+	if err := loader.UpdateSchema(dbConfig, schemaConfig); err != nil {
 		return err
 	}
 
@@ -144,10 +150,10 @@ func run(log *log.Logger) error {
 			CountryCode: city.CountryCode,
 			Lat:         city.Lat,
 			Lng:         city.Lng,
-			Categories:  cfg.Search.Categories,
-			Radius:      uint(cfg.Search.Radius),
 		}
-		if err := loader.UpdateData(log, dbConfig, search, keys, url); err != nil {
+
+		log.Println("main: Updating data for city:", search.CityName)
+		if err := loader.UpdateData(log, dbConfig, config, search); err != nil {
 			return err
 		}
 	}

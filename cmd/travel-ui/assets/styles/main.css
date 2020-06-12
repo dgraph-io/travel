@@ -193,38 +193,42 @@ tr:nth-child(odd) {
     background-color: rgba(0,0,0,0.4);
     border: 4px solid #333;
 }
-.modal-content {
+.modalcontent {
     background-color: #fefefe;
     margin: 15% auto;
     padding: 15px;
     border: 1px solid #888;
     width: 30%;
 }
-.modal-header {
+.modalheader {
     padding: 5px 10px;
     background-color: #5cb85c;
     color: white;
     font-size: 35px;
 }
-.modal-body {
+.modalbody {
     margin: 10px;
     font-size: 25px;
     padding-top: 10px;
 }
-.modal-table {
+.modaltable {
     margin: 0px;
 }
-.modal-table tr {
+.modaltable tr {
     background: #fff;
 }
-.modal-table div {
+.modaltable div {
     border: 1px solid #333;
     float: right;
     margin-top: 15px;
 }
-.modal-text {
+.modaltable input {
     width: 95%;
     font-size: 25px;
+}
+#modalmessage {
+    color: red;
+    padding-top: 10px;
 }
 .close {
     color: #000;

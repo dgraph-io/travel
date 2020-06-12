@@ -60,3 +60,33 @@ query {
 
 	return result.QueryCity[0].City, nil
 }
+
+// CityNames returns the list of city names currently loaded in the database.
+func (q query) CityNames(ctx context.Context) ([]string, error) {
+	query := `
+	query {
+		queryCity(filter: { }) {
+			name
+		}
+	}`
+
+	var result struct {
+		QueryCity []struct {
+			City
+		} `json:"queryCity"`
+	}
+	if err := q.graphql.Query(ctx, query, &result); err != nil {
+		return nil, errors.Wrap(err, "query failed")
+	}
+
+	if len(result.QueryCity) != 1 {
+		return nil, ErrCityNotFound
+	}
+
+	cities := make([]string, len(result.QueryCity))
+	for i, city := range result.QueryCity {
+		cities[i] = city.Name
+	}
+
+	return cities, nil
+}

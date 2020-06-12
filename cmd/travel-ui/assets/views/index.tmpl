@@ -16,13 +16,10 @@
 			var Dgraph = {{.GraphQLEndpoint}};
 		</script>
 	</head>
-	<body onload="loadData()">
+	<body onload="OnLoad()">
 		<div class="cityinput">
 			<label class="cityselectionlabel">Choose a city:</label>
 			<select id="cityselection" onchange="loadData()">
-				{{range $index, $element := .Cities}}
-					<option value="{{$element}}">{{$element}}</option>
-				{{end}}
 			</select>
 			<div class="customfunc">
 				<div type="button" class="button" onclick="showNewCityModal()">New City</div>
@@ -54,19 +51,20 @@
 				<pre id="schema"></pre>
 			</div>
 		</div>
-		<div id="newCityModal" class="modal">
-			<div class="modal-content">
-				<div class="modal-header">
+		<div id="newcitymodal" class="modal">
+			<div class="modalcontent">
+				<div class="modalheader">
 					<span class="close" onclick="closeNewCityModal()">&times;</span>
 					<span>Add New City</span>
 				</div>
-				<div class="modal-body">
-					<table class="modal-table">
-						<tr><td>Country Code:</td><td><input type="text" class="modal-text"/></td></tr>
-						<tr><td>City Name:</td><td><input type="text" class="modal-text"/></td></tr>
-						<tr><td>Latitude:</td><td><input type="text" class="modal-text"/></td></tr>
-						<tr><td>Longitude:</td><td><input type="text" class="modal-text"/></td></tr>
+				<div class="modalbody">
+					<table class="modaltable">
+						<tr><td>Country Code:</td><td><input id="countrycode" type="text"/></td></tr>
+						<tr><td>City Name:</td><td><input id="cityname" type="text"/></td></tr>
+						<tr><td>Latitude:</td><td><input id="lat" type="text"/></td></tr>
+						<tr><td>Longitude:</td><td><input id="lng" type="text"/></td></tr>
 						<tr><td colspan="2"><div type="button" id="addCity" class="tab" onclick="addNewCity()">Add City</div></td></tr>
+						<tr><td id="modalmessage" colspan="2"></td></tr>
 					</table>
 				</div>
 			</div>

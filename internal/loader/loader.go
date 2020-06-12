@@ -14,10 +14,6 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-// ErrFailed is used to report the program failed back to main
-// so the correct error code is returned.
-var ErrFailed = errors.New("feed failed")
-
 // Search represents a city and its coordinates. All fields must be
 // populated for a Search to be successful.
 type Search struct {
@@ -25,8 +21,19 @@ type Search struct {
 	CountryCode string
 	Lat         float64
 	Lng         float64
-	Categories  []string
-	Radius      uint
+}
+
+// Config defines the set of mandatory settings.
+type Config struct {
+	Filter Filter
+	Keys   Keys
+	URL    URL
+}
+
+// Filter represents search related refinements.
+type Filter struct {
+	Categories []string
+	Radius     uint
 }
 
 // Keys represents the set of keys needed for the different API's
@@ -44,61 +51,51 @@ type URL struct {
 }
 
 // UpdateSchema creates/updates the schema for the database.
-func UpdateSchema(log *log.Logger, dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error {
-	log.Println("feed: Work: Wait for the database is ready ...")
-
+func UpdateSchema(dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	err := data.Readiness(ctx, dbConfig.URL, 5*time.Second)
 	if err != nil {
-		log.Printf("feed: Work: Readiness: ERROR: %v", err)
-		return ErrFailed
+		return errors.Wrapf(err, "waiting for database to be ready")
 	}
 
 	schema, err := data.NewSchema(dbConfig, schemaConfig)
 	if err != nil {
-		log.Printf("feed: Work: New Data: ERROR: %v", err)
-		return ErrFailed
+		return errors.Wrapf(err, "preparing schema")
 	}
 
 	if err := schema.Create(ctx); err != nil {
-		log.Printf("feed: Work: Create Schema: ERROR: %v", err)
-		return ErrFailed
+		return errors.Wrapf(err, "creating schema")
 	}
 
 	return nil
 }
 
 // UpdateData retrieves and stores the feed data for this API.
-func UpdateData(log *log.Logger, dbConfig data.DBConfig, search Search, keys Keys, url URL) error {
+func UpdateData(log *log.Logger, dbConfig data.DBConfig, config Config, search Search) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	db, err := data.NewDB(dbConfig)
 	if err != nil {
-		log.Printf("feed: Work: New Data: ERROR: %v", err)
-		return ErrFailed
+		return errors.Wrapf(err, "preparing database")
 	}
 
 	city, err := addCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
 	if err != nil {
-		log.Printf("feed: Work: Add City: ERROR: %v", err)
-		return ErrFailed
+		return errors.Wrapf(err, "adding city")
 	}
 
-	if err := replaceWeather(ctx, log, db, keys.WeatherKey, url.Weather, city.ID, city.Lat, city.Lng); err != nil {
-		log.Printf("feed: Work: Replace Weather: ERROR: %v", err)
-		return ErrFailed
+	if err := replaceWeather(ctx, log, db, config.Keys.WeatherKey, config.URL.Weather, city.ID, city.Lat, city.Lng); err != nil {
+		return errors.Wrapf(err, "replacing weather")
 	}
 
-	if err := replaceAdvisory(ctx, log, db, url.Advisory, city.ID, search.CountryCode); err != nil {
-		log.Printf("feed: Work: Replace Advisory: ERROR: %v", err)
-		return ErrFailed
+	if err := replaceAdvisory(ctx, log, db, config.URL.Advisory, city.ID, search.CountryCode); err != nil {
+		return errors.Wrapf(err, "replacing advisory")
 	}
 
-	if err := addPlaces(ctx, log, db, keys.MapKey, city, search.Categories, search.Radius); err != nil {
-		log.Printf("feed: Work: Add Place: ERROR: %v", err)
-		return ErrFailed
+	if err := addPlaces(ctx, log, db, config.Keys.MapKey, city, config.Filter.Categories, config.Filter.Radius); err != nil {
+		return errors.Wrapf(err, "adding places")
 	}
 
 	return nil

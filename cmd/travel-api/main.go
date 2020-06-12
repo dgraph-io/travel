@@ -132,14 +132,19 @@ func run(log *log.Logger) error {
 		AuthToken:      cfg.Dgraph.AuthToken,
 	}
 
-	keys := loader.Keys{
-		MapKey:     cfg.APIKeys.MapsKey,
-		WeatherKey: cfg.APIKeys.WeatherKey,
-	}
-
-	url := loader.URL{
-		Advisory: cfg.URL.Advisory,
-		Weather:  cfg.URL.Weather,
+	loaderConfig := loader.Config{
+		Filter: loader.Filter{
+			Categories: cfg.Search.Categories,
+			Radius:     uint(cfg.Search.Radius),
+		},
+		Keys: loader.Keys{
+			MapKey:     cfg.APIKeys.MapsKey,
+			WeatherKey: cfg.APIKeys.WeatherKey,
+		},
+		URL: loader.URL{
+			Advisory: cfg.URL.Advisory,
+			Weather:  cfg.URL.Weather,
+		},
 	}
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
@@ -149,7 +154,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, dbConfig, keys, url),
+		Handler:      handlers.API(build, shutdown, log, dbConfig, loaderConfig),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

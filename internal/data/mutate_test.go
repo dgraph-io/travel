@@ -131,6 +131,19 @@ func addCity(tc TestConfig) func(t *testing.T) {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same city twice.", tests.Failed, testID)
 				}
 				t.Logf("\t%s\tTest %d:\tShould not be able to add the same city twice: %v", tests.Success, testID, err)
+
+				cities, err := db.Query.CityNames(ctx)
+				if err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the list of city names: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould be able to query for the list of city names.", tests.Success, testID)
+
+				if len(cities) != 1 || cities[0] != "sydney" {
+					t.Logf("\t\tTest %d:\tgot: %v", testID, cities)
+					t.Logf("\t\tTest %d:\texp: %v", testID, []string{"sydney"})
+					t.Fatalf("\t%s\tTest %d:\tShould be able to have the correct list: %v", tests.Failed, testID, err)
+				}
+				t.Logf("\t%s\tTest %d:\tShould be able to have the correct list.", tests.Success, testID)
 			}
 		}
 	}

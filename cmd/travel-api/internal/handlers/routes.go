@@ -12,7 +12,7 @@ import (
 )
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DBConfig, keys loader.Keys, url loader.URL) *web.App {
+func API(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DBConfig, loaderConfig loader.Config) *web.App {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
@@ -26,8 +26,9 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.D
 
 	// Register the feed endpoints.
 	feed := feed{
-		keys: keys,
-		url:  url,
+		log:          log,
+		dbConfig:     dbConfig,
+		loaderConfig: loaderConfig,
 	}
 	app.Handle(http.MethodPost, "/v1/feed/upload", feed.upload)
 

@@ -15,25 +15,23 @@ import (
 type index struct {
 	tmpl            *template.Template
 	graphQLEndpoint string
-	cities          []string
 	mapsKey         string
 }
 
-func newIndex(browserEndpoint string, cities []string, mapsKey string) (*index, error) {
-	data, err := ioutil.ReadFile("assets/views/index.tmpl")
+func newIndex(browserEndpoint string, mapsKey string) (*index, error) {
+	rawTmpl, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")
 	}
 
 	tmpl := template.New("index")
-	if _, err := tmpl.Parse(string(data)); err != nil {
+	if _, err := tmpl.Parse(string(rawTmpl)); err != nil {
 		return nil, errors.Wrap(err, "creating template")
 	}
 
 	index := index{
 		tmpl:            tmpl,
 		graphQLEndpoint: fmt.Sprintf("%s/graphql", browserEndpoint),
-		cities:          cities,
 		mapsKey:         mapsKey,
 	}
 
@@ -44,7 +42,6 @@ func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	var markup bytes.Buffer
 	vars := map[string]interface{}{
 		"GraphQLEndpoint": i.graphQLEndpoint,
-		"Cities":          i.cities,
 		"MapsKey":         i.mapsKey,
 	}
 

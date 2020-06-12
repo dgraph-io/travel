@@ -5,6 +5,16 @@ function querySchema() {
     });
 }
 
+function queryCityNames(cityName) {
+    return JSON.stringify({
+        query: `query {
+            queryCity(filter: {}) {
+                name
+            }}`,
+        variables: null
+    });
+}
+
 function queryCity(cityName) {
     return JSON.stringify({
         query: `query {
@@ -131,14 +141,7 @@ function queryPlaceByName(placeName) {
     });
 }
 
-function queryUploadFeed() {
-
-    // Just using test data to show how to wire up a custom function.
-    let countryCode = "US"
-    let cityName = "Beverly Hills"
-    let lat = 34.0736
-    let lng = -118.4004
-
+function queryUploadFeed(countryCode, cityName, lat, lng) {
     return JSON.stringify({
         query: `query {
             uploadFeed(countryCode: "` + countryCode + `", cityName: "` + cityName + `", lat: ` + lat + `, lng: ` + lng + `) {

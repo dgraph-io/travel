@@ -43,7 +43,9 @@ services:
       - 4000:4000 # DEBUG API
     depends_on:
       - dgraph-alpha
-    # environment:
+    environment:
+      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
+      - TRAVEL_DGRAPH_URL=http://dgraph-alpha:8080
       # - GODEBUG=gctrace=1
 
   # This is the core service API.
@@ -58,7 +60,7 @@ services:
     depends_on:
       - dgraph-alpha
     environment:
-      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_KEY_HERE>
+      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
       - TRAVEL_DGRAPH_URL=http://dgraph-alpha:8080
       # - GODEBUG=gctrace=1
 

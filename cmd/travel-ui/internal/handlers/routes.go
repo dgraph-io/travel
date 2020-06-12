@@ -12,15 +12,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// These are the currently cities supported. To be replaced by a query.
-var cities = []string{"miami", "new york", "sydney"}
-
 // UI constructs an http.Handler with all application routes defined.
 func UI(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DBConfig, browserEndpoint string, mapsKey string) (*web.App, error) {
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	// Register the index page for the website.
-	index, err := newIndex(browserEndpoint, cities, mapsKey)
+	index, err := newIndex(browserEndpoint, mapsKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading index template")
 	}

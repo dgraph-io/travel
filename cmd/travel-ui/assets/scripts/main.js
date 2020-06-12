@@ -6,6 +6,41 @@ $.ajaxSetup({
     contentType: "application/json; charset=utf-8"
 });
 
+function OnLoad() {
+    loadCitySelections(); 
+}
+
+function loadCitySelections() {
+    $('#cityselection').children().remove().end();
+
+    var query = queryCityNames();
+    $.post(Dgraph, query, function (o, status) {
+        if ((typeof o.errors != "undefined") && (o.errors.length > 0)) {
+            window.alert("ERROR: " + o.errors[0].message);
+            return;
+        }
+
+        const selection = document.getElementById("cityselection");
+        for (var i = 0; i < o.data.queryCity.length; i++) {
+            selection.options[i] = new Option(o.data.queryCity[i].name, o.data.queryCity[i].name);
+        }
+
+        loadData();
+    });
+}
+
+function loadData() {
+    document.getElementById("node").innerHTML = "";
+    document.getElementById("query").innerHTML = "";
+    showInfoTab("node");
+    showGraphTab("graph");
+
+    let city = document.getElementById("cityselection").value;
+    drawchart(city);
+    const d = { type: "city" };
+    showNodeData(d);
+}
+
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
         center: {lat: 25.7617, lng: -80.1918},
@@ -43,17 +78,6 @@ function loadMap() {
         }
         map.fitBounds(bounds);
     });
-}
-
-function loadData() {
-    document.getElementById("node").innerHTML = "";
-    document.getElementById("query").innerHTML = "";
-    showInfoTab("node");
-    showGraphTab("graph");
-
-    drawchart(document.getElementById("cityselection").value);
-    const d = { type: "city" };
-    showNodeData(d);
 }
 
 function loadSchema() {
@@ -281,33 +305,61 @@ function convertKelvin(k) {
 }
 
 function showNewCityModal() {
-    const modal = document.getElementById("newCityModal");
+    const message = document.getElementById("modalmessage");
+    const modal = document.getElementById("newcitymodal");
+    message.innerText = "";
     modal.style.display = "block";
 }
 
 function closeNewCityModal() {
-    const modal = document.getElementById("newCityModal");
+    const modal = document.getElementById("newcitymodal");
     modal.style.display = "none";
 }
 
 window.onclick = function(event) {
-    const modal = document.getElementById("newCityModal");
+    const modal = document.getElementById("newcitymodal");
     if (event.target == modal) {
       modal.style.display = "none";
     }
 }
 
 function addNewCity() {
-    window.alert("adding new city");
-}
+    const message = document.getElementById("modalmessage");
+    const countryCode = document.getElementById("countrycode");
+    if (countryCode == "") {
+        message.innerText = "country code is required";
+        return;
+    }
+    const cityName = document.getElementById("cityname");
+    if (cityName == "") {
+        message.innerText = "city name is required";
+        return;
+    }
+    const lat = document.getElementById("lat");
+    if (lat == "") {
+        message.innerText = "latitude is required";
+        return;
+    }
+    const lng = document.getElementById("lng");
+    if (lng == "") {
+        message.innerText = "longitude is required";
+        return;
+    }
 
-function uploadFeed() {
-    var query = queryUploadFeed();
+    var query = queryUploadFeed(countryCode.value, cityName.value, lat.value, lng.value);
     $.post(Dgraph, query, function (o, status) {
         if ((typeof o.errors != "undefined") && (o.errors.length > 0)) {
-            window.alert("ERROR: " + o.errors[0].message);
+            message.style.color = "red";
+            message.innerText = "ERROR: " + o.errors[0].message;
             return;
         }
-        window.alert(o.data.uploadFeed.message);
+        
+        message.style.color = "green";
+        message.innerText = o.data.uploadFeed.message;
+        
+        const selection = document.getElementById("cityselection");
+        var option = document.createElement("option");
+        option.text = cityName.value;
+        selection.add(option);
     });
 }
