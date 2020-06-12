@@ -280,6 +280,27 @@ function convertKelvin(k) {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
+function showNewCityModal() {
+    const modal = document.getElementById("newCityModal");
+    modal.style.display = "block";
+}
+
+function closeNewCityModal() {
+    const modal = document.getElementById("newCityModal");
+    modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById("newCityModal");
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+}
+
+function addNewCity() {
+    window.alert("adding new city");
+}
+
 function uploadFeed() {
     var query = queryUploadFeed();
     $.post(Dgraph, query, function (o, status) {
