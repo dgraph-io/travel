@@ -54,7 +54,7 @@ slash-browse:
 slash-logs:
 	docker-compose -f compose-slash.yaml logs -f
 
-# Seeding the database
+# Administration
 
 schema:
 	go run cmd/travel-admin/main.go schema
@@ -94,9 +94,11 @@ down-local:
 	docker stop $(FILES)
 	docker rm $(FILES)
 
-
 clean:
 	docker system prune -f
+
+logs-local:
+	docker logs -f $(FILES)
 
 # Git support
 
