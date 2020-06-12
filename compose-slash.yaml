@@ -1,0 +1,41 @@
+# https://docs.docker.com/compose/compose-file
+version: '3.8'
+
+networks:
+  shared-network:
+    driver: bridge
+
+services:
+
+  # This is the core service API.
+  travel-api:
+    container_name: travel-api
+    networks:
+      - shared-network
+    image: travel-api-amd64:1.0
+    ports:
+      - 3000:3000 # API
+      - 4000:4000 # DEBUG API
+    depends_on:
+      - dgraph-alpha
+    environment:
+      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
+      - TRAVEL_DGRAPH_URL=<ENTER_SLASH_URL_HERE>
+      # - GODEBUG=gctrace=1
+
+  # This is the core service API.
+  travel-ui:
+    container_name: travel-ui
+    networks:
+      - shared-network
+    image: travel-ui-amd64:1.0
+    ports:
+      - 80:80 # API
+      - 4080:4080 # DEBUG API
+    depends_on:
+      - dgraph-alpha
+    environment:
+      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
+      - TRAVEL_DGRAPH_URL=<ENTER_SLASH_URL_HERE>
+      # - GODEBUG=gctrace=1
+

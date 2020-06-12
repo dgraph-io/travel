@@ -24,58 +24,43 @@ travel-ui:
 
 # Running from within docker compose
 
-run-compose: up-compose seed browser-compose
+run: up seed browse
 
-up-compose:
-	docker-compose up --detach --remove-orphans
+up:
+	docker-compose -f compose.yaml up --detach --remove-orphans
 
-down-compose:
-	docker-compose down --remove-orphans
+down:
+	docker-compose -f compose.yaml down --remove-orphans
 
-browse-compose:
+browse:
 	python -m webbrowser "http://localhost"
 
-logs-compose:
-	docker-compose logs -f
-
-restart-compose:
-	docker-compose up --detach --build
-
-# Running from within the local computer
-
-run-local: up-local seed browser-local ui-local
-
-up-local:
-	docker run -it -d -p 8080:8080 dgraph/standalone:master
-
-ui-local:
-	cd cmd/travel-ui; \
-	go run main.go --web-ui-host=0.0.0.0:81
-
-api-local:
-	cd cmd/travel-api; \
-	go run main.go
-
-FILES := $(shell docker ps -aq)
-
-down-local:
-	docker stop $(FILES)
-	docker rm $(FILES)
-
-browse-local:
-	python -m webbrowser "http://localhost:81"
-
-logs-local:
-	docker logs -f $(FILES)
+logs:
+	docker-compose -f compose.yaml logs -f
 
 # Running from within the local with Slash
 
-run-slash: seed browser-local ui-local
+slash-run: seed browser-local ui-local
+
+slash-up:
+	docker-compose -f compose-slash.yaml up --detach --remove-orphans
+
+slash-down:
+	docker-compose -f compose-slash.yaml down --remove-orphans
+
+slash-browse:
+	python -m webbrowser "http://localhost"
+
+slash-logs:
+	docker-compose -f compose-slash.yaml logs -f
 
 # Seeding the database
 
-seed:
-	go run cmd/travel-data/main.go
+schema:
+	go run cmd/travel-admin/main.go schema
+
+seed: schema
+	go run cmd/travel-admin/main.go seed
 
 # Running tests within the local computer
 
@@ -102,6 +87,13 @@ deps-cleancache:
 	go clean -modcache
 
 # Docker support
+
+FILES := $(shell docker ps -aq)
+
+down-local:
+	docker stop $(FILES)
+	docker rm $(FILES)
+
 
 clean:
 	docker system prune -f

@@ -6,8 +6,9 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf"
-	"github.com/dgraph-io/travel/cmd/travel-auth/internal/commands"
+	"github.com/dgraph-io/travel/cmd/travel-admin/internal/commands"
 	"github.com/dgraph-io/travel/internal/data"
+	"github.com/dgraph-io/travel/internal/loader"
 	"github.com/pkg/errors"
 )
 
@@ -15,7 +16,9 @@ import (
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
+	log := log.New(os.Stdout, "ADMIN : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+
+	if err := run(log); err != nil {
 		if errors.Cause(err) != commands.ErrHelp {
 			log.Printf("error: %s", err)
 		}
@@ -23,7 +26,7 @@ func main() {
 	}
 }
 
-func run() error {
+func run(log *log.Logger) error {
 
 	// =========================================================================
 	// Configuration
@@ -35,6 +38,24 @@ func run() error {
 			URL            string `conf:"default:http://0.0.0.0:8080"`
 			AuthHeaderName string `conf:"default:X-Travel-Auth"`
 			AuthToken      string
+		}
+		CustomFunctions struct {
+			UploadFeedURL string `conf:"default:http://travel-api:3000/v1/feed/upload"`
+		}
+		Search struct {
+			Categories []string `conf:"default:restaurant;bar;supermarket"`
+			Radius     int      `conf:"default:5000"`
+		}
+		APIKeys struct {
+			// You need to generate a Google Key to support Places API and JS Maps.
+			// Once you have the key it's best to export it.
+			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
+			MapsKey    string
+			WeatherKey string `conf:"default:5b68961dd2602c2f722f02448d2de823"`
+		}
+		URL struct {
+			Advisory string `conf:"default:https://www.travel-advisory.info/api"`
+			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 	}
 	cfg.Version.SVN = build
@@ -76,6 +97,37 @@ func run() error {
 	}
 
 	switch cfg.Args.Num(0) {
+	case "schema":
+		schemaConfig := data.SchemaConfig{
+			CustomFunctions: data.CustomFunctions{
+				UploadFeedURL: cfg.CustomFunctions.UploadFeedURL,
+			},
+		}
+
+		if err := commands.Schema(dbConfig, schemaConfig); err != nil {
+			return errors.Wrap(err, "updating schema")
+		}
+
+	case "seed":
+		config := loader.Config{
+			Filter: loader.Filter{
+				Categories: cfg.Search.Categories,
+				Radius:     uint(cfg.Search.Radius),
+			},
+			Keys: loader.Keys{
+				MapKey:     cfg.APIKeys.MapsKey,
+				WeatherKey: cfg.APIKeys.WeatherKey,
+			},
+			URL: loader.URL{
+				Advisory: cfg.URL.Advisory,
+				Weather:  cfg.URL.Weather,
+			},
+		}
+
+		if err := commands.Seed(log, dbConfig, config); err != nil {
+			return errors.Wrap(err, "seeding database")
+		}
+
 	case "adduser":
 		newUser := data.NewUser{
 			Name:     cfg.Args.Num(1),
