@@ -28,7 +28,9 @@ func TestData(t *testing.T) {
 	tc := TestConfig{
 		url: url,
 		schema: data.SchemaConfig{
-			SendEmailURL: "http://0.0.0.0:3000/v1/email",
+			CustomFunctions: data.CustomFunctions{
+				UploadFeedURL: "http://0.0.0.0:3000/v1/feed/upload",
+			},
 		},
 	}
 

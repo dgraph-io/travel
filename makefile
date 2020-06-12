@@ -32,7 +32,7 @@ up-compose:
 down-compose:
 	docker-compose down --remove-orphans
 
-browser-compose:
+browse-compose:
 	python -m webbrowser "http://localhost"
 
 logs-compose:
@@ -62,7 +62,7 @@ down-local:
 	docker stop $(FILES)
 	docker rm $(FILES)
 
-browser-local:
+browse-local:
 	python -m webbrowser "http://localhost:81"
 
 logs-local:

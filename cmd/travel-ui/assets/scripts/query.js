@@ -131,18 +131,17 @@ function queryPlaceByName(placeName) {
     });
 }
 
-function querySendEmail() {
+function queryUploadFeed() {
 
     // Just using test data to show how to wire up a custom function.
     let userID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-    let nodeType = "place"
-    let nodeID = "0x32"
-    let email = "bill@ardanlabs.com"
+    let cityName = "Los Angeles"
 
     return JSON.stringify({
         query: `query {
-            sendEmail(userID: "` + userID + `", nodeType: "` + nodeType + `", nodeID: "` + nodeID + `", email: "` + email + `") {
+            uploadFeed(userID: "` + userID + `", cityName: "` + cityName + `") {
                 user_id
+                city_name
 	            message
             }
         }`,

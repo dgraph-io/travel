@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/cmd/travel-api/internal/handlers"
 	"github.com/dgraph-io/travel/internal/data"
+	"github.com/dgraph-io/travel/internal/loader"
 	"github.com/pkg/errors"
 )
 
@@ -44,16 +44,25 @@ func run(log *log.Logger) error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
+		Search struct {
+			Categories []string `conf:"default:restaurant;bar;supermarket"`
+			Radius     int      `conf:"default:5000"`
+		}
+		APIKeys struct {
+			// You need to generate a Google Key to support Places API and JS Maps.
+			// Once you have the key it's best to export it.
+			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
+			MapsKey    string
+			WeatherKey string `conf:"default:5b68961dd2602c2f722f02448d2de823"`
+		}
+		URL struct {
+			Advisory string `conf:"default:https://www.travel-advisory.info/api"`
+			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
+		}
 		Dgraph struct {
 			URL            string `conf:"default:http://0.0.0.0:8080"`
 			AuthHeaderName string
 			AuthToken      string
-		}
-		Email struct {
-			User     string
-			Password string
-			Host     string
-			Port     int
 		}
 	}
 	cfg.Version.SVN = build
@@ -123,12 +132,14 @@ func run(log *log.Logger) error {
 		AuthToken:      cfg.Dgraph.AuthToken,
 	}
 
-	// Capture the email configuration.
-	emailConfig := handlers.EmailConfig{
-		User:     cfg.Email.User,
-		Password: cfg.Email.Password,
-		Host:     cfg.Email.Host,
-		Port:     strconv.Itoa(cfg.Email.Port),
+	keys := loader.Keys{
+		MapKey:     cfg.APIKeys.MapsKey,
+		WeatherKey: cfg.APIKeys.WeatherKey,
+	}
+
+	url := loader.URL{
+		Advisory: cfg.URL.Advisory,
+		Weather:  cfg.URL.Weather,
 	}
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
@@ -138,7 +149,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, dbConfig, emailConfig),
+		Handler:      handlers.API(build, shutdown, log, dbConfig, keys, url),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

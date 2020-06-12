@@ -161,7 +161,7 @@ function showNodeData(d, index, circles) {
         case "city":
             var query = queryCity(name);
             $.post(Dgraph, query, function (o, status) {
-                if ((typeof o.errors != "undefined") && (o.errors.length > 0)) {
+                 if ((typeof o.errors != "undefined") && (o.errors.length > 0)) {
                     nodeBox.innerText = "ERROR: " + o.errors[0].message;
                     return;
                 }
@@ -280,13 +280,13 @@ function convertKelvin(k) {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
-function sendEmail() {
-    var query = querySendEmail();
+function uploadFeed() {
+    var query = queryUploadFeed();
     $.post(Dgraph, query, function (o, status) {
         if ((typeof o.errors != "undefined") && (o.errors.length > 0)) {
             window.alert("ERROR: " + o.errors[0].message);
             return;
         }
-        window.alert(o.data.sendEmail.message);
+        window.alert(o.data.uploadFeed.message);
     });
 }

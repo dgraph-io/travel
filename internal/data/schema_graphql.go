@@ -112,16 +112,17 @@ type Weather {
 	wind_speed: Float
 }
 
-type EmailResponse @remote {
+type UploadFeedResponse @remote {
 	user_id: ID
+	city_name: String
 	message: String
 }
 
 type Query{
-	sendEmail(userID: String!, nodeType: String!, nodeID: String!, email: String!): EmailResponse @custom(http:{
-		url: "{{.SendEmailURL}}",
+	uploadFeed(userID: String!, cityName: String!) : UploadFeedResponse @custom(http:{
+		url: "{{.UploadFeedURL}}",
 		method: "POST",
-		body: "{userid: $userID, nodetype: $nodeType, nodeid: $nodeID, email: $email}"
+		body: "{userid: $userID, cityname: $cityName}"
 	})
 }
 

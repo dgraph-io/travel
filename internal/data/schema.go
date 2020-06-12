@@ -15,9 +15,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// CustomFunctions is the set of custom functions defined in the schema. The
+// URL to the function is required as part of the function declaration.
+type CustomFunctions struct {
+	UploadFeedURL string
+}
+
 // SchemaConfig contains information required for the schema document.
 type SchemaConfig struct {
-	SendEmailURL string
+	CustomFunctions
 }
 
 // Schema provides support for schema operations against the database.
@@ -41,8 +47,8 @@ func NewSchema(dbConfig DBConfig, schemaConfig SchemaConfig) (*Schema, error) {
 	}
 	var document bytes.Buffer
 	vars := map[string]interface{}{
-		"SendEmailURL": schemaConfig.SendEmailURL,
-		"PublicKey":    publicKey,
+		"UploadFeedURL": schemaConfig.CustomFunctions.UploadFeedURL,
+		"PublicKey":     publicKey,
 	}
 	if err := tmpl.Execute(&document, vars); err != nil {
 		return nil, errors.Wrap(err, "executing template")

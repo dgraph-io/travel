@@ -1,4 +1,4 @@
-package feed
+package loader
 
 import (
 	"github.com/dgraph-io/travel/internal/data"

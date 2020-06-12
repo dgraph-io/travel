@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf"
-	"github.com/dgraph-io/travel/cmd/travel-data/internal/feed"
 	"github.com/dgraph-io/travel/internal/data"
+	"github.com/dgraph-io/travel/internal/loader"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +18,7 @@ type city struct {
 	Lng         float64
 }
 
-// These are the currently cities supported.
+// These are the current default cities to start with.
 var cities = []city{
 	{"US", "miami", 25.7617, -80.1918},
 	{"US", "new york", 40.730610, -73.935242},
@@ -60,7 +60,7 @@ func run(log *log.Logger) error {
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		CustomFunctions struct {
-			SendEmailURL string `conf:"default:http://travel-api:3000/v1/email"`
+			UploadFeedURL string `conf:"default:http://travel-api:3000/v1/feed/upload"`
 		}
 		Dgraph struct {
 			URL            string `conf:"default:http://0.0.0.0:8080"`
@@ -114,20 +114,22 @@ func run(log *log.Logger) error {
 	}
 
 	schemaConfig := data.SchemaConfig{
-		SendEmailURL: cfg.CustomFunctions.SendEmailURL,
+		CustomFunctions: data.CustomFunctions{
+			UploadFeedURL: cfg.CustomFunctions.UploadFeedURL,
+		},
 	}
 
-	keys := feed.Keys{
+	keys := loader.Keys{
 		MapKey:     cfg.APIKeys.MapsKey,
 		WeatherKey: cfg.APIKeys.WeatherKey,
 	}
 
-	url := feed.URL{
+	url := loader.URL{
 		Advisory: cfg.URL.Advisory,
 		Weather:  cfg.URL.Weather,
 	}
 
-	if err := feed.Schema(log, dbConfig, schemaConfig); err != nil {
+	if err := loader.UpdateSchema(log, dbConfig, schemaConfig); err != nil {
 		return err
 	}
 
@@ -137,7 +139,7 @@ func run(log *log.Logger) error {
 	}
 
 	for _, city := range cities {
-		search := feed.Search{
+		search := loader.Search{
 			CityName:    city.Name,
 			CountryCode: city.CountryCode,
 			Lat:         city.Lat,
@@ -145,7 +147,7 @@ func run(log *log.Logger) error {
 			Categories:  cfg.Search.Categories,
 			Radius:      uint(cfg.Search.Radius),
 		}
-		if err := feed.Work(log, dbConfig, search, keys, url); err != nil {
+		if err := loader.UpdateData(log, dbConfig, search, keys, url); err != nil {
 			return err
 		}
 	}
