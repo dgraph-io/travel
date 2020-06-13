@@ -16,8 +16,6 @@ services:
     ports:
       - 3000:3000 # API
       - 4000:4000 # DEBUG API
-    depends_on:
-      - dgraph-alpha
     environment:
       - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
       - TRAVEL_DGRAPH_URL=<ENTER_SLASH_URL_HERE>
@@ -33,8 +31,6 @@ services:
     ports:
       - 80:80 # API
       - 4080:4080 # DEBUG API
-    depends_on:
-      - dgraph-alpha
     environment:
       - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
       - TRAVEL_DGRAPH_URL=<ENTER_SLASH_URL_HERE>

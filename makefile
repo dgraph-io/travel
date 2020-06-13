@@ -54,6 +54,33 @@ slash-browse:
 slash-logs:
 	docker-compose -f compose-slash.yaml logs -f
 
+# Running Local
+
+local-run: local-up seed browse
+
+local-up:
+	go run cmd/travel-api/main.go &> api.log &
+	cd cmd/travel-ui; \
+	go run main.go &> ../../ui.log &
+
+API := $(shell lsof -i tcp:4000 | cut -c9-13 | grep "[0-9]")
+UI := $(shell lsof -i tcp:4080 | cut -c9-13 | grep "[0-9]")
+
+ps:
+	lsof -i tcp:4000; \
+	lsof -i tcp:4080
+
+local-down:
+	kill -15 $(API); \
+	kill -15 $(UI); \
+	rm *.log
+
+api-logs:
+	tail -F api.log
+
+ui-logs:
+	tail -F ui.log
+
 # Administration
 
 schema:
