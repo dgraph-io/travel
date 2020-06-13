@@ -17,7 +17,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DB
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	// Register the index page for the website.
-	index, err := newIndex(browserEndpoint, mapsKey)
+	index, err := newIndex(dbConfig, browserEndpoint, mapsKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading index template")
 	}

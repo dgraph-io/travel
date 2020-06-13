@@ -3,22 +3,24 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/dgraph-io/travel/internal/data"
 	"github.com/pkg/errors"
 )
 
 type index struct {
 	tmpl            *template.Template
 	graphQLEndpoint string
+	authHeaderName  string
+	authToken       string
 	mapsKey         string
 }
 
-func newIndex(browserEndpoint string, mapsKey string) (*index, error) {
+func newIndex(dbConfig data.DBConfig, browserEndpoint string, mapsKey string) (*index, error) {
 	rawTmpl, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")
@@ -31,7 +33,9 @@ func newIndex(browserEndpoint string, mapsKey string) (*index, error) {
 
 	index := index{
 		tmpl:            tmpl,
-		graphQLEndpoint: fmt.Sprintf("%s/graphql", browserEndpoint),
+		graphQLEndpoint: browserEndpoint,
+		authHeaderName:  dbConfig.AuthHeaderName,
+		authToken:       dbConfig.AuthToken,
 		mapsKey:         mapsKey,
 	}
 
@@ -41,8 +45,10 @@ func newIndex(browserEndpoint string, mapsKey string) (*index, error) {
 func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var markup bytes.Buffer
 	vars := map[string]interface{}{
-		"GraphQLEndpoint": i.graphQLEndpoint,
+		"GraphQLEndpoint": i.graphQLEndpoint + "/graphql",
 		"MapsKey":         i.mapsKey,
+		"AuthHeaderName":  i.authHeaderName,
+		"AuthToken":       i.authToken,
 	}
 
 	if err := i.tmpl.Execute(&markup, vars); err != nil {

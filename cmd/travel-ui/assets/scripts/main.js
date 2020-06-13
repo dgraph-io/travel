@@ -3,7 +3,12 @@ var markers = [];
 var currentMap;
 
 $.ajaxSetup({
-    contentType: "application/json; charset=utf-8"
+    contentType: "application/json; charset=utf-8",
+    beforeSend: function (xhr) {
+        if (AuthHeaderName != "") {
+            xhr.setRequestHeader(AuthHeaderName, AuthToken);
+        }
+    }
 });
 
 function OnLoad() {

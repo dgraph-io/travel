@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"fmt"
 	"log"
 	"os"
@@ -86,6 +87,20 @@ func run(log *log.Logger) error {
 	if cfg.Dgraph.AuthToken == "" {
 		cfg.Dgraph.AuthToken = data.AdminJWT
 	}
+
+	// =========================================================================
+	// App Starting
+
+	// Print the build version for our logs. Also expose it under /debug/vars.
+	expvar.NewString("build").Set(build)
+	log.Printf("main : Started : Application initializing : version %q", build)
+	defer log.Println("main: Completed")
+
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return errors.Wrap(err, "generating config for output")
+	}
+	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
 	// Commands
