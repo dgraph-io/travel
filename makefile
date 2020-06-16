@@ -108,6 +108,7 @@ tidy:
 
 deps-upgrade:
 	go get -u -t -d -v ./...
+	go mod tidy
 	go mod vendor
 
 deps-cleancache:

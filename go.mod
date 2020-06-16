@@ -14,11 +14,8 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/stretchr/testify v1.5.1 // indirect
-	go.opencensus.io v0.22.3 // indirect
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
-	googlemaps.github.io/maps v1.2.0
+	googlemaps.github.io/maps v1.2.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
