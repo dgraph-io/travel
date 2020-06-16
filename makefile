@@ -59,8 +59,8 @@ slash-logs:
 local-run: local-up seed browse
 
 local-up:
-	go run cmd/travel-api/main.go &> api.log &
-	cd cmd/travel-ui; \
+	go run app/travel-api/main.go &> api.log &
+	cd app/travel-ui; \
 	go run main.go &> ../../ui.log &
 
 API := $(shell lsof -i tcp:4000 | cut -c9-13 | grep "[0-9]")
@@ -84,10 +84,10 @@ ui-logs:
 # Administration
 
 schema:
-	go run cmd/travel-admin/main.go schema
+	go run app/travel-admin/main.go schema
 
 seed: schema
-	go run cmd/travel-admin/main.go seed
+	go run app/travel-admin/main.go seed
 
 # Running tests within the local computer
 
