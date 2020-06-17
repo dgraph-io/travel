@@ -7,10 +7,17 @@ import (
 	"log"
 	"time"
 
+	"github.com/ardanlabs/graphql"
 	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/feeds/advisory"
-	"github.com/dgraph-io/travel/business/feeds/places"
-	"github.com/dgraph-io/travel/business/feeds/weather"
+	"github.com/dgraph-io/travel/business/data/advisory"
+	"github.com/dgraph-io/travel/business/data/city"
+	"github.com/dgraph-io/travel/business/data/place"
+	"github.com/dgraph-io/travel/business/data/ready"
+	"github.com/dgraph-io/travel/business/data/schema"
+	"github.com/dgraph-io/travel/business/data/weather"
+	advisoryfeed "github.com/dgraph-io/travel/business/feeds/advisory"
+	placesfeed "github.com/dgraph-io/travel/business/feeds/places"
+	weatherfeed "github.com/dgraph-io/travel/business/feeds/weather"
 	"github.com/pkg/errors"
 	"googlemaps.github.io/maps"
 )
@@ -52,15 +59,18 @@ type URL struct {
 }
 
 // UpdateSchema creates/updates the schema for the database.
-func UpdateSchema(dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error {
+func UpdateSchema(gqlConfig data.GraphQLConfig, schemaConfig schema.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	err := data.Readiness(ctx, dbConfig.URL, 5*time.Second)
+
+	err := ready.Validate(ctx, gqlConfig.URL, 5*time.Second)
 	if err != nil {
 		return errors.Wrapf(err, "waiting for database to be ready")
 	}
 
-	schema, err := data.NewSchema(dbConfig, schemaConfig)
+	gql := data.NewGraphQL(gqlConfig)
+
+	schema, err := schema.New(gql, schemaConfig)
 	if err != nil {
 		return errors.Wrapf(err, "preparing schema")
 	}
@@ -73,29 +83,26 @@ func UpdateSchema(dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error 
 }
 
 // UpdateData retrieves and stores the feed data for this API.
-func UpdateData(log *log.Logger, dbConfig data.DBConfig, config Config, search Search) error {
+func UpdateData(log *log.Logger, gqlConfig data.GraphQLConfig, config Config, search Search) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	db, err := data.NewDB(dbConfig)
-	if err != nil {
-		return errors.Wrapf(err, "preparing database")
-	}
+	gql := data.NewGraphQL(gqlConfig)
 
-	city, err := addCity(ctx, log, db, search.CityName, search.Lat, search.Lng)
+	city, err := addCity(ctx, log, gql, search.CityName, search.Lat, search.Lng)
 	if err != nil {
 		return errors.Wrapf(err, "adding city")
 	}
 
-	if err := replaceWeather(ctx, log, db, config.Keys.WeatherKey, config.URL.Weather, city.ID, city.Lat, city.Lng); err != nil {
+	if err := replaceWeather(ctx, log, gql, config.Keys.WeatherKey, config.URL.Weather, city.ID, city.Lat, city.Lng); err != nil {
 		return errors.Wrapf(err, "replacing weather")
 	}
 
-	if err := replaceAdvisory(ctx, log, db, config.URL.Advisory, city.ID, search.CountryCode); err != nil {
+	if err := replaceAdvisory(ctx, log, gql, config.URL.Advisory, city.ID, search.CountryCode); err != nil {
 		return errors.Wrapf(err, "replacing advisory")
 	}
 
-	if err := addPlaces(ctx, log, db, config.Keys.MapKey, city, config.Filter.Categories, config.Filter.Radius); err != nil {
+	if err := addPlaces(ctx, log, gql, config.Keys.MapKey, city, config.Filter.Categories, config.Filter.Radius); err != nil {
 		return errors.Wrapf(err, "adding places")
 	}
 
@@ -103,69 +110,69 @@ func UpdateData(log *log.Logger, dbConfig data.DBConfig, config Config, search S
 }
 
 // addCity add the specified city into the database.
-func addCity(ctx context.Context, log *log.Logger, db *data.DB, name string, lat float64, lng float64) (data.City, error) {
-	city := data.City{
+func addCity(ctx context.Context, log *log.Logger, gql *graphql.GraphQL, name string, lat float64, lng float64) (city.City, error) {
+	newCity := city.City{
 		Name: name,
 		Lat:  lat,
 		Lng:  lng,
 	}
-	city, err := db.Mutate.AddCity(ctx, city)
-	if err != nil && err != data.ErrCityExists {
-		return data.City{}, errors.Wrapf(err, "adding city: %s", name)
+	newCity, err := city.Add(ctx, gql, newCity)
+	if err != nil && err != city.ErrExists {
+		return city.City{}, errors.Wrapf(err, "adding city: %s", name)
 	}
 
-	if err == data.ErrCityExists {
-		log.Printf("feed: Work: City Existed: ID: %s Name: %s Lat: %f Lng: %f", city.ID, name, lat, lng)
+	if err == city.ErrExists {
+		log.Printf("feed: Work: City Existed: ID: %s Name: %s Lat: %f Lng: %f", newCity.ID, name, lat, lng)
 	} else {
-		log.Printf("feed: Work: Added City: ID: %s Name: %s Lat: %f Lng: %f", city.ID, name, lat, lng)
+		log.Printf("feed: Work: Added City: ID: %s Name: %s Lat: %f Lng: %f", newCity.ID, name, lat, lng)
 	}
 
-	return city, nil
+	return newCity, nil
 }
 
 // replaceWeather pulls weather information and updates it for the specified city.
-func replaceWeather(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, url string, cityID string, lat float64, lng float64) error {
-	weather, err := weather.Search(ctx, apiKey, url, lat, lng)
+func replaceWeather(ctx context.Context, log *log.Logger, gql *graphql.GraphQL, apiKey string, url string, cityID string, lat float64, lng float64) error {
+	feedData, err := weatherfeed.Search(ctx, apiKey, url, lat, lng)
 	if err != nil {
 		return errors.Wrap(err, "searching weather")
 	}
 
-	updWeather := marshal.Weather(weather)
-	updWeather, err = db.Mutate.ReplaceWeather(ctx, cityID, updWeather)
+	newWeather := marshalWeather(feedData)
+	newWeather, err = weather.Replace(ctx, gql, cityID, newWeather)
 	if err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
 
-	log.Printf("feed: Work: Replaced Weather: ID: %s Desc: %s", updWeather.ID, updWeather.Desc)
+	log.Printf("feed: Work: Replaced Weather: ID: %s Desc: %s", newWeather.ID, newWeather.Desc)
 	return nil
 }
 
 // replaceAdvisory pulls advisory information and updates it for the specified city.
-func replaceAdvisory(ctx context.Context, log *log.Logger, db *data.DB, url string, cityID string, countryCode string) error {
-	advisory, err := advisory.Search(ctx, url, countryCode)
+func replaceAdvisory(ctx context.Context, log *log.Logger, gql *graphql.GraphQL, url string, cityID string, countryCode string) error {
+	feedData, err := advisoryfeed.Search(ctx, url, countryCode)
 	if err != nil {
 		return errors.Wrap(err, "searching advisory")
 	}
 
-	updAdvisory := marshal.Advisory(advisory)
-	updAdvisory, err = db.Mutate.ReplaceAdvisory(ctx, cityID, updAdvisory)
+	newAdvisory := marshalAdvisory(feedData)
+	newAdvisory, err = advisory.Replace(ctx, gql, cityID, newAdvisory)
 	if err != nil {
 		return errors.Wrap(err, "replacing advisory")
 	}
 
-	log.Printf("feed: Work: Replaced Advisory: ID: %s Message: %s", updAdvisory.ID, updAdvisory.Message)
+	log.Printf("feed: Work: Replaced Advisory: ID: %s Message: %s", newAdvisory.ID, newAdvisory.Message)
 	return nil
 }
 
 // addPlaces pulls place information and adds new places to the specified city.
-func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string, city data.City, categories []string, radius uint) error {
+func addPlaces(ctx context.Context, log *log.Logger, gql *graphql.GraphQL, apiKey string, city city.City, categories []string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
 	}
 
 	for _, category := range categories {
-		filter := places.Filter{
+		filter := placesfeed.Filter{
 			Name:    city.Name,
 			Lat:     city.Lat,
 			Lng:     city.Lng,
@@ -176,21 +183,21 @@ func addPlaces(ctx context.Context, log *log.Logger, db *data.DB, apiKey string,
 
 		// Only store up to the first 20 places.
 		for i := 0; i < 1; i++ {
-			places, errRet := places.Search(ctx, client, &filter)
+			feedList, errRet := placesfeed.Search(ctx, client, &filter)
 			if errRet != nil && errRet != io.EOF {
 				return errors.Wrap(err, "searching places")
 			}
 
-			for _, place := range places {
-				place, err := db.Mutate.AddPlace(ctx, marshal.Place(place, city.ID, category))
-				if err != nil && err != data.ErrPlaceExists {
-					return errors.Wrapf(err, "adding place: %s", place.Name)
+			for _, feedData := range feedList {
+				newPlace, err := place.Add(ctx, gql, marshalPlace(feedData, city.ID, category))
+				if err != nil && err != place.ErrExists {
+					return errors.Wrapf(err, "adding place: %s", newPlace.Name)
 				}
 
-				if err == data.ErrPlaceExists {
-					log.Printf("feed: Work: Place Existed: ID: %s Name: %s", place.ID, place.Name)
+				if err == place.ErrExists {
+					log.Printf("feed: Work: Place Existed: ID: %s Name: %s", newPlace.ID, newPlace.Name)
 				} else {
-					log.Printf("feed: Work: Added Place: ID: %s Name: %s", place.ID, place.Name)
+					log.Printf("feed: Work: Added Place: ID: %s Name: %s", newPlace.ID, newPlace.Name)
 				}
 			}
 

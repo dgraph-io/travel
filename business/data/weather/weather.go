@@ -1,4 +1,5 @@
-package data
+// Package weather provides support for managing weather data in the database.
+package weather
 
 import (
 	"context"
@@ -8,42 +9,81 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReplaceWeather replaces a weather in the database and connects it
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound = errors.New("weather not found")
+)
+
+// Replace replaces a weather in the database and connects it
 // to the specified city.
-func (m mutate) ReplaceWeather(ctx context.Context, cityID string, wth Weather) (Weather, error) {
-	if err := weather.delete(ctx, m.query, m.graphql, cityID); err != nil {
-		if err != ErrWeatherNotFound {
+func Replace(ctx context.Context, gql *graphql.GraphQL, cityID string, weather Weather) (Weather, error) {
+	if err := delete(ctx, gql, cityID); err != nil {
+		if err != ErrNotFound {
 			return Weather{}, errors.Wrap(err, "deleting weather from database")
 		}
 	}
 
-	wth, err := weather.add(ctx, m.graphql, wth)
+	weather, err := add(ctx, gql, weather)
 	if err != nil {
 		return Weather{}, errors.Wrap(err, "adding weather to database")
 	}
 
-	if err := weather.updateCity(ctx, m.graphql, cityID, wth); err != nil {
+	if err := updateCity(ctx, gql, cityID, weather); err != nil {
 		return Weather{}, errors.Wrap(err, "replace weather in city")
 	}
 
-	return wth, nil
+	return weather, nil
+}
+
+// One returns the specified weather from the database by the city id.
+func One(ctx context.Context, gql *graphql.GraphQL, cityID string) (Weather, error) {
+	query := fmt.Sprintf(`
+query {
+	getCity(id: %q) {
+		weather {
+			id
+			city_name
+			description
+			feels_like
+			humidity
+			pressure
+			sunrise
+			sunset
+			temp
+			temp_min
+			temp_max
+			visibility
+			wind_direction
+			wind_speed
+		}
+	}
+}`, cityID)
+
+	var result struct {
+		GetCity struct {
+			Weather Weather `json:"weather"`
+		} `json:"getCity"`
+	}
+	if err := gql.Query(ctx, query, &result); err != nil {
+		return Weather{}, errors.Wrap(err, "query failed")
+	}
+
+	if result.GetCity.Weather.ID == "" {
+		return Weather{}, ErrNotFound
+	}
+
+	return result.GetCity.Weather, nil
 }
 
 // =============================================================================
 
-type wth struct {
-	prepare weatherPrepare
-}
-
-var weather wth
-
-func (w wth) add(ctx context.Context, graphql *graphql.GraphQL, weather Weather) (Weather, error) {
+func add(ctx context.Context, gql *graphql.GraphQL, weather Weather) (Weather, error) {
 	if weather.ID != "" {
 		return Weather{}, errors.New("weather contains id")
 	}
 
-	mutation, result := w.prepare.add(weather)
-	if err := graphql.Query(ctx, mutation, &result); err != nil {
+	mutation, result := prepareAdd(weather)
+	if err := gql.Query(ctx, mutation, &result); err != nil {
 		return Weather{}, errors.Wrap(err, "failed to add weather")
 	}
 
@@ -55,13 +95,13 @@ func (w wth) add(ctx context.Context, graphql *graphql.GraphQL, weather Weather)
 	return weather, nil
 }
 
-func (w wth) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, weather Weather) error {
+func updateCity(ctx context.Context, gql *graphql.GraphQL, cityID string, weather Weather) error {
 	if weather.ID == "" {
 		return errors.New("weather missing id")
 	}
 
-	mutation, result := w.prepare.updateCity(cityID, weather)
-	err := graphql.Query(ctx, mutation, &result)
+	mutation, result := prepareUpdateCity(cityID, weather)
+	err := gql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
@@ -69,14 +109,14 @@ func (w wth) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID st
 	return nil
 }
 
-func (w wth) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
-	weather, err := query.Weather(ctx, cityID)
+func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
+	weather, err := One(ctx, gql, cityID)
 	if err != nil {
 		return err
 	}
 
-	mutation, result := w.prepare.delete(weather.ID)
-	if err := graphql.Query(ctx, mutation, &result); err != nil {
+	mutation, result := prepareDelete(weather.ID)
+	if err := gql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
 
@@ -90,10 +130,8 @@ func (w wth) delete(ctx context.Context, query query, graphql *graphql.GraphQL, 
 
 // =============================================================================
 
-type weatherPrepare struct{}
-
-func (weatherPrepare) add(weather Weather) (string, weatherAddResult) {
-	var result weatherAddResult
+func prepareAdd(weather Weather) (string, addResult) {
+	var result addResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addWeather(input: [{
@@ -120,8 +158,8 @@ mutation {
 	return mutation, result
 }
 
-func (weatherPrepare) updateCity(cityID string, weather Weather) (string, cityUpdateResult) {
-	var result cityUpdateResult
+func prepareUpdateCity(cityID string, weather Weather) (string, updateCityResult) {
+	var result updateCityResult
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {
@@ -156,8 +194,8 @@ mutation {
 	return mutation, result
 }
 
-func (weatherPrepare) delete(weatherID string) (string, weatherDeleteResult) {
-	var result weatherDeleteResult
+func prepareDelete(weatherID string) (string, deleteResult) {
+	var result deleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteWeather(filter: { id: [%q] })
@@ -165,34 +203,4 @@ mutation {
 }`, weatherID, result.document())
 
 	return mutation, result
-}
-
-type weatherAddResult struct {
-	AddWeather struct {
-		Weather []struct {
-			ID string `json:"id"`
-		} `json:"weather"`
-	} `json:"addWeather"`
-}
-
-func (weatherAddResult) document() string {
-	return `{
-		weather {
-			id
-		}
-	}`
-}
-
-type weatherDeleteResult struct {
-	DeleteWeather struct {
-		Msg     string
-		NumUids int
-	} `json:"deleteWeather"`
-}
-
-func (weatherDeleteResult) document() string {
-	return `{
-		msg,
-		numUids,
-	}`
 }

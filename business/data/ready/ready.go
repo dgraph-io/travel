@@ -1,4 +1,6 @@
-package data
+// Package ready provides support for waiting for the database to be
+// ready to receive commands.
+package ready
 
 import (
 	"context"
@@ -11,10 +13,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Readiness checks if the DB is ready to receive requests. It will attempt
+// Validate checks if the DB is ready to receive requests. It will attempt
 // a check between each retry interval specified. The context holds the
 // total amount of time Readiness will wait to validate the DB is healthy.
-func Readiness(ctx context.Context, url string, retryInterval time.Duration) error {
+func Validate(ctx context.Context, url string, retryInterval time.Duration) error {
 
 	// We will try until the context timeout has expired.
 	for {

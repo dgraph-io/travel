@@ -9,6 +9,8 @@ import (
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/app/travel-admin/commands"
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/data/schema"
+	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgraph-io/travel/business/loader"
 	"github.com/pkg/errors"
 )
@@ -85,7 +87,7 @@ func run(log *log.Logger) error {
 
 	// For convenience with the training material, an ADMIN token is provided.
 	if cfg.Dgraph.AuthToken == "" {
-		cfg.Dgraph.AuthToken = data.AdminJWT
+		cfg.Dgraph.AuthToken = schema.AdminJWT
 	}
 
 	// =========================================================================
@@ -105,7 +107,7 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Commands
 
-	dbConfig := data.DBConfig{
+	gqlConfig := data.GraphQLConfig{
 		URL:            cfg.Dgraph.URL,
 		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
 		AuthToken:      cfg.Dgraph.AuthToken,
@@ -113,13 +115,13 @@ func run(log *log.Logger) error {
 
 	switch cfg.Args.Num(0) {
 	case "schema":
-		schemaConfig := data.SchemaConfig{
-			CustomFunctions: data.CustomFunctions{
+		config := schema.Config{
+			CustomFunctions: schema.CustomFunctions{
 				UploadFeedURL: cfg.CustomFunctions.UploadFeedURL,
 			},
 		}
 
-		if err := commands.Schema(dbConfig, schemaConfig); err != nil {
+		if err := commands.Schema(gqlConfig, config); err != nil {
 			return errors.Wrap(err, "updating schema")
 		}
 
@@ -139,25 +141,25 @@ func run(log *log.Logger) error {
 			},
 		}
 
-		if err := commands.Seed(log, dbConfig, config); err != nil {
+		if err := commands.Seed(log, gqlConfig, config); err != nil {
 			return errors.Wrap(err, "seeding database")
 		}
 
 	case "adduser":
-		newUser := data.NewUser{
+		newUser := user.NewUser{
 			Name:     cfg.Args.Num(1),
 			Email:    cfg.Args.Num(2),
 			Password: cfg.Args.Num(3),
 			Role:     cfg.Args.Num(4),
 		}
 
-		if err := commands.AddUser(dbConfig, newUser); err != nil {
+		if err := commands.AddUser(gqlConfig, newUser); err != nil {
 			return errors.Wrap(err, "adding user")
 		}
 
 	case "getuser":
 		email := cfg.Args.Num(1)
-		if err := commands.GetUser(dbConfig, email); err != nil {
+		if err := commands.GetUser(gqlConfig, email); err != nil {
 			return errors.Wrap(err, "getting user")
 		}
 
@@ -170,7 +172,7 @@ func run(log *log.Logger) error {
 		email := cfg.Args.Num(1)
 		privateKeyFile := cfg.Args.Num(2)
 		algorithm := cfg.Args.Num(3)
-		if err := commands.GenToken(dbConfig, email, privateKeyFile, algorithm); err != nil {
+		if err := commands.GenToken(gqlConfig, email, privateKeyFile, algorithm); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 

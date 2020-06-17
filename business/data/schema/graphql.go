@@ -1,4 +1,4 @@
-package data
+package schema
 
 // schema is a convenience variable for the schema and public key required for
 // the project. This helps to support the training and quick start to getting

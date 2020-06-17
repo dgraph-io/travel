@@ -1,7 +1,7 @@
 # binaries
-cmd/travel-data/travel-admin
-cmd/travel-api/travel-api
-cmd/travel-ui/travel-ui
+app/travel-data/travel-admin
+app/travel-api/travel-api
+app/travel-ui/travel-ui
 
 # keys
 .keys

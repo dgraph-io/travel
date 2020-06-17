@@ -1,11 +1,10 @@
-package data
+// Package schema provides schema support for the database.
+package schema
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"net"
-	"net/http"
 	"regexp"
 	"strings"
 	"text/template"
@@ -15,14 +14,20 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Schema error variables.
+var (
+	ErrNoSchemaExists = errors.New("no schema exists")
+	ErrInvalidSchema  = errors.New("schema doesn't match")
+)
+
 // CustomFunctions is the set of custom functions defined in the schema. The
 // URL to the function is required as part of the function declaration.
 type CustomFunctions struct {
 	UploadFeedURL string
 }
 
-// SchemaConfig contains information required for the schema document.
-type SchemaConfig struct {
+// Config contains information required for the schema document.
+type Config struct {
 	CustomFunctions
 }
 
@@ -32,8 +37,8 @@ type Schema struct {
 	document string
 }
 
-// NewSchema constructs a Schema value for use to manage the schema.
-func NewSchema(dbConfig DBConfig, schemaConfig SchemaConfig) (*Schema, error) {
+// New constructs a Schema value for use to manage the schema.
+func New(graphql *graphql.GraphQL, config Config) (*Schema, error) {
 
 	// The actual CRLF (\n) must be converted to the characters '\n' so the
 	// entire key sits on one line.
@@ -47,31 +52,12 @@ func NewSchema(dbConfig DBConfig, schemaConfig SchemaConfig) (*Schema, error) {
 	}
 	var document bytes.Buffer
 	vars := map[string]interface{}{
-		"UploadFeedURL": schemaConfig.CustomFunctions.UploadFeedURL,
+		"UploadFeedURL": config.CustomFunctions.UploadFeedURL,
 		"PublicKey":     publicKey,
 	}
 	if err := tmpl.Execute(&document, vars); err != nil {
 		return nil, errors.Wrap(err, "executing template")
 	}
-
-	client := http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-	}
-
-	auth := graphql.WithAuth(dbConfig.AuthHeaderName, dbConfig.AuthToken)
-	graphql := graphql.New(dbConfig.URL, &client, auth)
 
 	schema := Schema{
 		graphql:  graphql,

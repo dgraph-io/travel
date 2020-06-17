@@ -1,78 +1,64 @@
 package loader
 
 import (
-	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/feeds/advisory"
-	"github.com/dgraph-io/travel/business/feeds/places"
-	"github.com/dgraph-io/travel/business/feeds/weather"
+	"github.com/dgraph-io/travel/business/data/advisory"
+	"github.com/dgraph-io/travel/business/data/place"
+	"github.com/dgraph-io/travel/business/data/weather"
+	advisoryfeed "github.com/dgraph-io/travel/business/feeds/advisory"
+	placesfeed "github.com/dgraph-io/travel/business/feeds/places"
+	weatherfeed "github.com/dgraph-io/travel/business/feeds/weather"
 )
 
-type m struct{}
-
-// Marshal provides marshaling functions for the different
-// feed values.
-var marshal m
-
-// Place marshals a Place value from the places package into
+// marshalPlace marshals a Place value from the places package into
 // a data Place value.
-func (m) Place(place places.Place, cityID string, category string) data.Place {
-	return data.Place{
-		PlaceID:          place.PlaceID,
+func marshalPlace(feedData placesfeed.Place, cityID string, category string) place.Place {
+	return place.Place{
+		PlaceID:          feedData.PlaceID,
 		Category:         category,
-		CityID:           data.CityID{ID: cityID},
-		CityName:         place.CityName,
-		Name:             place.Name,
-		Address:          place.Address,
-		Lat:              place.Lat,
-		Lng:              place.Lng,
-		LocationType:     place.LocationType,
-		AvgUserRating:    place.AvgUserRating,
-		NumberOfRatings:  place.NumberOfRatings,
-		GmapsURL:         place.GmapsURL,
-		PhotoReferenceID: place.PhotoReferenceID,
+		CityID:           place.CityID{ID: cityID},
+		CityName:         feedData.CityName,
+		Name:             feedData.Name,
+		Address:          feedData.Address,
+		Lat:              feedData.Lat,
+		Lng:              feedData.Lng,
+		LocationType:     feedData.LocationType,
+		AvgUserRating:    feedData.AvgUserRating,
+		NumberOfRatings:  feedData.NumberOfRatings,
+		GmapsURL:         feedData.GmapsURL,
+		PhotoReferenceID: feedData.PhotoReferenceID,
 	}
 }
 
-// Places marshals a collection of Place values from the
-// places package into a collection of data Place values.
-func (m) Places(places []places.Place, cityID string, category string) []data.Place {
-	dataPlaces := make([]data.Place, len(places))
-	for i, place := range places {
-		dataPlaces[i] = marshal.Place(place, cityID, category)
-	}
-	return dataPlaces
-}
-
-// Advisory marshals a Advisory value from the advisory package into
+// marshalAdvisory marshals a Advisory value from the advisory package into
 // a data Advisory value.
-func (m) Advisory(advisory advisory.Advisory) data.Advisory {
-	return data.Advisory{
-		Country:     advisory.Country,
-		CountryCode: advisory.CountryCode,
-		Continent:   advisory.Continent,
-		Score:       advisory.Score,
-		LastUpdated: advisory.LastUpdated,
-		Message:     advisory.Message,
-		Source:      advisory.Source,
+func marshalAdvisory(feedData advisoryfeed.Advisory) advisory.Advisory {
+	return advisory.Advisory{
+		Country:     feedData.Country,
+		CountryCode: feedData.CountryCode,
+		Continent:   feedData.Continent,
+		Score:       feedData.Score,
+		LastUpdated: feedData.LastUpdated,
+		Message:     feedData.Message,
+		Source:      feedData.Source,
 	}
 }
 
-// Weather marshals a Weather value from the weather package into
+// marshalWeather marshals a Weather value from the weather package into
 // a data Weather value.
-func (m) Weather(weather weather.Weather) data.Weather {
-	return data.Weather{
-		CityName:      weather.CityName,
-		Visibility:    weather.Visibility,
-		Desc:          weather.Desc,
-		Temp:          weather.Temp,
-		FeelsLike:     weather.FeelsLike,
-		MinTemp:       weather.MinTemp,
-		MaxTemp:       weather.MaxTemp,
-		Pressure:      weather.Pressure,
-		Humidity:      weather.Humidity,
-		WindSpeed:     weather.WindSpeed,
-		WindDirection: weather.WindDirection,
-		Sunrise:       weather.Sunrise,
-		Sunset:        weather.Sunset,
+func marshalWeather(feedData weatherfeed.Weather) weather.Weather {
+	return weather.Weather{
+		CityName:      feedData.CityName,
+		Visibility:    feedData.Visibility,
+		Desc:          feedData.Desc,
+		Temp:          feedData.Temp,
+		FeelsLike:     feedData.FeelsLike,
+		MinTemp:       feedData.MinTemp,
+		MaxTemp:       feedData.MaxTemp,
+		Pressure:      feedData.Pressure,
+		Humidity:      feedData.Humidity,
+		WindSpeed:     feedData.WindSpeed,
+		WindDirection: feedData.WindDirection,
+		Sunrise:       feedData.Sunrise,
+		Sunset:        feedData.Sunset,
 	}
 }

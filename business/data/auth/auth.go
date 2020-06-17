@@ -1,4 +1,5 @@
-package data
+// Package auth provides authentication and authorization support.
+package auth
 
 import (
 	"crypto/rsa"
@@ -28,8 +29,8 @@ type StandardClaims struct {
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
-	Auth StandardClaims
 	jwt.StandardClaims
+	Auth StandardClaims
 }
 
 // Valid is called during the parsing of a token.
@@ -67,9 +68,9 @@ func (c Claims) HasRole(roles ...string) bool {
 // endpoint. See https://auth0.com/docs/jwks for more details.
 type KeyLookupFunc func(kid string) (*rsa.PublicKey, error)
 
-// Authenticator is used to authenticate clients. It can generate a token for a
+// Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
-type Authenticator struct {
+type Auth struct {
 	privateKey       *rsa.PrivateKey
 	activeKID        string
 	algorithm        string
@@ -77,12 +78,12 @@ type Authenticator struct {
 	parser           *jwt.Parser
 }
 
-// NewAuthenticator creates an *Authenticator for use. It will error if:
+// New creates an *Authenticator for use. It will error if:
 // - The private key is nil.
 // - The public key func is nil.
 // - The key ID is blank.
 // - The specified algorithm is unsupported.
-func NewAuthenticator(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Authenticator, error) {
+func New(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Auth, error) {
 	if privateKey == nil {
 		return nil, errors.New("private key cannot be nil")
 	}
@@ -103,7 +104,7 @@ func NewAuthenticator(privateKey *rsa.PrivateKey, activeKID, algorithm string, p
 		ValidMethods: []string{algorithm},
 	}
 
-	a := Authenticator{
+	a := Auth{
 		privateKey:       privateKey,
 		activeKID:        activeKID,
 		algorithm:        algorithm,
@@ -115,7 +116,7 @@ func NewAuthenticator(privateKey *rsa.PrivateKey, activeKID, algorithm string, p
 }
 
 // GenerateToken generates a signed JWT token string representing the user Claims.
-func (a *Authenticator) GenerateToken(claims Claims) (string, error) {
+func (a *Auth) GenerateToken(claims Claims) (string, error) {
 	method := jwt.GetSigningMethod(a.algorithm)
 
 	tkn := jwt.NewWithClaims(method, claims)
@@ -129,9 +130,9 @@ func (a *Authenticator) GenerateToken(claims Claims) (string, error) {
 	return str, nil
 }
 
-// ParseClaims recreates the Claims that were used to generate a token. It
+// ValidateToken recreates the Claims that were used to generate a token. It
 // verifies that the token was signed using our key.
-func (a *Authenticator) ParseClaims(tokenStr string) (Claims, error) {
+func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
 
 	// keyFunc is a function that returns the public key for validating a token.
 	// We use the parsed (but unverified) token to find the key id. That ID is

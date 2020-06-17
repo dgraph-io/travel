@@ -20,7 +20,7 @@ type index struct {
 	mapsKey         string
 }
 
-func newIndex(dbConfig data.DBConfig, browserEndpoint string, mapsKey string) (*index, error) {
+func newIndex(gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey string) (*index, error) {
 	rawTmpl, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading index page")
@@ -34,8 +34,8 @@ func newIndex(dbConfig data.DBConfig, browserEndpoint string, mapsKey string) (*
 	index := index{
 		tmpl:            tmpl,
 		graphQLEndpoint: browserEndpoint,
-		authHeaderName:  dbConfig.AuthHeaderName,
-		authToken:       dbConfig.AuthToken,
+		authHeaderName:  gqlConfig.AuthHeaderName,
+		authToken:       gqlConfig.AuthToken,
 		mapsKey:         mapsKey,
 	}
 

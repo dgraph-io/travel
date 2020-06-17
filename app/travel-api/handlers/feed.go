@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/data/schema"
 	"github.com/dgraph-io/travel/business/loader"
 	"github.com/dgraph-io/travel/foundation/web"
 	"github.com/pkg/errors"
@@ -15,12 +16,12 @@ import (
 
 type feed struct {
 	log          *log.Logger
-	dbConfig     data.DBConfig
+	gqlConfig    data.GraphQLConfig
 	loaderConfig loader.Config
 }
 
 func (f *feed) upload(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var request data.UploadFeedRequest
+	var request schema.UploadFeedRequest
 	if err := web.Decode(r, &request); err != nil {
 		return errors.Wrap(err, "decoding request")
 	}
@@ -37,7 +38,7 @@ func (f *feed) upload(ctx context.Context, w http.ResponseWriter, r *http.Reques
 			Lat:         request.Lat,
 			Lng:         request.Lng,
 		}
-		if err := loader.UpdateData(f.log, f.dbConfig, f.loaderConfig, search); err != nil {
+		if err := loader.UpdateData(f.log, f.gqlConfig, f.loaderConfig, search); err != nil {
 			log.Printf("%s : (%d) : %s %s -> %s (%s) : ERROR : %v",
 				v.TraceID, v.StatusCode,
 				r.Method, r.URL.Path,
@@ -52,7 +53,7 @@ func (f *feed) upload(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		)
 	}()
 
-	resp := data.UploadFeedResponse{
+	resp := schema.UploadFeedResponse{
 		CountryCode: request.CountryCode,
 		CityName:    request.CityName,
 		Lat:         request.Lat,

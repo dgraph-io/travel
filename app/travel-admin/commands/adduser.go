@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/pkg/errors"
 )
 
@@ -13,21 +14,18 @@ import (
 var ErrHelp = errors.New("provided help")
 
 // AddUser handles the creation of users.
-func AddUser(dbConfig data.DBConfig, newUser data.NewUser) error {
+func AddUser(gqlConfig data.GraphQLConfig, newUser user.NewUser) error {
 	if newUser.Name == "" || newUser.Email == "" || newUser.Password == "" || newUser.Role == "" {
 		fmt.Println("help: adduser <name> <email> <password> <role>")
 		return ErrHelp
 	}
 
-	db, err := data.NewDB(dbConfig)
-	if err != nil {
-		return errors.Wrap(err, "init database")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	u, err := db.Mutate.AddUser(ctx, newUser, time.Now())
+	gql := data.NewGraphQL(gqlConfig)
+
+	u, err := user.Add(ctx, gql, newUser, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "adding user")
 	}

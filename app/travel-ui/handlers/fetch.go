@@ -8,27 +8,26 @@ import (
 
 	"github.com/AvraamMavridis/randomcolor"
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/data/city"
+	"github.com/dgraph-io/travel/business/data/place"
 	"github.com/dimfeld/httptreemux/v5"
 	"github.com/pkg/errors"
 )
 
 type fetch struct {
-	dbConfig data.DBConfig
+	gqlConfig data.GraphQLConfig
 }
 
 func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	db, err := data.NewDB(f.dbConfig)
-	if err != nil {
-		return errors.Wrap(err, "new db")
-	}
+	gql := data.NewGraphQL(f.gqlConfig)
 
 	params := httptreemux.ContextParams(r.Context())
-	city, err := db.Query.CityByName(context.Background(), params["city"])
+	city, err := city.OneByName(context.Background(), gql, params["city"])
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
 
-	places, err := db.Query.Places(context.Background(), city.ID)
+	places, err := place.List(context.Background(), gql, city.ID)
 	if err != nil {
 		return errors.Wrap(err, "query places")
 	}
@@ -61,7 +60,7 @@ type doc struct {
 	Links []link `json:"links"`
 }
 
-func marshalCity(cityName string, places []data.Place) (string, error) {
+func marshalCity(cityName string, places []place.Place) (string, error) {
 
 	// Need the unique set of categories.
 	categories := make(map[string]string)

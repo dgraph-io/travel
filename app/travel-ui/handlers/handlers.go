@@ -15,11 +15,11 @@ import (
 )
 
 // UI constructs an http.Handler with all application routes defined.
-func UI(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DBConfig, browserEndpoint string, mapsKey string) (*web.App, error) {
+func UI(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey string) (*web.App, error) {
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	// Register the index page for the website.
-	index, err := newIndex(dbConfig, browserEndpoint, mapsKey)
+	index, err := newIndex(gqlConfig, browserEndpoint, mapsKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading index template")
 	}
@@ -36,14 +36,14 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, dbConfig data.DB
 
 	// Register health check endpoint.
 	check := check{
-		build:    build,
-		dbConfig: dbConfig,
+		build:     build,
+		gqlConfig: gqlConfig,
 	}
 	app.Handle(http.MethodGet, "/health", check.health)
 
 	// Register data load endpoint.
 	fetch := fetch{
-		dbConfig: dbConfig,
+		gqlConfig: gqlConfig,
 	}
 	app.Handle("GET", "/data/:city", fetch.data)
 

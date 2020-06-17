@@ -1,4 +1,5 @@
-package data
+// Package advisory provides support for managing advisory data in the database.
+package advisory
 
 import (
 	"context"
@@ -8,42 +9,75 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReplaceAdvisory replaces an advisory in the database and connects it
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound = errors.New("advisory not found")
+)
+
+// Replace replaces an advisory in the database and connects it
 // to the specified city.
-func (m mutate) ReplaceAdvisory(ctx context.Context, cityID string, adv Advisory) (Advisory, error) {
-	if err := advisory.delete(ctx, m.query, m.graphql, cityID); err != nil {
-		if err != ErrAdvisoryNotFound {
+func Replace(ctx context.Context, gql *graphql.GraphQL, cityID string, advisory Advisory) (Advisory, error) {
+	if err := delete(ctx, gql, cityID); err != nil {
+		if err != ErrNotFound {
 			return Advisory{}, errors.Wrap(err, "deleting advisory from database")
 		}
 	}
 
-	adv, err := advisory.add(ctx, m.graphql, adv)
+	advisory, err := add(ctx, gql, advisory)
 	if err != nil {
 		return Advisory{}, errors.Wrap(err, "adding advisory to database")
 	}
 
-	if err := advisory.updateCity(ctx, m.graphql, cityID, adv); err != nil {
+	if err := updateCity(ctx, gql, cityID, advisory); err != nil {
 		return Advisory{}, errors.Wrap(err, "replace advisory in city")
 	}
 
-	return adv, nil
+	return advisory, nil
+}
+
+// One returns the specified advisory from the database by the city id.
+func One(ctx context.Context, gql *graphql.GraphQL, cityID string) (Advisory, error) {
+	query := fmt.Sprintf(`
+query {
+	getCity(id: %q) {
+		advisory {
+			id
+			continent
+			country
+			country_code
+			last_updated
+			message
+			score
+			source
+		}
+	}
+}`, cityID)
+
+	var result struct {
+		GetCity struct {
+			Advisory Advisory `json:"advisory"`
+		} `json:"getCity"`
+	}
+	if err := gql.Query(ctx, query, &result); err != nil {
+		return Advisory{}, errors.Wrap(err, "query failed")
+	}
+
+	if result.GetCity.Advisory.ID == "" {
+		return Advisory{}, ErrNotFound
+	}
+
+	return result.GetCity.Advisory, nil
 }
 
 // =============================================================================
 
-type adv struct {
-	prepare advisoryPrepare
-}
-
-var advisory adv
-
-func (a adv) add(ctx context.Context, graphql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
+func add(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
 	if advisory.ID != "" {
 		return Advisory{}, errors.New("advisory contains id")
 	}
 
-	mutation, result := a.prepare.add(advisory)
-	if err := graphql.Query(ctx, mutation, &result); err != nil {
+	mutation, result := prepareAdd(advisory)
+	if err := gql.Query(ctx, mutation, &result); err != nil {
 		return Advisory{}, errors.Wrap(err, "failed to add place")
 	}
 
@@ -55,13 +89,13 @@ func (a adv) add(ctx context.Context, graphql *graphql.GraphQL, advisory Advisor
 	return advisory, nil
 }
 
-func (a adv) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID string, advisory Advisory) error {
+func updateCity(ctx context.Context, gql *graphql.GraphQL, cityID string, advisory Advisory) error {
 	if advisory.ID == "" {
 		return errors.New("advisory missing id")
 	}
 
-	mutation, result := a.prepare.updateCity(cityID, advisory)
-	err := graphql.Query(ctx, mutation, &result)
+	mutation, result := prepareUpdateCity(cityID, advisory)
+	err := gql.Query(ctx, mutation, &result)
 	if err != nil {
 		return errors.Wrap(err, "failed to update city")
 	}
@@ -69,14 +103,14 @@ func (a adv) updateCity(ctx context.Context, graphql *graphql.GraphQL, cityID st
 	return nil
 }
 
-func (a adv) delete(ctx context.Context, query query, graphql *graphql.GraphQL, cityID string) error {
-	advisory, err := query.Advisory(ctx, cityID)
+func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
+	advisory, err := One(ctx, gql, cityID)
 	if err != nil {
 		return err
 	}
 
-	mutation, result := a.prepare.delete(advisory.ID)
-	if err := graphql.Query(ctx, mutation, &result); err != nil {
+	mutation, result := prepareDelete(advisory.ID)
+	if err := gql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}
 
@@ -90,10 +124,8 @@ func (a adv) delete(ctx context.Context, query query, graphql *graphql.GraphQL, 
 
 // =============================================================================
 
-type advisoryPrepare struct{}
-
-func (advisoryPrepare) add(advisory Advisory) (string, advisoryAddResult) {
-	var result advisoryAddResult
+func prepareAdd(advisory Advisory) (string, addResult) {
+	var result addResult
 	mutation := fmt.Sprintf(`
 mutation {
 	addAdvisory(input: [{
@@ -113,8 +145,8 @@ mutation {
 	return mutation, result
 }
 
-func (advisoryPrepare) updateCity(cityID string, advisory Advisory) (string, cityUpdateResult) {
-	var result cityUpdateResult
+func prepareUpdateCity(cityID string, advisory Advisory) (string, updateCityResult) {
+	var result updateCityResult
 	mutation := fmt.Sprintf(`
 mutation {
 	updateCity(input: {
@@ -142,8 +174,8 @@ mutation {
 	return mutation, result
 }
 
-func (advisoryPrepare) delete(advisoryID string) (string, advisoryDeleteResult) {
-	var result advisoryDeleteResult
+func prepareDelete(advisoryID string) (string, deleteResult) {
+	var result deleteResult
 	mutation := fmt.Sprintf(`
 mutation {
 	deleteAdvisory(filter: { id: [%q] })
@@ -151,34 +183,4 @@ mutation {
 }`, advisoryID, result.document())
 
 	return mutation, result
-}
-
-type advisoryAddResult struct {
-	AddAdvisory struct {
-		Advisory []struct {
-			ID string `json:"id"`
-		} `json:"advisory"`
-	} `json:"addAdvisory"`
-}
-
-func (advisoryAddResult) document() string {
-	return `{
-		advisory {
-			id
-		}
-	}`
-}
-
-type advisoryDeleteResult struct {
-	DeleteAdvisory struct {
-		Msg     string
-		NumUids int
-	} `json:"deleteAdvisory"`
-}
-
-func (advisoryDeleteResult) document() string {
-	return `{
-		msg,
-		numUids,
-	}`
 }

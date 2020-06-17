@@ -8,28 +8,27 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/data/auth"
+	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(dbConfig data.DBConfig, email string, privateKeyFile string, algorithm string) error {
+func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string, algorithm string) error {
 	if email == "" || privateKeyFile == "" || algorithm == "" {
 		fmt.Println("help: gentoken <email> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")
 		return ErrHelp
 	}
 
-	db, err := data.NewDB(dbConfig)
-	if err != nil {
-		return errors.Wrap(err, "init database")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	gql := data.NewGraphQL(gqlConfig)
+
 	// Retrieve the user by email so we have the roles for this user.
-	user, err := db.Query.UserByEmail(ctx, email)
+	user, err := user.OneByEmail(ctx, gql, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}
@@ -63,7 +62,7 @@ func GenToken(dbConfig data.DBConfig, email string, privateKeyFile string, algor
 	// to the corresponding public key, the algorithms to use (RS256), and the
 	// key lookup function to perform the actual retrieve of the KID to public
 	// key lookup.
-	authenticator, err := data.NewAuthenticator(privateKey, keyID, algorithm, keyLookupFunc)
+	a, err := auth.New(privateKey, keyID, algorithm, keyLookupFunc)
 	if err != nil {
 		return errors.Wrap(err, "constructing authenticator")
 	}
@@ -79,14 +78,14 @@ func GenToken(dbConfig data.DBConfig, email string, privateKeyFile string, algor
 	// nbf (not before time): Time before which the JWT must not be accepted for processing
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
-	claims := data.Claims{
+	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "travel project",
 			Subject:   user.ID,
 			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		Auth: data.StandardClaims{
+		Auth: auth.StandardClaims{
 			Role: user.Role,
 		},
 	}
@@ -95,7 +94,7 @@ func GenToken(dbConfig data.DBConfig, email string, privateKeyFile string, algor
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := authenticator.GenerateToken(claims)
+	token, err := a.GenerateToken(claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

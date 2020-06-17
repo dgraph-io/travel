@@ -5,12 +5,13 @@ import (
 	"log"
 
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/data/schema"
 	"github.com/dgraph-io/travel/business/loader"
 )
 
 // Schema handles the updating of the schema.
-func Schema(dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error {
-	if err := loader.UpdateSchema(dbConfig, schemaConfig); err != nil {
+func Schema(gqlConfig data.GraphQLConfig, config schema.Config) error {
+	if err := loader.UpdateSchema(gqlConfig, config); err != nil {
 		return err
 	}
 
@@ -19,7 +20,7 @@ func Schema(dbConfig data.DBConfig, schemaConfig data.SchemaConfig) error {
 }
 
 // Seed handles loading the databse with city data.
-func Seed(log *log.Logger, dbConfig data.DBConfig, config loader.Config) error {
+func Seed(log *log.Logger, gqlConfig data.GraphQLConfig, config loader.Config) error {
 	var cities = []struct {
 		CountryCode string
 		Name        string
@@ -40,7 +41,7 @@ func Seed(log *log.Logger, dbConfig data.DBConfig, config loader.Config) error {
 		}
 
 		log.Println("main: Updating data for city:", search.CityName)
-		if err := loader.UpdateData(log, dbConfig, config, search); err != nil {
+		if err := loader.UpdateData(log, gqlConfig, config, search); err != nil {
 			return err
 		}
 	}
