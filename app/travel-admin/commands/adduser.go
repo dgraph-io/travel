@@ -10,9 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ErrHelp provides context that help was given.
-var ErrHelp = errors.New("provided help")
-
 // AddUser handles the creation of users.
 func AddUser(gqlConfig data.GraphQLConfig, newUser user.NewUser) error {
 	if newUser.Name == "" || newUser.Email == "" || newUser.Password == "" || newUser.Role == "" {
