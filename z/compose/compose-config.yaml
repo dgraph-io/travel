@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+
+  travel-api:
+      environment:
+        - TRAVEL_API_KEYS_MAPS_KEY=
+
+  travel-ui:
+      environment:
+        - TRAVEL_API_KEYS_MAPS_KEY=

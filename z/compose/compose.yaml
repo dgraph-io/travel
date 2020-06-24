@@ -1,4 +1,3 @@
-# https://docs.docker.com/compose/compose-file
 version: '3.8'
 
 networks:
@@ -41,8 +40,6 @@ services:
       - 4000:4000 # DEBUG API
     depends_on:
       - dgraph-alpha
-    environment:
-      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
 
   travel-ui:
     container_name: travel-ui
@@ -54,5 +51,3 @@ services:
       - 4080:4080 # DEBUG API
     depends_on:
       - dgraph-alpha
-    environment:
-      - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>

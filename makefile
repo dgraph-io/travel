@@ -29,7 +29,7 @@ travel-ui:
 run: up seed browse
 
 up:
-	docker-compose -f z/compose/compose.yaml up --detach --remove-orphans
+	docker-compose -f z/compose/compose.yaml -f z/compose/compose-config.yaml up --detach --remove-orphans
 
 down:
 	docker-compose -f z/compose/compose.yaml down --remove-orphans
@@ -79,7 +79,7 @@ kind-delete:
 slash-run: slash-up seed slash-browse
 
 slash-up:
-	docker-compose -f z/compose/compose-slash.yaml up --detach --remove-orphans
+	docker-compose -f z/compose/compose-slash.yaml -f z/compose/compose-slash-config.yaml up --detach --remove-orphans
 
 slash-down:
 	docker-compose -f z/compose/compose-slash.yaml down --remove-orphans
