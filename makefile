@@ -57,7 +57,7 @@ kind-services:
 	kustomize build z/k8s/dev | kubectl apply -f -
 
 kind-schema:
-	go run app/travel-admin/main.go schema --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload
+	go run app/travel-admin/main.go --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload schema
 
 kind-seed: kind-schema
 	go run app/travel-admin/main.go seed 
