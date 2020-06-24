@@ -7,7 +7,6 @@ networks:
 
 services:
 
-  # This is the core service API.
   travel-api:
     container_name: travel-api
     networks:
@@ -22,7 +21,6 @@ services:
       - TRAVEL_DGRAPH_AUTH_HEADER_NAME="X-Auth-Token"
       - TRAVEL_DGRAPH_AUTH_TOKEN=<ENTER_TOKEN_HERE>
 
-  # This is the core service API.
   travel-ui:
     container_name: travel-ui
     networks:

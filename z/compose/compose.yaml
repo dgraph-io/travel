@@ -7,7 +7,6 @@ networks:
 
 services:
 
-  # Database
   dgraph-zero:
     container_name: dgraph-zero
     networks:
@@ -32,7 +31,6 @@ services:
       - DGRAPH_ALPHA_WHITELIST=0.0.0.0/0
     command: dgraph alpha --vmodule=server=3
 
-  # This is the core service API.
   travel-api:
     container_name: travel-api
     networks:
@@ -46,7 +44,6 @@ services:
     environment:
       - TRAVEL_API_KEYS_MAPS_KEY=<ENTER_API_KEY>
 
-  # This is the core service API.
   travel-ui:
     container_name: travel-ui
     networks:

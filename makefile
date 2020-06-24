@@ -1,12 +1,13 @@
 SHELL := /bin/bash
 
+# ==============================================================================
 # Building containers
 
 all: travel-api travel-ui
 
 travel-api:
 	docker build \
-		-f dockerfile.travel-api \
+		-f z/compose/dockerfile.travel-api \
 		-t travel-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=travel-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -15,45 +16,81 @@ travel-api:
 
 travel-ui:
 	docker build \
-		-f dockerfile.travel-ui \
+		-f z/compose/dockerfile.travel-ui \
 		-t travel-ui-amd64:1.0 \
 		--build-arg PACKAGE_NAME=travel-ui \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
+# ==============================================================================
 # Running from within docker compose
 
 run: up seed browse
 
 up:
-	docker-compose -f compose.yaml up --detach --remove-orphans
+	docker-compose -f z/compose/compose.yaml up --detach --remove-orphans
 
 down:
-	docker-compose -f compose.yaml down --remove-orphans
+	docker-compose -f z/compose/compose.yaml down --remove-orphans
 
 browse:
 	python -m webbrowser "http://localhost"
 
 logs:
-	docker-compose -f compose.yaml logs -f
+	docker-compose -f z/compose/compose.yaml logs -f
 
+# ==============================================================================
+# Running from within k8s/dev
+
+kind-up:
+	kind create cluster --name dgraph-travel-cluster --config z/k8s/dev/kind-config.yaml
+
+kind-down:
+	kind delete cluster --name dgraph-travel-cluster
+
+kind-load:
+	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
+	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
+
+kind-services:
+	kustomize build z/k8s/dev | kubectl apply -f -
+
+kind-schema:
+	go run app/travel-admin/main.go schema --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload
+
+kind-seed: kind-schema
+	go run app/travel-admin/main.go seed 
+
+kind-logs:
+	kubectl logs -lapp=travel --all-containers=true -f
+
+kind-status:
+	kubectl get nodes
+	kubectl get pods
+	kubectl get services travel
+
+kind-delete:
+	kustomize build . | kubectl delete -f -
+
+# ==============================================================================
 # Running from within the local with Slash
 
 slash-run: slash-up seed slash-browse
 
 slash-up:
-	docker-compose -f compose-slash.yaml up --detach --remove-orphans
+	docker-compose -f z/compose/compose-slash.yaml up --detach --remove-orphans
 
 slash-down:
-	docker-compose -f compose-slash.yaml down --remove-orphans
+	docker-compose -f z/compose/compose-slash.yaml down --remove-orphans
 
 slash-browse:
 	python -m webbrowser "http://localhost"
 
 slash-logs:
-	docker-compose -f compose-slash.yaml logs -f
+	docker-compose -f z/compose/compose-slash.yaml logs -f
 
+# ==============================================================================
 # Running Local
 
 local-run: local-up seed browse
@@ -81,6 +118,7 @@ api-logs:
 ui-logs:
 	tail -F ui.log
 
+# ==============================================================================
 # Administration
 
 schema:
@@ -114,6 +152,7 @@ deps-upgrade:
 deps-cleancache:
 	go clean -modcache
 
+# ==============================================================================
 # Docker support
 
 FILES := $(shell docker ps -aq)
@@ -128,6 +167,7 @@ clean:
 logs-local:
 	docker logs -f $(FILES)
 
+# ==============================================================================
 # Git support
 
 install-hooks:

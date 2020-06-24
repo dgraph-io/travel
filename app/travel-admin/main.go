@@ -64,8 +64,13 @@ func run(log *log.Logger) error {
 	cfg.Version.SVN = build
 	cfg.Version.Desc = "copyright information here"
 
+	args := os.Args[1:]
+	if len(os.Args) > 2 {
+		args = os.Args[2:]
+	}
+
 	const prefix = "TRAVEL"
-	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
+	if err := conf.Parse(args, prefix, &cfg); err != nil {
 		switch err {
 		case conf.ErrHelpWanted:
 			usage, err := conf.Usage(prefix, &cfg)
@@ -113,7 +118,12 @@ func run(log *log.Logger) error {
 		AuthToken:      cfg.Dgraph.AuthToken,
 	}
 
-	switch cfg.Args.Num(0) {
+	var command string
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	switch command {
 	case "schema":
 		config := schema.Config{
 			CustomFunctions: schema.CustomFunctions{
