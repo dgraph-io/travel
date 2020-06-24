@@ -7,7 +7,7 @@ all: travel-api travel-ui
 
 travel-api:
 	docker build \
-		-f z/compose/dockerfile.travel-api \
+		-f zarf/compose/dockerfile.travel-api \
 		-t travel-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=travel-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -16,7 +16,7 @@ travel-api:
 
 travel-ui:
 	docker build \
-		-f z/compose/dockerfile.travel-ui \
+		-f zarf/compose/dockerfile.travel-ui \
 		-t travel-ui-amd64:1.0 \
 		--build-arg PACKAGE_NAME=travel-ui \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -29,22 +29,22 @@ travel-ui:
 run: up seed browse
 
 up:
-	docker-compose -f z/compose/compose.yaml -f z/compose/compose-config.yaml up --detach --remove-orphans
+	docker-compose -f zarf/compose/compose.yaml -f zarf/compose/compose-config.yaml up --detach --remove-orphans
 
 down:
-	docker-compose -f z/compose/compose.yaml down --remove-orphans
+	docker-compose -f zarf/compose/compose.yaml down --remove-orphans
 
 browse:
 	python -m webbrowser "http://localhost"
 
 logs:
-	docker-compose -f z/compose/compose.yaml logs -f
+	docker-compose -f zarf/compose/compose.yaml logs -f
 
 # ==============================================================================
 # Running from within k8s/dev
 
 kind-up:
-	kind create cluster --name dgraph-travel-cluster --config z/k8s/dev/kind-config.yaml
+	kind create cluster --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name dgraph-travel-cluster
@@ -54,7 +54,7 @@ kind-load:
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
 
 kind-services:
-	kustomize build z/k8s/dev | kubectl apply -f -
+	kustomize build zarf/k8s/dev | kubectl apply -f -
 
 kind-schema:
 	go run app/travel-admin/main.go --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload schema
@@ -79,16 +79,16 @@ kind-delete:
 slash-run: slash-up seed slash-browse
 
 slash-up:
-	docker-compose -f z/compose/compose-slash.yaml -f z/compose/compose-slash-config.yaml up --detach --remove-orphans
+	docker-compose -f zarf/compose/compose-slash.yaml -f zarf/compose/compose-slash-config.yaml up --detach --remove-orphans
 
 slash-down:
-	docker-compose -f z/compose/compose-slash.yaml down --remove-orphans
+	docker-compose -f zarf/compose/compose-slash.yaml down --remove-orphans
 
 slash-browse:
 	python -m webbrowser "http://localhost"
 
 slash-logs:
-	docker-compose -f z/compose/compose-slash.yaml logs -f
+	docker-compose -f zarf/compose/compose-slash.yaml logs -f
 
 # ==============================================================================
 # Running Local
