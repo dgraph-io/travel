@@ -2,10 +2,21 @@ version: '3.8'
 
 services:
 
+  dgraph-zero:
+    environment:
+      - DGRAPH_ZERO_MY=dgraph-zero:5080
+
+  dgraph-alpha:
+    environment:
+      - DGRAPH_ALPHA_MY=dgraph-alpha:7080
+      - DGRAPH_ALPHA_LRU_MB=1024
+      - DGRAPH_ALPHA_ZERO=dgraph-zero:5080
+      - DGRAPH_ALPHA_WHITELIST=0.0.0.0/0
+
   travel-api:
-      environment:
-        - TRAVEL_API_KEYS_MAPS_KEY=
+    environment:
+      - TRAVEL_API_KEYS_MAPS_KEY=
 
   travel-ui:
-      environment:
-        - TRAVEL_API_KEYS_MAPS_KEY=
+    environment:
+      - TRAVEL_API_KEYS_MAPS_KEY=
