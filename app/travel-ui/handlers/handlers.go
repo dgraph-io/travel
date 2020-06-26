@@ -23,7 +23,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.G
 	if err != nil {
 		return nil, errors.Wrap(err, "loading index template")
 	}
-	app.Handle("GET", "/", index.handler)
+	app.Handle(http.MethodGet, "/", index.handler)
 
 	// Register the assets.
 	fs := http.FileServer(http.Dir("assets"))
@@ -32,7 +32,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.G
 		fs.ServeHTTP(w, r)
 		return nil
 	}
-	app.Handle("GET", "/assets/*", f)
+	app.Handle(http.MethodGet, "/assets/*", f)
 
 	// Register health check endpoint.
 	check := check{
@@ -45,7 +45,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.G
 	fetch := fetch{
 		gqlConfig: gqlConfig,
 	}
-	app.Handle("GET", "/data/:city", fetch.data)
+	app.Handle(http.MethodGet, "/data/:city", fetch.data)
 
 	return app, nil
 }

@@ -32,6 +32,12 @@ spec:
           containerPort: 3000
         - name: api-debug
           containerPort: 4000
+        readinessProbe:
+          httpGet:
+            path: /v1/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 15
       - name: ui
         image: travel-ui-amd64:1.0
         env:
@@ -50,6 +56,12 @@ spec:
           containerPort: 80
         - name: ui-debug
           containerPort: 4080
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
