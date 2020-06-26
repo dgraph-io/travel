@@ -143,7 +143,7 @@ func readiness(url string) func(t *testing.T) {
 
 		tt := []tableTest{
 			{"timeout", 500 * time.Millisecond, time.Second, false},
-			{"ready", 500 * time.Millisecond, 5 * time.Second, true},
+			{"ready", 500 * time.Millisecond, 20 * time.Second, true},
 		}
 
 		t.Log("Given the need to be able to validate the database is ready.")
