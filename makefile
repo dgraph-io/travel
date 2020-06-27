@@ -56,11 +56,11 @@ kind-load:
 kind-services:
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
-kind-schema:
-	go run app/travel-admin/main.go --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload schema
-
-kind-seed: kind-schema
-	go run app/travel-admin/main.go seed 
+kind-update:
+	kubectl delete deployment travel
+	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
+	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
+	kustomize build zarf/k8s/dev | kubectl apply -f -
 
 kind-logs:
 	kubectl logs -lapp=travel --all-containers=true -f
@@ -70,8 +70,17 @@ kind-status:
 	kubectl get pods
 	kubectl get services travel
 
+kind-status-full:
+	kubectl describe pod -lapp=travel
+
 kind-delete:
 	kustomize build . | kubectl delete -f -
+
+kind-schema:
+	go run app/travel-admin/main.go --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload schema
+
+kind-seed: kind-schema
+	go run app/travel-admin/main.go seed 
 
 # ==============================================================================
 # Running from within the local with Slash
