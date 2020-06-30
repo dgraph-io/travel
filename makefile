@@ -3,9 +3,9 @@ SHELL := /bin/bash
 # ==============================================================================
 # Building containers
 
-all: travel-api travel-ui
+all: api ui
 
-travel-api:
+api:
 	docker build \
 		-f zarf/compose/dockerfile.travel-api \
 		-t travel-api-amd64:1.0 \
@@ -14,7 +14,7 @@ travel-api:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
-travel-ui:
+ui:
 	docker build \
 		-f zarf/compose/dockerfile.travel-ui \
 		-t travel-ui-amd64:1.0 \
@@ -50,17 +50,19 @@ kind-down:
 	kind delete cluster --name dgraph-travel-cluster
 
 kind-load:
-	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
+	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
 
 kind-services:
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
-kind-update:
-	kubectl delete deployment travel
-	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
+kind-api: api
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
-	kustomize build zarf/k8s/dev | kubectl apply -f -
+	kubectl delete pods -lapp=travel
+
+kind-ui: ui
+	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
+	kubectl delete pods -lapp=travel
 
 kind-logs:
 	kubectl logs -lapp=travel --all-containers=true -f
@@ -68,7 +70,6 @@ kind-logs:
 kind-status:
 	kubectl get nodes
 	kubectl get pods
-	kubectl get services travel
 
 kind-status-full:
 	kubectl describe pod -lapp=travel
