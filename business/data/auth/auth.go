@@ -66,13 +66,13 @@ func (c Claims) HasRole(roles ...string) bool {
 //
 // * KID to public key resolution is usually accomplished via a public JWKS
 // endpoint. See https://auth0.com/docs/jwks for more details.
-type KeyLookupFunc func(kid string) (*rsa.PublicKey, error)
+type KeyLookupFunc func(publicKID string) (*rsa.PublicKey, error)
 
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
 	privateKey       *rsa.PrivateKey
-	activeKID        string
+	publicKID        string
 	algorithm        string
 	pubKeyLookupFunc KeyLookupFunc
 	parser           *jwt.Parser
@@ -80,15 +80,15 @@ type Auth struct {
 
 // New creates an *Authenticator for use. It will error if:
 // - The private key is nil.
-// - The public key func is nil.
-// - The key ID is blank.
+// - The public key ID is empty.
 // - The specified algorithm is unsupported.
-func New(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Auth, error) {
+// - The public key function is nil.
+func New(privateKey *rsa.PrivateKey, publicKID, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Auth, error) {
 	if privateKey == nil {
 		return nil, errors.New("private key cannot be nil")
 	}
-	if activeKID == "" {
-		return nil, errors.New("active kid cannot be blank")
+	if publicKID == "" {
+		return nil, errors.New("public kid cannot be blank")
 	}
 	if jwt.GetSigningMethod(algorithm) == nil {
 		return nil, errors.Errorf("unknown algorithm %v", algorithm)
@@ -106,7 +106,7 @@ func New(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLooku
 
 	a := Auth{
 		privateKey:       privateKey,
-		activeKID:        activeKID,
+		publicKID:        publicKID,
 		algorithm:        algorithm,
 		pubKeyLookupFunc: publicKeyLookupFunc,
 		parser:           &parser,
@@ -120,7 +120,7 @@ func (a *Auth) GenerateToken(claims Claims) (string, error) {
 	method := jwt.GetSigningMethod(a.algorithm)
 
 	tkn := jwt.NewWithClaims(method, claims)
-	tkn.Header["kid"] = a.activeKID
+	tkn.Header["kid"] = a.publicKID
 
 	str, err := tkn.SignedString(a.privateKey)
 	if err != nil {
