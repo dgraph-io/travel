@@ -137,10 +137,6 @@ query {
 // =============================================================================
 
 func add(ctx context.Context, gql *graphql.GraphQL, user User) (User, error) {
-	if user.ID != "" {
-		return User{}, errors.New("user contains id")
-	}
-
 	mutation, result := prepareAdd(user)
 	if err := gql.Query(ctx, mutation, &result); err != nil {
 		return User{}, errors.Wrap(err, "failed to add user")
