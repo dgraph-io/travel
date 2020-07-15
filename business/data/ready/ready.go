@@ -17,6 +17,7 @@ import (
 // a check between each retry interval specified. The context holds the
 // total amount of time Readiness will wait to validate the DB is healthy.
 func Validate(ctx context.Context, url string, retryInterval time.Duration) error {
+	var t *time.Timer
 
 	// We will try until the context timeout has expired.
 	for {
@@ -31,13 +32,18 @@ func Validate(ctx context.Context, url string, retryInterval time.Duration) erro
 			return errors.Wrap(ctx.Err(), "timed out")
 		}
 
-		// Wait before we try again.
-		t := time.NewTimer(retryInterval)
+		// Create the timer if one doesn't exist.
+		if t == nil {
+			t = time.NewTimer(retryInterval)
+		}
+
+		// Wait before we try again or timeout.
 		select {
 		case <-ctx.Done():
 			t.Stop()
 			return errors.Wrap(ctx.Err(), "timed out")
 		case <-t.C:
+			t.Reset(retryInterval)
 		}
 	}
 }

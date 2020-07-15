@@ -71,7 +71,6 @@ func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) (*s
 		AuthHeaderName: "X-Travel-Auth",
 		AuthToken:      schema.AdminJWT,
 	}
-
 	gql := data.NewGraphQL(gqlConfig)
 
 	schema, err := schema.New(gql, tc.schema)
