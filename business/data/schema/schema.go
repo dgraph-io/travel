@@ -70,10 +70,6 @@ func New(graphql *graphql.GraphQL, config Config) (*Schema, error) {
 // DropAll perform an alter operatation against the configured server
 // to remove all the data and schema.
 func (s *Schema) DropAll(ctx context.Context) error {
-	// if _, err := s.retrieve(ctx); err != nil {
-	// 	return errors.Wrap(err, "can't drop schema, db not ready")
-	// }
-
 	query := strings.NewReader(`{"drop_all": true}`)
 	if err := s.graphql.Do(ctx, "alter", query, nil); err != nil {
 		return errors.Wrap(err, "dropping schema and data")
@@ -86,6 +82,17 @@ func (s *Schema) DropAll(ctx context.Context) error {
 
 	if err := s.validate(ctx, schema); err != ErrNoSchemaExists {
 		return errors.Wrap(err, "unable to drop schema and data")
+	}
+
+	return nil
+}
+
+// DropData perform an alter operatation against the configured server
+// to remove all the data and schema.
+func (s *Schema) DropData(ctx context.Context) error {
+	query := strings.NewReader(`{"drop_op": "DATA"}`)
+	if err := s.graphql.Do(ctx, "alter", query, nil); err != nil {
+		return errors.Wrap(err, "dropping data")
 	}
 
 	return nil

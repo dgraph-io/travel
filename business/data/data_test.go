@@ -59,7 +59,7 @@ func TestData(t *testing.T) {
 }
 
 // waitReady provides support for making sure the database is ready to be used.
-func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) (*schema.Schema, *graphql.GraphQL) {
+func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) *graphql.GraphQL {
 	err := ready.Validate(ctx, tc.url, time.Second)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready: %v", tests.Failed, testID, err)
@@ -79,23 +79,23 @@ func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) (*s
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to prepare the schema.", tests.Success, testID)
 
-	return schema, gql
+	if err := schema.Create(ctx); err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
+
+	if err := schema.DropData(ctx); err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
+
+	return gql
 }
 
 // seedCity is a support test help function to consolidate the seeding of a
 // city since so many data tests need this functionality.
 func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newCity city.City) (*graphql.GraphQL, city.City) {
-	schema, gql := waitReady(t, ctx, testID, tc)
-
-	if err := schema.DropAll(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
-
-	if err := schema.Create(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
+	gql := waitReady(t, ctx, testID, tc)
 
 	city, err := city.Add(ctx, gql, newCity)
 	if err != nil {
@@ -109,17 +109,7 @@ func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newC
 // seedUser is a support test help function to consolidate the seeding of a
 // user since so many data tests need this functionality.
 func seedUser(t *testing.T, ctx context.Context, testID int, tc TestConfig, newUser user.NewUser, now time.Time) (*graphql.GraphQL, user.User) {
-	schema, gql := waitReady(t, ctx, testID, tc)
-
-	if err := schema.DropAll(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
-
-	if err := schema.Create(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
+	gql := waitReady(t, ctx, testID, tc)
 
 	user, err := user.Add(ctx, gql, newUser, now)
 	if err != nil {
@@ -189,17 +179,7 @@ func addSchema(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				schema, _ := waitReady(t, ctx, 0, tc)
-
-				if err := schema.DropAll(ctx); err != nil {
-					t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
-				}
-				t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
-
-				if err := schema.Create(ctx); err != nil {
-					t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
-				}
-				t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
+				waitReady(t, ctx, 0, tc)
 			}
 		}
 	}

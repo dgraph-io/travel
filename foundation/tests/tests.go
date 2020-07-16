@@ -18,18 +18,20 @@ const (
 
 // NewUnit creates a test value with necessary application state to run
 // database tests. It will return the host to use to connect to the database.
-func NewUnit(t *testing.T) (url string, teardown func()) {
+func NewUnit(t *testing.T) (string, func()) {
 
 	// Start a DB container instance with dgraph running.
 	c := startDBContainer(t, dbImage)
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
-	teardown = func() {
+	teardown := func() {
 		t.Helper()
 		t.Log("tearing down test ...")
 		stopContainer(t, c.ID)
 	}
+
+	// url := "http://0.0.0.0:8080"
 
 	return c.URL, teardown
 }
