@@ -79,15 +79,24 @@ func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) *gr
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to prepare the schema.", tests.Success, testID)
 
+	// Performing this action here breaks the current version of Dgraph.
+	// To see this, uncomment this code and comment lines 96-99.
+	// This code used to work on an earlier version of dgraph.
+	//
+	// if err := schema.DropAll(ctx); err != nil {
+	// 	t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
+	// }
+	// t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
+
 	if err := schema.Create(ctx); err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to create the schema: %v", tests.Failed, testID, err)
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to create the schema.", tests.Success, testID)
 
 	if err := schema.DropData(ctx); err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data and schema: %v", tests.Failed, testID, err)
+		t.Fatalf("\t%s\tTest %d:\tShould be able to drop the data : %v", tests.Failed, testID, err)
 	}
-	t.Logf("\t%s\tTest %d:\tShould be able to drop the data and schema.", tests.Success, testID)
+	t.Logf("\t%s\tTest %d:\tShould be able to drop the data.", tests.Success, testID)
 
 	return gql
 }
