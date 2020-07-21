@@ -65,3 +65,5 @@ _**Video**_
 ## Reading
 
 [Why you should build your next app with a GraphQL database](https://dgraph.io/blog/post/graphdb-for-your-next-app/) - dgraph  
+[Dgraph, GraphQL, Schemas, and CRUD](https://www.ardanlabs.com/blog/2020/05/dgraph-graphql-schemas-crud.html) - Bill Kennedy  
+[Dgraph Database Semantics](https://www.ardanlabs.com/blog/2020/06/dgraph-database-semantics.html) - Bill Kennedy  
