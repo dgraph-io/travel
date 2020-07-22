@@ -10,11 +10,13 @@ require (
 	github.com/dimfeld/httptreemux/v5 v5.2.2
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
-	github.com/google/go-cmp v0.4.1
+	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
-	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
+	go.opencensus.io v0.22.4 // indirect
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	googlemaps.github.io/maps v1.2.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
