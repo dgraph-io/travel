@@ -216,16 +216,6 @@ func add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) 
 	return place, nil
 }
 
-func updateCity(ctx context.Context, gql *graphql.GraphQL, cityID string, placeID string) error {
-	mutation, result := prepareUpdateCity(cityID, placeID)
-	err := gql.Query(ctx, mutation, &result)
-	if err != nil {
-		return errors.Wrap(err, "failed to update city")
-	}
-
-	return nil
-}
-
 // =============================================================================
 
 func prepareAdd(place Place) (string, addResult) {
@@ -254,26 +244,6 @@ mutation {
 		place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
 		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID,
 		result.document())
-
-	return mutation, result
-}
-
-func prepareUpdateCity(cityID string, placeID string) (string, updateCityResult) {
-	var result updateCityResult
-	mutation := fmt.Sprintf(`
-mutation {
-	updateCity(input: {
-		filter: {
-		  id: [%q]
-		},
-		set: {
-			places: [{
-				id: %q
-			}]
-		}
-	})
-	%s
-}`, cityID, placeID, result.document())
 
 	return mutation, result
 }

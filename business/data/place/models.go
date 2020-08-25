@@ -38,19 +38,3 @@ func (addResult) document() string {
 		}
 	}`
 }
-
-type updateCityResult struct {
-	UpdateCity struct {
-		City []struct {
-			ID string `json:"id"`
-		} `json:"city"`
-	} `json:"updateCity"`
-}
-
-func (updateCityResult) document() string {
-	return `{
-		city {
-			id
-		}
-	}`
-}
