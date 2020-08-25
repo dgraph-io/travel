@@ -3,6 +3,7 @@ package weather
 // Weather contains the weather data points captured from the API.
 type Weather struct {
 	ID            string  `json:"id,omitempty"`
+	City          City    `json:"city"`
 	CityName      string  `json:"city_name"`
 	Visibility    string  `json:"visibility"`
 	Desc          string  `json:"description"`
@@ -18,6 +19,11 @@ type Weather struct {
 	Sunset        int     `json:"sunset"`
 }
 
+// City is used to capture the city id in relationships.
+type City struct {
+	ID string `json:"id"`
+}
+
 type addResult struct {
 	AddWeather struct {
 		Weather []struct {
@@ -29,22 +35,6 @@ type addResult struct {
 func (addResult) document() string {
 	return `{
 		weather {
-			id
-		}
-	}`
-}
-
-type updateCityResult struct {
-	UpdateCity struct {
-		City []struct {
-			ID string `json:"id"`
-		} `json:"city"`
-	} `json:"updateCity"`
-}
-
-func (updateCityResult) document() string {
-	return `{
-		city {
 			id
 		}
 	}`

@@ -16,8 +16,15 @@ var (
 
 // Replace replaces an advisory in the database and connects it
 // to the specified city.
-func Replace(ctx context.Context, gql *graphql.GraphQL, cityID string, advisory Advisory) (Advisory, error) {
-	if err := delete(ctx, gql, cityID); err != nil {
+func Replace(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
+	if advisory.ID != "" {
+		return Advisory{}, errors.New("advisory contains id")
+	}
+	if advisory.City.ID == "" {
+		return Advisory{}, errors.New("cityid not provided")
+	}
+
+	if err := delete(ctx, gql, advisory.City.ID); err != nil {
 		if err != ErrNotFound {
 			return Advisory{}, errors.Wrap(err, "deleting advisory from database")
 		}
@@ -26,10 +33,6 @@ func Replace(ctx context.Context, gql *graphql.GraphQL, cityID string, advisory 
 	advisory, err := add(ctx, gql, advisory)
 	if err != nil {
 		return Advisory{}, errors.Wrap(err, "adding advisory to database")
-	}
-
-	if err := updateCity(ctx, gql, cityID, advisory); err != nil {
-		return Advisory{}, errors.Wrap(err, "replace advisory in city")
 	}
 
 	return advisory, nil
@@ -42,6 +45,9 @@ query {
 	getCity(id: %q) {
 		advisory {
 			id
+			city {
+				id
+			}
 			continent
 			country
 			country_code
@@ -72,10 +78,6 @@ query {
 // =============================================================================
 
 func add(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
-	if advisory.ID != "" {
-		return Advisory{}, errors.New("advisory contains id")
-	}
-
 	mutation, result := prepareAdd(advisory)
 	if err := gql.Query(ctx, mutation, &result); err != nil {
 		return Advisory{}, errors.Wrap(err, "failed to add place")
@@ -87,20 +89,6 @@ func add(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory
 
 	advisory.ID = result.AddAdvisory.Advisory[0].ID
 	return advisory, nil
-}
-
-func updateCity(ctx context.Context, gql *graphql.GraphQL, cityID string, advisory Advisory) error {
-	if advisory.ID == "" {
-		return errors.New("advisory missing id")
-	}
-
-	mutation, result := prepareUpdateCity(cityID, advisory)
-	err := gql.Query(ctx, mutation, &result)
-	if err != nil {
-		return errors.Wrap(err, "failed to update city")
-	}
-
-	return nil
 }
 
 func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
@@ -129,6 +117,9 @@ func prepareAdd(advisory Advisory) (string, addResult) {
 	mutation := fmt.Sprintf(`
 mutation {
 	addAdvisory(input: [{
+		city: {
+			id: %q
+		}
 		continent: %q
 		country: %q
 		country_code: %q
@@ -138,36 +129,7 @@ mutation {
 		source: %q
 	}])
 	%s
-}`, advisory.Continent, advisory.Country, advisory.CountryCode,
-		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
-		result.document())
-
-	return mutation, result
-}
-
-func prepareUpdateCity(cityID string, advisory Advisory) (string, updateCityResult) {
-	var result updateCityResult
-	mutation := fmt.Sprintf(`
-mutation {
-	updateCity(input: {
-		filter: {
-		  id: [%q]
-		},
-		set: {
-			advisory: {
-				id: %q
-				continent: %q
-				country: %q
-				country_code: %q
-				last_updated: %q
-				message: %q
-				score: %f
-				source: %q
-			}
-		}
-	})
-	%s
-}`, cityID, advisory.ID, advisory.Continent, advisory.Country, advisory.CountryCode,
+}`, advisory.City.ID, advisory.Continent, advisory.Country, advisory.CountryCode,
 		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
 		result.document())
 

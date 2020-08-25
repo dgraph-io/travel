@@ -356,7 +356,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 					{
 						PlaceID:          "12345",
 						Category:         "test",
-						CityID:           place.CityID{ID: addedCity.ID},
+						City:             place.City{ID: addedCity.ID},
 						CityName:         "sydney",
 						Name:             "Bill's SPAM shack",
 						Address:          "123 Mocking Bird Lane",
@@ -371,7 +371,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 					{
 						PlaceID:          "65432",
 						Category:         "test",
-						CityID:           place.CityID{ID: addedCity.ID},
+						City:             place.City{ID: addedCity.ID},
 						CityName:         "sydney",
 						Name:             "Karthic Coffee",
 						Address:          "634 Ventura Blvd",
@@ -453,6 +453,7 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
 
 				newAdvisory := advisory.Advisory{
+					City:        advisory.City{ID: addedCity.ID},
 					Country:     "Australia",
 					CountryCode: "AU",
 					Continent:   "Australia",
@@ -462,7 +463,7 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 					Source:      "friendly neighborhood community engineers",
 				}
 
-				addedAdvisory, err := advisory.Replace(ctx, gql, addedCity.ID, newAdvisory)
+				addedAdvisory, err := advisory.Replace(ctx, gql, newAdvisory)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace an advisory in Dgraph: %v", tests.Failed, testID, err)
 				}
@@ -481,7 +482,7 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 
 				addedAdvisory.ID = ""
 				addedAdvisory.Score = 6
-				addedAdvisory, err = advisory.Replace(ctx, gql, addedCity.ID, addedAdvisory)
+				addedAdvisory, err = advisory.Replace(ctx, gql, addedAdvisory)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace an advisory twice in Dgraph: %v", tests.Failed, testID, err)
 				}
@@ -522,6 +523,7 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
 
 				newWeather := weather.Weather{
+					City:          weather.City{ID: addedCity.ID},
 					CityName:      "Sydney",
 					Visibility:    "clear",
 					Desc:          "going to be a great day",
@@ -537,7 +539,7 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 					Sunset:        10009945,
 				}
 
-				addedWeather, err := weather.Replace(ctx, gql, addedCity.ID, newWeather)
+				addedWeather, err := weather.Replace(ctx, gql, newWeather)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace the weather in Dgraph: %v", tests.Failed, testID, err)
 				}
@@ -556,7 +558,7 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 
 				addedWeather.ID = ""
 				addedWeather.Desc = "test replace"
-				addedWeather, err = weather.Replace(ctx, gql, addedCity.ID, addedWeather)
+				addedWeather, err = weather.Replace(ctx, gql, addedWeather)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace the weather twice in Dgraph: %v", tests.Failed, testID, err)
 				}

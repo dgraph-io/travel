@@ -63,12 +63,13 @@ type City {
 	lat: Float!
 	lng: Float!
 	places: [Place] @hasInverse(field: city)
-	advisory: Advisory
-	weather: Weather
+	advisory: Advisory @hasInverse(field: city)
+	weather: Weather @hasInverse(field: city)
 }
 
 type Advisory {
 	id: ID!
+	city: City!
 	continent: String!
 	country: String!
 	country_code: String!
@@ -97,6 +98,7 @@ type Place {
 
 type Weather {
 	id: ID!
+	city: City!
 	city_name: String!
 	description: String
 	feels_like: Float

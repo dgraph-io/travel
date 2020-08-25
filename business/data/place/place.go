@@ -20,6 +20,13 @@ var (
 // this function will fail but the found place is returned. If the city is
 // being added, the city with the id from the database is returned.
 func Add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) {
+	if place.ID != "" {
+		return Place{}, errors.New("place contains id")
+	}
+	if place.City.ID == "" {
+		return Place{}, errors.New("cityid not provided")
+	}
+
 	if place, err := OneByName(ctx, gql, place.Name); err == nil {
 		return place, ErrExists
 	}
@@ -27,10 +34,6 @@ func Add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) 
 	place, err := add(ctx, gql, place)
 	if err != nil {
 		return Place{}, errors.Wrap(err, "adding place to database")
-	}
-
-	if err := updateCity(ctx, gql, place.CityID.ID, place.ID); err != nil {
-		return Place{}, errors.Wrap(err, "adding place to city in database")
 	}
 
 	return place, nil
@@ -194,13 +197,6 @@ query {
 // =============================================================================
 
 func add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) {
-	if place.ID != "" {
-		return Place{}, errors.New("place contains id")
-	}
-	if place.CityID.ID == "" {
-		return Place{}, errors.New("cityid not provided")
-	}
-
 	for i := range place.LocationType {
 		if !strings.HasPrefix(place.LocationType[i], `"`) {
 			place.LocationType[i] = fmt.Sprintf(`"%s"`, place.LocationType[i])
@@ -254,7 +250,7 @@ mutation {
 		photo_id: %q
 	}])
 	%s
-}`, place.Address, place.AvgUserRating, place.Category, place.CityID.ID, place.CityName, place.GmapsURL,
+}`, place.Address, place.AvgUserRating, place.Category, place.City.ID, place.CityName, place.GmapsURL,
 		place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
 		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID,
 		result.document())

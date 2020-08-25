@@ -137,8 +137,8 @@ func replaceWeather(ctx context.Context, log *log.Logger, gql *graphql.GraphQL, 
 		return errors.Wrap(err, "searching weather")
 	}
 
-	newWeather := marshalWeather(feedData)
-	newWeather, err = weather.Replace(ctx, gql, cityID, newWeather)
+	newWeather := marshalWeather(feedData, cityID)
+	newWeather, err = weather.Replace(ctx, gql, newWeather)
 	if err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
@@ -154,8 +154,8 @@ func replaceAdvisory(ctx context.Context, log *log.Logger, gql *graphql.GraphQL,
 		return errors.Wrap(err, "searching advisory")
 	}
 
-	newAdvisory := marshalAdvisory(feedData)
-	newAdvisory, err = advisory.Replace(ctx, gql, cityID, newAdvisory)
+	newAdvisory := marshalAdvisory(feedData, cityID)
+	newAdvisory, err = advisory.Replace(ctx, gql, newAdvisory)
 	if err != nil {
 		return errors.Wrap(err, "replacing advisory")
 	}

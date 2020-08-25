@@ -3,6 +3,7 @@ package advisory
 // Advisory contains the travel advisory result captured for a city.
 type Advisory struct {
 	ID          string  `json:"id,omitempty"`
+	City        City    `json:"city"`
 	Country     string  `json:"country"`
 	CountryCode string  `json:"country_code"`
 	Continent   string  `json:"continent"`
@@ -10,6 +11,11 @@ type Advisory struct {
 	LastUpdated string  `json:"last_updated"`
 	Message     string  `json:"message"`
 	Source      string  `json:"source"`
+}
+
+// City is used to capture the city id in relationships.
+type City struct {
+	ID string `json:"id"`
 }
 
 type addResult struct {
@@ -23,22 +29,6 @@ type addResult struct {
 func (addResult) document() string {
 	return `{
 		advisory {
-			id
-		}
-	}`
-}
-
-type updateCityResult struct {
-	UpdateCity struct {
-		City []struct {
-			ID string `json:"id"`
-		} `json:"city"`
-	} `json:"updateCity"`
-}
-
-func (updateCityResult) document() string {
-	return `{
-		city {
 			id
 		}
 	}`

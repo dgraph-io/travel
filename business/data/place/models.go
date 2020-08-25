@@ -4,7 +4,7 @@ package place
 type Place struct {
 	ID               string   `json:"id,omitempty"`
 	Category         string   `json:"category"`
-	CityID           CityID   `json:"city"`
+	City             City     `json:"city"`
 	PlaceID          string   `json:"place_id"`
 	CityName         string   `json:"city_name"`
 	Name             string   `json:"name"`
@@ -18,8 +18,8 @@ type Place struct {
 	PhotoReferenceID string   `json:"photo_id"`
 }
 
-// CityID is used to capture the city id in relationships.
-type CityID struct {
+// City is used to capture the city id in relationships.
+type City struct {
 	ID string `json:"id"`
 }
 
