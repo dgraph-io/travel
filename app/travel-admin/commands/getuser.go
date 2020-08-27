@@ -22,7 +22,7 @@ func GetUser(gqlConfig data.GraphQLConfig, email string) error {
 
 	gql := data.NewGraphQL(gqlConfig)
 
-	u, err := user.OneByEmail(ctx, gql, email)
+	u, err := user.QueryByEmail(ctx, gql, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}

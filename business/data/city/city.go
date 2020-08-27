@@ -19,7 +19,7 @@ var (
 // this function will fail but the found city is returned. If the city is
 // being added, the city with the id from the database is returned.
 func Add(ctx context.Context, gql *graphql.GraphQL, city City) (City, error) {
-	if city, err := OneByName(ctx, gql, city.Name); err == nil {
+	if city, err := QueryByName(ctx, gql, city.Name); err == nil {
 		return city, ErrExists
 	}
 
@@ -31,8 +31,8 @@ func Add(ctx context.Context, gql *graphql.GraphQL, city City) (City, error) {
 	return city, nil
 }
 
-// One returns the specified city from the database by the city id.
-func One(ctx context.Context, gql *graphql.GraphQL, cityID string) (City, error) {
+// QueryByID returns the specified city from the database by the city id.
+func QueryByID(ctx context.Context, gql *graphql.GraphQL, cityID string) (City, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -57,8 +57,8 @@ query {
 	return result.GetCity, nil
 }
 
-// OneByName returns the specified city from the database by the city name.
-func OneByName(ctx context.Context, gql *graphql.GraphQL, name string) (City, error) {
+// QueryByName returns the specified city from the database by the city name.
+func QueryByName(ctx context.Context, gql *graphql.GraphQL, name string) (City, error) {
 	query := fmt.Sprintf(`
 query {
 	queryCity(filter: { name: { eq: %q } }) {
@@ -85,8 +85,8 @@ query {
 	return result.QueryCity[0].City, nil
 }
 
-// ListNames returns the list of city names currently loaded in the database.
-func ListNames(ctx context.Context, gql *graphql.GraphQL) ([]string, error) {
+// QueryNames returns the list of city names currently loaded in the database.
+func QueryNames(ctx context.Context, gql *graphql.GraphQL) ([]string, error) {
 	query := `
 	query {
 		queryCity(filter: { }) {

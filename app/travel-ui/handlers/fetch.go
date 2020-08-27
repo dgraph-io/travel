@@ -22,12 +22,12 @@ func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request)
 	gql := data.NewGraphQL(f.gqlConfig)
 
 	params := httptreemux.ContextParams(r.Context())
-	city, err := city.OneByName(context.Background(), gql, params["city"])
+	city, err := city.QueryByName(context.Background(), gql, params["city"])
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
 
-	places, err := place.List(context.Background(), gql, city.ID)
+	places, err := place.QueryByCity(context.Background(), gql, city.ID)
 	if err != nil {
 		return errors.Wrap(err, "query places")
 	}

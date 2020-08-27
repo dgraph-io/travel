@@ -22,7 +22,7 @@ var (
 // this function will fail but the found user is returned. If the user is
 // being added, the user with the id from the database is returned.
 func Add(ctx context.Context, gql *graphql.GraphQL, nu NewUser, now time.Time) (User, error) {
-	if u, err := OneByEmail(ctx, gql, nu.Email); err == nil {
+	if u, err := QueryByEmail(ctx, gql, nu.Email); err == nil {
 		return u, ErrExists
 	}
 
@@ -51,7 +51,7 @@ func Add(ctx context.Context, gql *graphql.GraphQL, nu NewUser, now time.Time) (
 // Update updates a user in the database by its ID. If the user doesn't
 // already exist, this function will fail.
 func Update(ctx context.Context, gql *graphql.GraphQL, u User) error {
-	if _, err := One(ctx, gql, u.ID); err != nil {
+	if _, err := QueryByID(ctx, gql, u.ID); err != nil {
 		return ErrNotExists
 	}
 
@@ -65,7 +65,7 @@ func Update(ctx context.Context, gql *graphql.GraphQL, u User) error {
 // Delete removes a user from the database by its ID. If the user doesn't
 // already exist, this function will fail.
 func Delete(ctx context.Context, gql *graphql.GraphQL, userID string) error {
-	if _, err := One(ctx, gql, userID); err != nil {
+	if _, err := QueryByID(ctx, gql, userID); err != nil {
 		return ErrNotExists
 	}
 
@@ -76,8 +76,8 @@ func Delete(ctx context.Context, gql *graphql.GraphQL, userID string) error {
 	return nil
 }
 
-// One returns the specified user from the database by the city id.
-func One(ctx context.Context, gql *graphql.GraphQL, userID string) (User, error) {
+// QueryByID returns the specified user from the database by the city id.
+func QueryByID(ctx context.Context, gql *graphql.GraphQL, userID string) (User, error) {
 	query := fmt.Sprintf(`
 query {
 	getUser(id: %q) {
@@ -105,8 +105,8 @@ query {
 	return result.GetUser, nil
 }
 
-// OneByEmail returns the specified user from the database by email.
-func OneByEmail(ctx context.Context, gql *graphql.GraphQL, email string) (User, error) {
+// QueryByEmail returns the specified user from the database by email.
+func QueryByEmail(ctx context.Context, gql *graphql.GraphQL, email string) (User, error) {
 	query := fmt.Sprintf(`
 query {
 	queryUser(filter: { email: { eq: %q } }) {

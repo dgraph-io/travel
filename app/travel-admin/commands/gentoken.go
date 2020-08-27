@@ -28,7 +28,7 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	gql := data.NewGraphQL(gqlConfig)
 
 	// Retrieve the user by email so we have the roles for this user.
-	user, err := user.OneByEmail(ctx, gql, email)
+	user, err := user.QueryByEmail(ctx, gql, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}

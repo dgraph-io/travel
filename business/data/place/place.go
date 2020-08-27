@@ -27,7 +27,7 @@ func Add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) 
 		return Place{}, errors.New("cityid not provided")
 	}
 
-	if place, err := OneByName(ctx, gql, place.Name); err == nil {
+	if place, err := QueryByName(ctx, gql, place.Name); err == nil {
 		return place, ErrExists
 	}
 
@@ -39,8 +39,8 @@ func Add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) 
 	return place, nil
 }
 
-// One returns the specified place from the database by the place id.
-func One(ctx context.Context, gql *graphql.GraphQL, placeID string) (Place, error) {
+// QueryByID returns the specified place from the database by the place id.
+func QueryByID(ctx context.Context, gql *graphql.GraphQL, placeID string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getPlace(id: %q) {
@@ -79,8 +79,8 @@ query {
 	return result.GetPlace.Place, nil
 }
 
-// OneByName returns the specified place from the database by name.
-func OneByName(ctx context.Context, gql *graphql.GraphQL, name string) (Place, error) {
+// QueryByName returns the specified place from the database by name.
+func QueryByName(ctx context.Context, gql *graphql.GraphQL, name string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { name: { eq: %q } }) {
@@ -117,9 +117,9 @@ query {
 	return result.QueryPlace[0], nil
 }
 
-// OneByCategory returns the collection of places from the database
+// QueryByCategory returns the collection of places from the database
 // by the cagtegory name.
-func OneByCategory(ctx context.Context, gql *graphql.GraphQL, category string) ([]Place, error) {
+func QueryByCategory(ctx context.Context, gql *graphql.GraphQL, category string) ([]Place, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { category: { eq: %q } }) {
@@ -156,8 +156,8 @@ query {
 	return result.QueryPlace, nil
 }
 
-// List returns the collection of places from the database by the city id.
-func List(ctx context.Context, gql *graphql.GraphQL, cityID string) ([]Place, error) {
+// QueryByCity returns the collection of places from the database by the city id.
+func QueryByCity(ctx context.Context, gql *graphql.GraphQL, cityID string) ([]Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {

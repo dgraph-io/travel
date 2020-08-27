@@ -38,8 +38,8 @@ func Replace(ctx context.Context, gql *graphql.GraphQL, weather Weather) (Weathe
 	return weather, nil
 }
 
-// One returns the specified weather from the database by the city id.
-func One(ctx context.Context, gql *graphql.GraphQL, cityID string) (Weather, error) {
+// QueryByCity returns the specified weather from the database by the city id.
+func QueryByCity(ctx context.Context, gql *graphql.GraphQL, cityID string) (Weather, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -98,7 +98,7 @@ func add(ctx context.Context, gql *graphql.GraphQL, weather Weather) (Weather, e
 }
 
 func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
-	weather, err := One(ctx, gql, cityID)
+	weather, err := QueryByCity(ctx, gql, cityID)
 	if err != nil {
 		return err
 	}

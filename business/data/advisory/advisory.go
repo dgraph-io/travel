@@ -38,8 +38,8 @@ func Replace(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advi
 	return advisory, nil
 }
 
-// One returns the specified advisory from the database by the city id.
-func One(ctx context.Context, gql *graphql.GraphQL, cityID string) (Advisory, error) {
+// QueryByCity returns the specified advisory from the database by the city id.
+func QueryByCity(ctx context.Context, gql *graphql.GraphQL, cityID string) (Advisory, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -92,7 +92,7 @@ func add(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory
 }
 
 func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
-	advisory, err := One(ctx, gql, cityID)
+	advisory, err := QueryByCity(ctx, gql, cityID)
 	if err != nil {
 		return err
 	}
