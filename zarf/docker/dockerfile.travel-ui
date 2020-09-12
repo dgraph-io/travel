@@ -1,9 +1,7 @@
 # Build the Go Binary.
-FROM golang:1.15 as build_travel-ui
+FROM golang:1.15.2 as build_travel-ui
 ENV CGO_ENABLED 0
 ARG VCS_REF
-ARG PACKAGE_NAME
-ARG PACKAGE_PREFIX
 
 # Create a location in the container for the source code. Using the
 # default GOPATH location.
@@ -15,24 +13,24 @@ COPY . .
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
-WORKDIR /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}
+WORKDIR /service/app/travel-ui
 RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.7
+FROM alpine:3.12
 ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
-COPY --from=build_travel-ui /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}/assets/ /app/assets/
-COPY --from=build_travel-ui /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
+COPY --from=build_travel-ui /service/app/travel-ui/assets/ /app/assets/
+COPY --from=build_travel-ui /service/app/travel-ui/travel-ui /app/travel-ui
 WORKDIR /app
-CMD ["/app/main"]
+CMD ["/app/travel-ui"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="${PACKAGE_NAME}" \
-      org.opencontainers.image.authors="Dgraph" \
-      org.opencontainers.image.source="https://github.com/dgraph-io/travel/app/${PACKAGE_PREFIX}${PACKAGE_NAME}" \
+      org.opencontainers.image.title="travel-ui" \
+      org.opencontainers.image.authors="ArdanLabs, Dgraph" \
+      org.opencontainers.image.source="https://github.com/dgraph-io/travel/app/travel-ui" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.vendor="Dgraph"

@@ -7,18 +7,16 @@ all: api ui
 
 api:
 	docker build \
-		-f zarf/compose/dockerfile.travel-api \
+		-f zarf/docker/dockerfile.travel-api \
 		-t travel-api-amd64:1.0 \
-		--build-arg PACKAGE_NAME=travel-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
 ui:
 	docker build \
-		-f zarf/compose/dockerfile.travel-ui \
+		-f zarf/docker/dockerfile.travel-ui \
 		-t travel-ui-amd64:1.0 \
-		--build-arg PACKAGE_NAME=travel-ui \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
@@ -44,7 +42,7 @@ logs:
 # Running from within k8s/dev
 
 kind-up:
-	kind create cluster --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
+	kind create cluster --image kindest/node:v1.18.8 --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name dgraph-travel-cluster
@@ -69,7 +67,7 @@ kind-logs:
 
 kind-status:
 	kubectl get nodes
-	kubectl get pods
+	kubectl get pods --watch
 
 kind-status-full:
 	kubectl describe pod -lapp=travel
