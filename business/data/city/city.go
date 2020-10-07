@@ -4,8 +4,10 @@ package city
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/ardanlabs/graphql"
+	"github.com/dgraph-io/travel/business/data"
 	"github.com/pkg/errors"
 )
 
@@ -17,12 +19,14 @@ var (
 
 // City manages the set of API's for city access.
 type City struct {
+	log *log.Logger
 	gql *graphql.GraphQL
 }
 
 // New constructs a City for api access.
-func New(gql *graphql.GraphQL) City {
+func New(log *log.Logger, gql *graphql.GraphQL) City {
 	return City{
+		log: log,
 		gql: gql,
 	}
 }
@@ -30,12 +34,12 @@ func New(gql *graphql.GraphQL) City {
 // Add adds a new city to the database. If the city already exists
 // this function will fail but the found city is returned. If the city is
 // being added, the city with the id from the database is returned.
-func (c City) Add(ctx context.Context, cty Info) (Info, error) {
-	if cty, err := c.QueryByName(ctx, cty.Name); err == nil {
+func (c City) Add(ctx context.Context, traceID string, cty Info) (Info, error) {
+	if cty, err := c.QueryByName(ctx, traceID, cty.Name); err == nil {
 		return cty, ErrExists
 	}
 
-	cty, err := c.add(ctx, cty)
+	cty, err := c.add(ctx, traceID, cty)
 	if err != nil {
 		return Info{}, errors.Wrap(err, "adding city to database")
 	}
@@ -44,7 +48,7 @@ func (c City) Add(ctx context.Context, cty Info) (Info, error) {
 }
 
 // QueryByID returns the specified city from the database by the city id.
-func (c City) QueryByID(ctx context.Context, cityID string) (Info, error) {
+func (c City) QueryByID(ctx context.Context, traceID string, cityID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -54,6 +58,8 @@ query {
 		lng
 	}
 }`, cityID)
+
+	c.log.Printf("%s: %s: %s", traceID, "city.QueryByID", data.Log(query))
 
 	var result struct {
 		GetCity Info `json:"getCity"`
@@ -70,7 +76,7 @@ query {
 }
 
 // QueryByName returns the specified city from the database by the city name.
-func (c City) QueryByName(ctx context.Context, name string) (Info, error) {
+func (c City) QueryByName(ctx context.Context, traceID string, name string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryCity(filter: { name: { eq: %q } }) {
@@ -80,6 +86,8 @@ query {
 		lng
 	}
 }`, name)
+
+	c.log.Printf("%s: %s: %s", traceID, "city.QueryByName", data.Log(query))
 
 	var result struct {
 		QueryCity []struct {
@@ -98,13 +106,15 @@ query {
 }
 
 // QueryNames returns the list of city names currently loaded in the database.
-func (c City) QueryNames(ctx context.Context) ([]string, error) {
+func (c City) QueryNames(ctx context.Context, traceID string) ([]string, error) {
 	query := `
 	query {
 		queryCity(filter: { }) {
 			name
 		}
 	}`
+
+	c.log.Printf("%s: %s: %s", traceID, "city.QueryNames", data.Log(query))
 
 	var result struct {
 		QueryCity []struct {
@@ -129,12 +139,14 @@ func (c City) QueryNames(ctx context.Context) ([]string, error) {
 
 // =============================================================================
 
-func (c City) add(ctx context.Context, cty Info) (Info, error) {
+func (c City) add(ctx context.Context, traceID string, cty Info) (Info, error) {
 	if cty.ID != "" {
 		return Info{}, errors.New("city contains id")
 	}
 
 	mutation, result := prepareAdd(cty)
+	c.log.Printf("%s: %s: %s", traceID, "city.Add", data.Log(mutation))
+
 	if err := c.gql.Query(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add city")
 	}

@@ -4,9 +4,11 @@ package user
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/ardanlabs/graphql"
+	"github.com/dgraph-io/travel/business/data"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,12 +22,14 @@ var (
 
 // User manages the set of API's for user access.
 type User struct {
+	log *log.Logger
 	gql *graphql.GraphQL
 }
 
 // New constructs a User for api access.
-func New(gql *graphql.GraphQL) User {
+func New(log *log.Logger, gql *graphql.GraphQL) User {
 	return User{
+		log: log,
 		gql: gql,
 	}
 }
@@ -33,8 +37,8 @@ func New(gql *graphql.GraphQL) User {
 // Add adds a new user to the database. If the user already exists
 // this function will fail but the found user is returned. If the user is
 // being added, the user with the id from the database is returned.
-func (u User) Add(ctx context.Context, nu NewUser, now time.Time) (Info, error) {
-	if usr, err := u.QueryByEmail(ctx, nu.Email); err == nil {
+func (u User) Add(ctx context.Context, traceID string, nu NewUser, now time.Time) (Info, error) {
+	if usr, err := u.QueryByEmail(ctx, traceID, nu.Email); err == nil {
 		return usr, ErrExists
 	}
 
@@ -52,7 +56,7 @@ func (u User) Add(ctx context.Context, nu NewUser, now time.Time) (Info, error) 
 		DateUpdated:  now,
 	}
 
-	usr, err = u.add(ctx, usr)
+	usr, err = u.add(ctx, traceID, usr)
 	if err != nil {
 		return Info{}, errors.Wrap(err, "adding user to database")
 	}
@@ -62,12 +66,12 @@ func (u User) Add(ctx context.Context, nu NewUser, now time.Time) (Info, error) 
 
 // Update updates a user in the database by its ID. If the user doesn't
 // already exist, this function will fail.
-func (u User) Update(ctx context.Context, usr Info) error {
-	if _, err := u.QueryByID(ctx, usr.ID); err != nil {
+func (u User) Update(ctx context.Context, traceID string, usr Info) error {
+	if _, err := u.QueryByID(ctx, traceID, usr.ID); err != nil {
 		return ErrNotExists
 	}
 
-	if err := u.update(ctx, usr); err != nil {
+	if err := u.update(ctx, traceID, usr); err != nil {
 		return errors.Wrap(err, "updating user in database")
 	}
 
@@ -76,12 +80,12 @@ func (u User) Update(ctx context.Context, usr Info) error {
 
 // Delete removes a user from the database by its ID. If the user doesn't
 // already exist, this function will fail.
-func (u User) Delete(ctx context.Context, userID string) error {
-	if _, err := u.QueryByID(ctx, userID); err != nil {
+func (u User) Delete(ctx context.Context, traceID string, userID string) error {
+	if _, err := u.QueryByID(ctx, traceID, userID); err != nil {
 		return ErrNotExists
 	}
 
-	if err := u.delete(ctx, userID); err != nil {
+	if err := u.delete(ctx, traceID, userID); err != nil {
 		return errors.Wrap(err, "deleting user in database")
 	}
 
@@ -89,7 +93,7 @@ func (u User) Delete(ctx context.Context, userID string) error {
 }
 
 // QueryByID returns the specified user from the database by the city id.
-func (u User) QueryByID(ctx context.Context, userID string) (Info, error) {
+func (u User) QueryByID(ctx context.Context, traceID string, userID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getUser(id: %q) {
@@ -102,6 +106,8 @@ query {
 		date_updated
 	}
 }`, userID)
+
+	u.log.Printf("%s: %s: %s", traceID, "user.QueryByID", data.Log(query))
 
 	var result struct {
 		GetUser Info `json:"getUser"`
@@ -118,7 +124,7 @@ query {
 }
 
 // QueryByEmail returns the specified user from the database by email.
-func (u User) QueryByEmail(ctx context.Context, email string) (Info, error) {
+func (u User) QueryByEmail(ctx context.Context, traceID string, email string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryUser(filter: { email: { eq: %q } }) {
@@ -131,6 +137,8 @@ query {
 		date_updated
 	}
 }`, email)
+
+	u.log.Printf("%s: %s: %s", traceID, "user.QueryByEmail", data.Log(query))
 
 	var result struct {
 		QueryUser []Info `json:"queryUser"`
@@ -148,8 +156,10 @@ query {
 
 // =============================================================================
 
-func (u User) add(ctx context.Context, usr Info) (Info, error) {
+func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
 	mutation, result := prepareAdd(usr)
+	u.log.Printf("%s: %s: %s", traceID, "user.Add", data.Log(mutation))
+
 	if err := u.gql.Query(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add user")
 	}
@@ -162,12 +172,14 @@ func (u User) add(ctx context.Context, usr Info) (Info, error) {
 	return usr, nil
 }
 
-func (u User) update(ctx context.Context, usr Info) error {
+func (u User) update(ctx context.Context, traceID string, usr Info) error {
 	if usr.ID == "" {
 		return errors.New("user missing id")
 	}
 
 	mutation, result := prepareUpdate(usr)
+	u.log.Printf("%s: %s: %s", traceID, "user.Update", data.Log(mutation))
+
 	if err := u.gql.Query(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
@@ -180,12 +192,14 @@ func (u User) update(ctx context.Context, usr Info) error {
 	return nil
 }
 
-func (u User) delete(ctx context.Context, userID string) error {
+func (u User) delete(ctx context.Context, traceID string, userID string) error {
 	if userID == "" {
 		return errors.New("missing user id")
 	}
 
 	mutation, result := prepareDelete(userID)
+	u.log.Printf("%s: %s: %s", traceID, "user.Delete", data.Log(mutation))
+
 	if err := u.gql.Query(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to delete user")
 	}

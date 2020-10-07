@@ -32,24 +32,30 @@ func (fg *feedGroup) upload(ctx context.Context, w http.ResponseWriter, r *http.
 	}
 
 	go func() {
+		fg.log.Printf("%s: started G: %s %s -> %s",
+			v.TraceID,
+			r.Method, r.URL.Path, r.RemoteAddr,
+		)
+
 		search := loader.Search{
 			CityName:    request.CityName,
 			CountryCode: request.CountryCode,
 			Lat:         request.Lat,
 			Lng:         request.Lng,
 		}
-		if err := loader.UpdateData(fg.log, fg.gqlConfig, fg.loaderConfig, search); err != nil {
-			log.Printf("%s : (%d) : %s %s -> %s (%s) : ERROR : %v",
-				v.TraceID, v.StatusCode,
-				r.Method, r.URL.Path,
-				r.RemoteAddr, time.Since(v.Now), err,
+		if err := loader.UpdateData(fg.log, fg.gqlConfig, v.TraceID, fg.loaderConfig, search); err != nil {
+			fg.log.Printf("%s: completed G: %s %s -> %s (%d) (%s) : ERROR : %v",
+				v.TraceID,
+				r.Method, r.URL.Path, r.RemoteAddr,
+				v.StatusCode, time.Since(v.Now), err,
 			)
 			return
 		}
-		log.Printf("%s : (%d) : %s %s -> %s (%s)",
-			v.TraceID, v.StatusCode,
-			r.Method, r.URL.Path,
-			r.RemoteAddr, time.Since(v.Now),
+
+		fg.log.Printf("%s: completed G: %s %s -> %s (%d) (%s)",
+			v.TraceID,
+			r.Method, r.URL.Path, r.RemoteAddr,
+			v.StatusCode, time.Since(v.Now),
 		)
 	}()
 

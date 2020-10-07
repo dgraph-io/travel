@@ -7,6 +7,7 @@ import (
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/schema"
 	"github.com/dgraph-io/travel/business/loader"
+	"github.com/google/uuid"
 )
 
 // Schema handles the updating of the schema.
@@ -41,7 +42,8 @@ func Seed(log *log.Logger, gqlConfig data.GraphQLConfig, config loader.Config) e
 		}
 
 		log.Println("main: Updating data for city:", search.CityName)
-		if err := loader.UpdateData(log, gqlConfig, config, search); err != nil {
+		traceID := uuid.New().String()
+		if err := loader.UpdateData(log, gqlConfig, traceID, config, search); err != nil {
 			return err
 		}
 	}

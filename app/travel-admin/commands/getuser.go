@@ -3,15 +3,17 @@ package commands
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/user"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
 // GetUser returns information about a user by email.
-func GetUser(gqlConfig data.GraphQLConfig, email string) error {
+func GetUser(log *log.Logger, gqlConfig data.GraphQLConfig, email string) error {
 	if email == "" {
 		fmt.Println("help: getuser <email>")
 		return ErrHelp
@@ -21,9 +23,10 @@ func GetUser(gqlConfig data.GraphQLConfig, email string) error {
 	defer cancel()
 
 	gql := data.NewGraphQL(gqlConfig)
-	u := user.New(gql)
+	u := user.New(log, gql)
+	traceID := uuid.New().String()
 
-	usr, err := u.QueryByEmail(ctx, email)
+	usr, err := u.QueryByEmail(ctx, traceID, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}

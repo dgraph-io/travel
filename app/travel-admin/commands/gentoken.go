@@ -5,17 +5,19 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/auth"
 	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string, algorithm string) error {
+func GenToken(log *log.Logger, gqlConfig data.GraphQLConfig, email string, privateKeyFile string, algorithm string) error {
 	if email == "" || privateKeyFile == "" || algorithm == "" {
 		fmt.Println("help: gentoken <email> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")
@@ -26,10 +28,11 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	defer cancel()
 
 	gql := data.NewGraphQL(gqlConfig)
-	u := user.New(gql)
+	u := user.New(log, gql)
+	traceID := uuid.New().String()
 
 	// Retrieve the user by email so we have the roles for this user.
-	usr, err := u.QueryByEmail(ctx, email)
+	usr, err := u.QueryByEmail(ctx, traceID, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}

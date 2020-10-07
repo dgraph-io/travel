@@ -4,32 +4,40 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/AvraamMavridis/randomcolor"
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/city"
 	"github.com/dgraph-io/travel/business/data/place"
+	"github.com/dgraph-io/travel/foundation/web"
 	"github.com/dimfeld/httptreemux/v5"
 	"github.com/pkg/errors"
 )
 
 type fetchGroup struct {
+	log       *log.Logger
 	gqlConfig data.GraphQLConfig
 }
 
 func (fg fetchGroup) data(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
 	gql := data.NewGraphQL(fg.gqlConfig)
-	c := city.New(gql)
-	p := place.New(gql)
+	c := city.New(fg.log, gql)
+	p := place.New(fg.log, gql)
 
 	params := httptreemux.ContextParams(r.Context())
-	city, err := c.QueryByName(context.Background(), params["city"])
+	city, err := c.QueryByName(context.Background(), v.TraceID, params["city"])
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
 
-	places, err := p.QueryByCity(context.Background(), city.ID)
+	places, err := p.QueryByCity(context.Background(), v.TraceID, city.ID)
 	if err != nil {
 		return errors.Wrap(err, "query places")
 	}

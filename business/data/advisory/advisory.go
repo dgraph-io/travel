@@ -4,8 +4,10 @@ package advisory
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/ardanlabs/graphql"
+	"github.com/dgraph-io/travel/business/data"
 	"github.com/pkg/errors"
 )
 
@@ -16,19 +18,21 @@ var (
 
 // Advisory manages the set of API's for advisory access.
 type Advisory struct {
+	log *log.Logger
 	gql *graphql.GraphQL
 }
 
 // New constructs a Advisory for api access.
-func New(gql *graphql.GraphQL) Advisory {
+func New(log *log.Logger, gql *graphql.GraphQL) Advisory {
 	return Advisory{
+		log: log,
 		gql: gql,
 	}
 }
 
 // Replace replaces an advisory in the database and connects it
 // to the specified city.
-func (a Advisory) Replace(ctx context.Context, adv Info) (Info, error) {
+func (a Advisory) Replace(ctx context.Context, traceID string, adv Info) (Info, error) {
 	if adv.ID != "" {
 		return Info{}, errors.New("advisory contains id")
 	}
@@ -36,13 +40,13 @@ func (a Advisory) Replace(ctx context.Context, adv Info) (Info, error) {
 		return Info{}, errors.New("cityid not provided")
 	}
 
-	if err := a.delete(ctx, adv.City.ID); err != nil {
+	if err := a.delete(ctx, traceID, adv.City.ID); err != nil {
 		if err != ErrNotFound {
 			return Info{}, errors.Wrap(err, "deleting advisory from database")
 		}
 	}
 
-	adv, err := a.add(ctx, adv)
+	adv, err := a.add(ctx, traceID, adv)
 	if err != nil {
 		return Info{}, errors.Wrap(err, "adding advisory to database")
 	}
@@ -51,7 +55,7 @@ func (a Advisory) Replace(ctx context.Context, adv Info) (Info, error) {
 }
 
 // QueryByCity returns the specified advisory from the database by the city id.
-func (a Advisory) QueryByCity(ctx context.Context, cityID string) (Info, error) {
+func (a Advisory) QueryByCity(ctx context.Context, traceID string, cityID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -71,6 +75,8 @@ query {
 	}
 }`, cityID)
 
+	a.log.Printf("%s: %s: %s", traceID, "advisory.QueryByID", data.Log(query))
+
 	var result struct {
 		GetCity struct {
 			Advisory Info `json:"advisory"`
@@ -89,8 +95,10 @@ query {
 
 // =============================================================================
 
-func (a Advisory) add(ctx context.Context, adv Info) (Info, error) {
+func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, error) {
 	mutation, result := prepareAdd(adv)
+	a.log.Printf("%s: %s: %s", traceID, "advisory.Add", data.Log(mutation))
+
 	if err := a.gql.Query(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add place")
 	}
@@ -103,13 +111,15 @@ func (a Advisory) add(ctx context.Context, adv Info) (Info, error) {
 	return adv, nil
 }
 
-func (a Advisory) delete(ctx context.Context, cityID string) error {
-	adv, err := a.QueryByCity(ctx, cityID)
+func (a Advisory) delete(ctx context.Context, traceID string, cityID string) error {
+	adv, err := a.QueryByCity(ctx, traceID, cityID)
 	if err != nil {
 		return err
 	}
 
 	mutation, result := prepareDelete(adv.ID)
+	a.log.Printf("%s: %s: %s", traceID, "advisory.Delete", data.Log(mutation))
+
 	if err := a.gql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}

@@ -4,9 +4,11 @@ package place
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/ardanlabs/graphql"
+	"github.com/dgraph-io/travel/business/data"
 	"github.com/pkg/errors"
 )
 
@@ -18,12 +20,14 @@ var (
 
 // Place manages the set of API's for place access.
 type Place struct {
+	log *log.Logger
 	gql *graphql.GraphQL
 }
 
 // New constructs a Place for api access.
-func New(gql *graphql.GraphQL) Place {
+func New(log *log.Logger, gql *graphql.GraphQL) Place {
 	return Place{
+		log: log,
 		gql: gql,
 	}
 }
@@ -31,7 +35,7 @@ func New(gql *graphql.GraphQL) Place {
 // Add adds a new place to the database. If the place already exists
 // this function will fail but the found place is returned. If the city is
 // being added, the city with the id from the database is returned.
-func (p Place) Add(ctx context.Context, plc Info) (Info, error) {
+func (p Place) Add(ctx context.Context, traceID string, plc Info) (Info, error) {
 	if plc.ID != "" {
 		return Info{}, errors.New("place contains id")
 	}
@@ -39,11 +43,11 @@ func (p Place) Add(ctx context.Context, plc Info) (Info, error) {
 		return Info{}, errors.New("cityid not provided")
 	}
 
-	if plc, err := p.QueryByName(ctx, plc.Name); err == nil {
+	if plc, err := p.QueryByName(ctx, traceID, plc.Name); err == nil {
 		return plc, ErrExists
 	}
 
-	plc, err := p.add(ctx, plc)
+	plc, err := p.add(ctx, traceID, plc)
 	if err != nil {
 		return Info{}, errors.Wrap(err, "adding place to database")
 	}
@@ -52,7 +56,7 @@ func (p Place) Add(ctx context.Context, plc Info) (Info, error) {
 }
 
 // QueryByID returns the specified place from the database by the place id.
-func (p Place) QueryByID(ctx context.Context, placeID string) (Info, error) {
+func (p Place) QueryByID(ctx context.Context, traceID string, placeID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getPlace(id: %q) {
@@ -75,6 +79,8 @@ query {
 	}
 }`, placeID)
 
+	p.log.Printf("%s: %s: %s", traceID, "place.QueryByID", data.Log(query))
+
 	var result struct {
 		GetPlace struct {
 			Info
@@ -92,7 +98,7 @@ query {
 }
 
 // QueryByName returns the specified place from the database by name.
-func (p Place) QueryByName(ctx context.Context, name string) (Info, error) {
+func (p Place) QueryByName(ctx context.Context, traceID string, name string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { name: { eq: %q } }) {
@@ -115,6 +121,8 @@ query {
 	}
 }`, name)
 
+	p.log.Printf("%s: %s: %s", traceID, "place.QueryByName", data.Log(query))
+
 	var result struct {
 		QueryPlace []Info `json:"queryPlace"`
 	}
@@ -131,7 +139,7 @@ query {
 
 // QueryByCategory returns the collection of places from the database
 // by the cagtegory name.
-func (p Place) QueryByCategory(ctx context.Context, category string) ([]Info, error) {
+func (p Place) QueryByCategory(ctx context.Context, traceID string, category string) ([]Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { category: { eq: %q } }) {
@@ -154,6 +162,8 @@ query {
 	}
 }`, category)
 
+	p.log.Printf("%s: %s: %s", traceID, "place.QueryByCategory", data.Log(query))
+
 	var result struct {
 		QueryPlace []Info `json:"queryPlace"`
 	}
@@ -169,7 +179,7 @@ query {
 }
 
 // QueryByCity returns the collection of places from the database by the city id.
-func (p Place) QueryByCity(ctx context.Context, cityID string) ([]Info, error) {
+func (p Place) QueryByCity(ctx context.Context, traceID string, cityID string) ([]Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -194,6 +204,8 @@ query {
 	}
 }`, cityID)
 
+	p.log.Printf("%s: %s: %s", traceID, "place.QueryByCity", data.Log(query))
+
 	var result struct {
 		GetCity struct {
 			Places []Info `json:"places"`
@@ -208,7 +220,7 @@ query {
 
 // =============================================================================
 
-func (p Place) add(ctx context.Context, plc Info) (Info, error) {
+func (p Place) add(ctx context.Context, traceID string, plc Info) (Info, error) {
 	for i := range plc.LocationType {
 		if !strings.HasPrefix(plc.LocationType[i], `"`) {
 			plc.LocationType[i] = fmt.Sprintf(`"%s"`, plc.LocationType[i])
@@ -216,6 +228,8 @@ func (p Place) add(ctx context.Context, plc Info) (Info, error) {
 	}
 
 	mutation, result := prepareAdd(plc)
+	p.log.Printf("%s: %s: %s", traceID, "place.Add", data.Log(mutation))
+
 	if err := p.gql.Query(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add place")
 	}

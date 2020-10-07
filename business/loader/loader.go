@@ -83,27 +83,27 @@ func UpdateSchema(gqlConfig data.GraphQLConfig, schemaConfig schema.Config) erro
 }
 
 // UpdateData retrieves and stores the feed data for this API.
-func UpdateData(log *log.Logger, gqlConfig data.GraphQLConfig, config Config, search Search) error {
+func UpdateData(log *log.Logger, gqlConfig data.GraphQLConfig, traceID string, config Config, search Search) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	gql := data.NewGraphQL(gqlConfig)
 	loader := newLoader(log, gql)
 
-	cty, err := loader.addCity(ctx, search.CityName, search.Lat, search.Lng)
+	cty, err := loader.addCity(ctx, traceID, search.CityName, search.Lat, search.Lng)
 	if err != nil {
 		return errors.Wrapf(err, "adding city")
 	}
 
-	if err := loader.replaceWeather(ctx, config.Keys.WeatherKey, config.URL.Weather, cty.ID, cty.Lat, cty.Lng); err != nil {
+	if err := loader.replaceWeather(ctx, traceID, config.Keys.WeatherKey, config.URL.Weather, cty.ID, cty.Lat, cty.Lng); err != nil {
 		return errors.Wrapf(err, "replacing weather")
 	}
 
-	if err := loader.replaceAdvisory(ctx, config.URL.Advisory, cty.ID, search.CountryCode); err != nil {
+	if err := loader.replaceAdvisory(ctx, traceID, config.URL.Advisory, cty.ID, search.CountryCode); err != nil {
 		return errors.Wrapf(err, "replacing advisory")
 	}
 
-	if err := loader.addPlaces(ctx, config.Keys.MapKey, cty, config.Filter.Categories, config.Filter.Radius); err != nil {
+	if err := loader.addPlaces(ctx, traceID, config.Keys.MapKey, cty, config.Filter.Categories, config.Filter.Radius); err != nil {
 		return errors.Wrapf(err, "adding places")
 	}
 
@@ -123,21 +123,21 @@ func newLoader(log *log.Logger, gql *graphql.GraphQL) loader {
 	return loader{
 		log:      log,
 		gql:      gql,
-		advisory: advisory.New(gql),
-		city:     city.New(gql),
-		place:    place.New(gql),
-		weather:  weather.New(gql),
+		advisory: advisory.New(log, gql),
+		city:     city.New(log, gql),
+		place:    place.New(log, gql),
+		weather:  weather.New(log, gql),
 	}
 }
 
 // addCity add the specified city into the database.
-func (l loader) addCity(ctx context.Context, name string, lat float64, lng float64) (city.Info, error) {
+func (l loader) addCity(ctx context.Context, traceID string, name string, lat float64, lng float64) (city.Info, error) {
 	newCity := city.Info{
 		Name: name,
 		Lat:  lat,
 		Lng:  lng,
 	}
-	newCity, err := l.city.Add(ctx, newCity)
+	newCity, err := l.city.Add(ctx, traceID, newCity)
 	if err != nil && err != city.ErrExists {
 		return city.Info{}, errors.Wrapf(err, "adding city: %s", name)
 	}
@@ -152,14 +152,14 @@ func (l loader) addCity(ctx context.Context, name string, lat float64, lng float
 }
 
 // replaceWeather pulls weather information and updates it for the specified city.
-func (l loader) replaceWeather(ctx context.Context, apiKey string, url string, cityID string, lat float64, lng float64) error {
+func (l loader) replaceWeather(ctx context.Context, traceID string, apiKey string, url string, cityID string, lat float64, lng float64) error {
 	feedData, err := weatherfeed.Search(ctx, apiKey, url, lat, lng)
 	if err != nil {
 		return errors.Wrap(err, "searching weather")
 	}
 
 	newWeather := marshalWeather(feedData, cityID)
-	newWeather, err = l.weather.Replace(ctx, newWeather)
+	newWeather, err = l.weather.Replace(ctx, traceID, newWeather)
 	if err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
@@ -169,14 +169,14 @@ func (l loader) replaceWeather(ctx context.Context, apiKey string, url string, c
 }
 
 // replaceAdvisory pulls advisory information and updates it for the specified city.
-func (l loader) replaceAdvisory(ctx context.Context, url string, cityID string, countryCode string) error {
+func (l loader) replaceAdvisory(ctx context.Context, traceID string, url string, cityID string, countryCode string) error {
 	feedData, err := advisoryfeed.Search(ctx, url, countryCode)
 	if err != nil {
 		return errors.Wrap(err, "searching advisory")
 	}
 
 	newAdvisory := marshalAdvisory(feedData, cityID)
-	newAdvisory, err = l.advisory.Replace(ctx, newAdvisory)
+	newAdvisory, err = l.advisory.Replace(ctx, traceID, newAdvisory)
 	if err != nil {
 		return errors.Wrap(err, "replacing advisory")
 	}
@@ -186,7 +186,7 @@ func (l loader) replaceAdvisory(ctx context.Context, url string, cityID string, 
 }
 
 // addPlaces pulls place information and adds new places to the specified city.
-func (l loader) addPlaces(ctx context.Context, apiKey string, cty city.Info, categories []string, radius uint) error {
+func (l loader) addPlaces(ctx context.Context, traceID string, apiKey string, cty city.Info, categories []string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
@@ -210,7 +210,7 @@ func (l loader) addPlaces(ctx context.Context, apiKey string, cty city.Info, cat
 			}
 
 			for _, feedData := range feedList {
-				newPlace, err := l.place.Add(ctx, marshalPlace(feedData, cty.ID, category))
+				newPlace, err := l.place.Add(ctx, traceID, marshalPlace(feedData, cty.ID, category))
 				if err != nil && err != place.ErrExists {
 					return errors.Wrapf(err, "adding place: %s", newPlace.Name)
 				}

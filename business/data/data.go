@@ -4,6 +4,7 @@ package data
 import (
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ardanlabs/graphql"
@@ -39,4 +40,11 @@ func NewGraphQL(gqlConfig GraphQLConfig) *graphql.GraphQL {
 	graphql := graphql.New(gqlConfig.URL, &client, auth)
 
 	return graphql
+}
+
+// Log removes line feeds and tabs for better logging.
+func Log(query string) string {
+	query = strings.Replace(query, "\t", "", -1)
+	query = strings.Replace(query, "\n", " ", -1)
+	return query
 }

@@ -153,13 +153,13 @@ func run(log *log.Logger) error {
 			Role:     cfg.Args.Num(4),
 		}
 
-		if err := commands.AddUser(gqlConfig, newUser); err != nil {
+		if err := commands.AddUser(log, gqlConfig, newUser); err != nil {
 			return errors.Wrap(err, "adding user")
 		}
 
 	case "getuser":
 		email := cfg.Args.Num(1)
-		if err := commands.GetUser(gqlConfig, email); err != nil {
+		if err := commands.GetUser(log, gqlConfig, email); err != nil {
 			return errors.Wrap(err, "getting user")
 		}
 
@@ -172,7 +172,7 @@ func run(log *log.Logger) error {
 		email := cfg.Args.Num(1)
 		privateKeyFile := cfg.Args.Num(2)
 		algorithm := cfg.Args.Num(3)
-		if err := commands.GenToken(gqlConfig, email, privateKeyFile, algorithm); err != nil {
+		if err := commands.GenToken(log, gqlConfig, email, privateKeyFile, algorithm); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 

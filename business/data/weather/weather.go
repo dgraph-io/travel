@@ -4,8 +4,10 @@ package weather
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/ardanlabs/graphql"
+	"github.com/dgraph-io/travel/business/data"
 	"github.com/pkg/errors"
 )
 
@@ -16,19 +18,21 @@ var (
 
 // Weather manages the set of API's for city access.
 type Weather struct {
+	log *log.Logger
 	gql *graphql.GraphQL
 }
 
 // New constructs a Weather for api access.
-func New(gql *graphql.GraphQL) Weather {
+func New(log *log.Logger, gql *graphql.GraphQL) Weather {
 	return Weather{
+		log: log,
 		gql: gql,
 	}
 }
 
 // Replace replaces a weather in the database and connects it
 // to the specified city.
-func (w Weather) Replace(ctx context.Context, wth Info) (Info, error) {
+func (w Weather) Replace(ctx context.Context, traceID string, wth Info) (Info, error) {
 	if wth.ID != "" {
 		return Info{}, errors.New("weather contains id")
 	}
@@ -36,13 +40,13 @@ func (w Weather) Replace(ctx context.Context, wth Info) (Info, error) {
 		return Info{}, errors.New("cityid not provided")
 	}
 
-	if err := w.delete(ctx, wth.City.ID); err != nil {
+	if err := w.delete(ctx, traceID, wth.City.ID); err != nil {
 		if err != ErrNotFound {
 			return Info{}, errors.Wrap(err, "deleting weather from database")
 		}
 	}
 
-	wth, err := w.add(ctx, wth)
+	wth, err := w.add(ctx, traceID, wth)
 	if err != nil {
 		return Info{}, errors.Wrap(err, "adding weather to database")
 	}
@@ -51,7 +55,7 @@ func (w Weather) Replace(ctx context.Context, wth Info) (Info, error) {
 }
 
 // QueryByCity returns the specified weather from the database by the city id.
-func (w Weather) QueryByCity(ctx context.Context, cityID string) (Info, error) {
+func (w Weather) QueryByCity(ctx context.Context, traceID string, cityID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -77,6 +81,8 @@ query {
 	}
 }`, cityID)
 
+	w.log.Printf("%s: %s: %s", traceID, "weather.QueryByID", data.Log(query))
+
 	var result struct {
 		GetCity struct {
 			Weather Info `json:"weather"`
@@ -95,8 +101,10 @@ query {
 
 // =============================================================================
 
-func (w Weather) add(ctx context.Context, wth Info) (Info, error) {
+func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error) {
 	mutation, result := prepareAdd(wth)
+	w.log.Printf("%s: %s: %s", traceID, "weather.Add", data.Log(mutation))
+
 	if err := w.gql.Query(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add weather")
 	}
@@ -109,13 +117,15 @@ func (w Weather) add(ctx context.Context, wth Info) (Info, error) {
 	return wth, nil
 }
 
-func (w Weather) delete(ctx context.Context, cityID string) error {
-	wth, err := w.QueryByCity(ctx, cityID)
+func (w Weather) delete(ctx context.Context, traceID string, cityID string) error {
+	wth, err := w.QueryByCity(ctx, traceID, cityID)
 	if err != nil {
 		return err
 	}
 
 	mutation, result := prepareDelete(wth.ID)
+	w.log.Printf("%s: %s: %s", traceID, "weather.Delete", data.Log(mutation))
+
 	if err := w.gql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}

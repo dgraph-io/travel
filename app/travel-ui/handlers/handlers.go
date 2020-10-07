@@ -43,6 +43,7 @@ func UI(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.G
 
 	// Register data load endpoint.
 	fg := fetchGroup{
+		log:       log,
 		gqlConfig: gqlConfig,
 	}
 	app.Handle(http.MethodGet, "/data/:city", fg.data)
