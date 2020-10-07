@@ -14,13 +14,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type feed struct {
+type feedGroup struct {
 	log          *log.Logger
 	gqlConfig    data.GraphQLConfig
 	loaderConfig loader.Config
 }
 
-func (f *feed) upload(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (fg *feedGroup) upload(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var request schema.UploadFeedRequest
 	if err := web.Decode(r, &request); err != nil {
 		return errors.Wrap(err, "decoding request")
@@ -38,7 +38,7 @@ func (f *feed) upload(ctx context.Context, w http.ResponseWriter, r *http.Reques
 			Lat:         request.Lat,
 			Lng:         request.Lng,
 		}
-		if err := loader.UpdateData(f.log, f.gqlConfig, f.loaderConfig, search); err != nil {
+		if err := loader.UpdateData(fg.log, fg.gqlConfig, fg.loaderConfig, search); err != nil {
 			log.Printf("%s : (%d) : %s %s -> %s (%s) : ERROR : %v",
 				v.TraceID, v.StatusCode,
 				r.Method, r.URL.Path,

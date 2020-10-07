@@ -21,12 +21,13 @@ func AddUser(gqlConfig data.GraphQLConfig, newUser user.NewUser) error {
 	defer cancel()
 
 	gql := data.NewGraphQL(gqlConfig)
+	u := user.New(gql)
 
-	u, err := user.Add(ctx, gql, newUser, time.Now())
+	usr, err := u.Add(ctx, newUser, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "adding user")
 	}
 
-	fmt.Println("user id:", u.ID)
+	fmt.Println("user id:", usr.ID)
 	return nil
 }

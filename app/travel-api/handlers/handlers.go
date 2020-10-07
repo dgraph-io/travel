@@ -20,19 +20,19 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	// Register the check endpoints.
-	check := check{
+	cg := checkGroup{
 		build:     build,
 		gqlConfig: gqlConfig,
 	}
-	app.Handle(http.MethodGet, "/v1/health", check.health)
+	app.Handle(http.MethodGet, "/v1/readiness", cg.readiness)
 
 	// Register the feed endpoints.
-	feed := feed{
+	fg := feedGroup{
 		log:          log,
 		gqlConfig:    gqlConfig,
 		loaderConfig: loaderConfig,
 	}
-	app.Handle(http.MethodPost, "/v1/feed/upload", feed.upload)
+	app.Handle(http.MethodPost, "/v1/feed/upload", fg.upload)
 
 	return app
 }

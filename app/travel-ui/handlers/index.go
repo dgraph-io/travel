@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type index struct {
+type indexGroup struct {
 	tmpl            *template.Template
 	graphQLEndpoint string
 	authHeaderName  string
@@ -20,18 +20,18 @@ type index struct {
 	mapsKey         string
 }
 
-func newIndex(gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey string) (*index, error) {
+func newIndex(gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey string) (indexGroup, error) {
 	rawTmpl, err := ioutil.ReadFile("assets/views/index.tmpl")
 	if err != nil {
-		return nil, errors.Wrap(err, "reading index page")
+		return indexGroup{}, errors.Wrap(err, "reading index page")
 	}
 
 	tmpl := template.New("index")
 	if _, err := tmpl.Parse(string(rawTmpl)); err != nil {
-		return nil, errors.Wrap(err, "creating template")
+		return indexGroup{}, errors.Wrap(err, "creating template")
 	}
 
-	index := index{
+	ig := indexGroup{
 		tmpl:            tmpl,
 		graphQLEndpoint: browserEndpoint,
 		authHeaderName:  gqlConfig.AuthHeaderName,
@@ -39,19 +39,19 @@ func newIndex(gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey stri
 		mapsKey:         mapsKey,
 	}
 
-	return &index, nil
+	return ig, nil
 }
 
-func (i *index) handler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ig *indexGroup) handler(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var markup bytes.Buffer
 	vars := map[string]interface{}{
-		"GraphQLEndpoint": i.graphQLEndpoint + "/graphql",
-		"MapsKey":         i.mapsKey,
-		"AuthHeaderName":  i.authHeaderName,
-		"AuthToken":       i.authToken,
+		"GraphQLEndpoint": ig.graphQLEndpoint + "/graphql",
+		"MapsKey":         ig.mapsKey,
+		"AuthHeaderName":  ig.authHeaderName,
+		"AuthToken":       ig.authToken,
 	}
 
-	if err := i.tmpl.Execute(&markup, vars); err != nil {
+	if err := ig.tmpl.Execute(&markup, vars); err != nil {
 		return errors.Wrap(err, "executing template")
 	}
 

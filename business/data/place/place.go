@@ -16,31 +16,43 @@ var (
 	ErrNotFound = errors.New("place not found")
 )
 
+// Place manages the set of API's for place access.
+type Place struct {
+	gql *graphql.GraphQL
+}
+
+// New constructs a Place for api access.
+func New(gql *graphql.GraphQL) Place {
+	return Place{
+		gql: gql,
+	}
+}
+
 // Add adds a new place to the database. If the place already exists
 // this function will fail but the found place is returned. If the city is
 // being added, the city with the id from the database is returned.
-func Add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) {
-	if place.ID != "" {
-		return Place{}, errors.New("place contains id")
+func (p Place) Add(ctx context.Context, plc Info) (Info, error) {
+	if plc.ID != "" {
+		return Info{}, errors.New("place contains id")
 	}
-	if place.City.ID == "" {
-		return Place{}, errors.New("cityid not provided")
-	}
-
-	if place, err := QueryByName(ctx, gql, place.Name); err == nil {
-		return place, ErrExists
+	if plc.City.ID == "" {
+		return Info{}, errors.New("cityid not provided")
 	}
 
-	place, err := add(ctx, gql, place)
+	if plc, err := p.QueryByName(ctx, plc.Name); err == nil {
+		return plc, ErrExists
+	}
+
+	plc, err := p.add(ctx, plc)
 	if err != nil {
-		return Place{}, errors.Wrap(err, "adding place to database")
+		return Info{}, errors.Wrap(err, "adding place to database")
 	}
 
-	return place, nil
+	return plc, nil
 }
 
 // QueryByID returns the specified place from the database by the place id.
-func QueryByID(ctx context.Context, gql *graphql.GraphQL, placeID string) (Place, error) {
+func (p Place) QueryByID(ctx context.Context, placeID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getPlace(id: %q) {
@@ -65,22 +77,22 @@ query {
 
 	var result struct {
 		GetPlace struct {
-			Place
+			Info
 		} `json:"getPlace"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
-		return Place{}, errors.Wrap(err, "query failed")
+	if err := p.gql.Query(ctx, query, &result); err != nil {
+		return Info{}, errors.Wrap(err, "query failed")
 	}
 
-	if result.GetPlace.Place.ID == "" {
-		return Place{}, ErrNotFound
+	if result.GetPlace.Info.ID == "" {
+		return Info{}, ErrNotFound
 	}
 
-	return result.GetPlace.Place, nil
+	return result.GetPlace.Info, nil
 }
 
 // QueryByName returns the specified place from the database by name.
-func QueryByName(ctx context.Context, gql *graphql.GraphQL, name string) (Place, error) {
+func (p Place) QueryByName(ctx context.Context, name string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { name: { eq: %q } }) {
@@ -104,14 +116,14 @@ query {
 }`, name)
 
 	var result struct {
-		QueryPlace []Place `json:"queryPlace"`
+		QueryPlace []Info `json:"queryPlace"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
-		return Place{}, errors.Wrap(err, "query failed")
+	if err := p.gql.Query(ctx, query, &result); err != nil {
+		return Info{}, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.QueryPlace) != 1 {
-		return Place{}, ErrNotFound
+		return Info{}, ErrNotFound
 	}
 
 	return result.QueryPlace[0], nil
@@ -119,7 +131,7 @@ query {
 
 // QueryByCategory returns the collection of places from the database
 // by the cagtegory name.
-func QueryByCategory(ctx context.Context, gql *graphql.GraphQL, category string) ([]Place, error) {
+func (p Place) QueryByCategory(ctx context.Context, category string) ([]Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { category: { eq: %q } }) {
@@ -143,9 +155,9 @@ query {
 }`, category)
 
 	var result struct {
-		QueryPlace []Place `json:"queryPlace"`
+		QueryPlace []Info `json:"queryPlace"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
+	if err := p.gql.Query(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -157,7 +169,7 @@ query {
 }
 
 // QueryByCity returns the collection of places from the database by the city id.
-func QueryByCity(ctx context.Context, gql *graphql.GraphQL, cityID string) ([]Place, error) {
+func (p Place) QueryByCity(ctx context.Context, cityID string) ([]Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -184,10 +196,10 @@ query {
 
 	var result struct {
 		GetCity struct {
-			Places []Place `json:"places"`
+			Places []Info `json:"places"`
 		} `json:"getCity"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
+	if err := p.gql.Query(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -196,29 +208,29 @@ query {
 
 // =============================================================================
 
-func add(ctx context.Context, gql *graphql.GraphQL, place Place) (Place, error) {
-	for i := range place.LocationType {
-		if !strings.HasPrefix(place.LocationType[i], `"`) {
-			place.LocationType[i] = fmt.Sprintf(`"%s"`, place.LocationType[i])
+func (p Place) add(ctx context.Context, plc Info) (Info, error) {
+	for i := range plc.LocationType {
+		if !strings.HasPrefix(plc.LocationType[i], `"`) {
+			plc.LocationType[i] = fmt.Sprintf(`"%s"`, plc.LocationType[i])
 		}
 	}
 
-	mutation, result := prepareAdd(place)
-	if err := gql.Query(ctx, mutation, &result); err != nil {
-		return Place{}, errors.Wrap(err, "failed to add place")
+	mutation, result := prepareAdd(plc)
+	if err := p.gql.Query(ctx, mutation, &result); err != nil {
+		return Info{}, errors.Wrap(err, "failed to add place")
 	}
 
 	if len(result.AddPlace.Place) != 1 {
-		return Place{}, errors.New("place id not returned")
+		return Info{}, errors.New("place id not returned")
 	}
 
-	place.ID = result.AddPlace.Place[0].ID
-	return place, nil
+	plc.ID = result.AddPlace.Place[0].ID
+	return plc, nil
 }
 
 // =============================================================================
 
-func prepareAdd(place Place) (string, addResult) {
+func prepareAdd(plc Info) (string, addResult) {
 	var result addResult
 	mutation := fmt.Sprintf(`
 mutation {
@@ -240,9 +252,9 @@ mutation {
 		photo_id: %q
 	}])
 	%s
-}`, place.Address, place.AvgUserRating, place.Category, place.City.ID, place.CityName, place.GmapsURL,
-		place.Lat, place.Lng, strings.Join(place.LocationType, ","), place.Name,
-		place.NumberOfRatings, place.PlaceID, place.PhotoReferenceID,
+}`, plc.Address, plc.AvgUserRating, plc.Category, plc.City.ID, plc.CityName, plc.GmapsURL,
+		plc.Lat, plc.Lng, strings.Join(plc.LocationType, ","), plc.Name,
+		plc.NumberOfRatings, plc.PlaceID, plc.PhotoReferenceID,
 		result.document())
 
 	return mutation, result

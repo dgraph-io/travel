@@ -18,20 +18,32 @@ var (
 	ErrNotFound  = errors.New("user not found")
 )
 
+// User manages the set of API's for user access.
+type User struct {
+	gql *graphql.GraphQL
+}
+
+// New constructs a User for api access.
+func New(gql *graphql.GraphQL) User {
+	return User{
+		gql: gql,
+	}
+}
+
 // Add adds a new user to the database. If the user already exists
 // this function will fail but the found user is returned. If the user is
 // being added, the user with the id from the database is returned.
-func Add(ctx context.Context, gql *graphql.GraphQL, nu NewUser, now time.Time) (User, error) {
-	if u, err := QueryByEmail(ctx, gql, nu.Email); err == nil {
-		return u, ErrExists
+func (u User) Add(ctx context.Context, nu NewUser, now time.Time) (Info, error) {
+	if usr, err := u.QueryByEmail(ctx, nu.Email); err == nil {
+		return usr, ErrExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return User{}, errors.Wrap(err, "generating password hash")
+		return Info{}, errors.Wrap(err, "generating password hash")
 	}
 
-	u := User{
+	usr := Info{
 		Name:         nu.Name,
 		Email:        nu.Email,
 		Role:         nu.Role,
@@ -40,22 +52,22 @@ func Add(ctx context.Context, gql *graphql.GraphQL, nu NewUser, now time.Time) (
 		DateUpdated:  now,
 	}
 
-	u, err = add(ctx, gql, u)
+	usr, err = u.add(ctx, usr)
 	if err != nil {
-		return User{}, errors.Wrap(err, "adding user to database")
+		return Info{}, errors.Wrap(err, "adding user to database")
 	}
 
-	return u, nil
+	return usr, nil
 }
 
 // Update updates a user in the database by its ID. If the user doesn't
 // already exist, this function will fail.
-func Update(ctx context.Context, gql *graphql.GraphQL, u User) error {
-	if _, err := QueryByID(ctx, gql, u.ID); err != nil {
+func (u User) Update(ctx context.Context, usr Info) error {
+	if _, err := u.QueryByID(ctx, usr.ID); err != nil {
 		return ErrNotExists
 	}
 
-	if err := update(ctx, gql, u); err != nil {
+	if err := u.update(ctx, usr); err != nil {
 		return errors.Wrap(err, "updating user in database")
 	}
 
@@ -64,12 +76,12 @@ func Update(ctx context.Context, gql *graphql.GraphQL, u User) error {
 
 // Delete removes a user from the database by its ID. If the user doesn't
 // already exist, this function will fail.
-func Delete(ctx context.Context, gql *graphql.GraphQL, userID string) error {
-	if _, err := QueryByID(ctx, gql, userID); err != nil {
+func (u User) Delete(ctx context.Context, userID string) error {
+	if _, err := u.QueryByID(ctx, userID); err != nil {
 		return ErrNotExists
 	}
 
-	if err := delete(ctx, gql, userID); err != nil {
+	if err := u.delete(ctx, userID); err != nil {
 		return errors.Wrap(err, "deleting user in database")
 	}
 
@@ -77,7 +89,7 @@ func Delete(ctx context.Context, gql *graphql.GraphQL, userID string) error {
 }
 
 // QueryByID returns the specified user from the database by the city id.
-func QueryByID(ctx context.Context, gql *graphql.GraphQL, userID string) (User, error) {
+func (u User) QueryByID(ctx context.Context, userID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getUser(id: %q) {
@@ -92,21 +104,21 @@ query {
 }`, userID)
 
 	var result struct {
-		GetUser User `json:"getUser"`
+		GetUser Info `json:"getUser"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
-		return User{}, errors.Wrap(err, "query failed")
+	if err := u.gql.Query(ctx, query, &result); err != nil {
+		return Info{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetUser.ID == "" {
-		return User{}, ErrNotFound
+		return Info{}, ErrNotFound
 	}
 
 	return result.GetUser, nil
 }
 
 // QueryByEmail returns the specified user from the database by email.
-func QueryByEmail(ctx context.Context, gql *graphql.GraphQL, email string) (User, error) {
+func (u User) QueryByEmail(ctx context.Context, email string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	queryUser(filter: { email: { eq: %q } }) {
@@ -121,14 +133,14 @@ query {
 }`, email)
 
 	var result struct {
-		QueryUser []User `json:"queryUser"`
+		QueryUser []Info `json:"queryUser"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
-		return User{}, errors.Wrap(err, "query failed")
+	if err := u.gql.Query(ctx, query, &result); err != nil {
+		return Info{}, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.QueryUser) != 1 {
-		return User{}, ErrNotFound
+		return Info{}, ErrNotFound
 	}
 
 	return result.QueryUser[0], nil
@@ -136,27 +148,27 @@ query {
 
 // =============================================================================
 
-func add(ctx context.Context, gql *graphql.GraphQL, user User) (User, error) {
-	mutation, result := prepareAdd(user)
-	if err := gql.Query(ctx, mutation, &result); err != nil {
-		return User{}, errors.Wrap(err, "failed to add user")
+func (u User) add(ctx context.Context, usr Info) (Info, error) {
+	mutation, result := prepareAdd(usr)
+	if err := u.gql.Query(ctx, mutation, &result); err != nil {
+		return Info{}, errors.Wrap(err, "failed to add user")
 	}
 
 	if len(result.AddUser.User) != 1 {
-		return User{}, errors.New("user id not returned")
+		return Info{}, errors.New("user id not returned")
 	}
 
-	user.ID = result.AddUser.User[0].ID
-	return user, nil
+	usr.ID = result.AddUser.User[0].ID
+	return usr, nil
 }
 
-func update(ctx context.Context, gql *graphql.GraphQL, user User) error {
-	if user.ID == "" {
+func (u User) update(ctx context.Context, usr Info) error {
+	if usr.ID == "" {
 		return errors.New("user missing id")
 	}
 
-	mutation, result := prepareUpdate(user)
-	if err := gql.Query(ctx, mutation, nil); err != nil {
+	mutation, result := prepareUpdate(usr)
+	if err := u.gql.Query(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
 
@@ -168,13 +180,13 @@ func update(ctx context.Context, gql *graphql.GraphQL, user User) error {
 	return nil
 }
 
-func delete(ctx context.Context, gql *graphql.GraphQL, userID string) error {
+func (u User) delete(ctx context.Context, userID string) error {
 	if userID == "" {
 		return errors.New("missing user id")
 	}
 
 	mutation, result := prepareDelete(userID)
-	if err := gql.Query(ctx, mutation, nil); err != nil {
+	if err := u.gql.Query(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to delete user")
 	}
 
@@ -188,7 +200,7 @@ func delete(ctx context.Context, gql *graphql.GraphQL, userID string) error {
 
 // =============================================================================
 
-func prepareAdd(user User) (string, addResult) {
+func prepareAdd(usr Info) (string, addResult) {
 	var result addResult
 	mutation := fmt.Sprintf(`
 mutation {
@@ -201,15 +213,15 @@ mutation {
 		date_updated: %q
 	}])
 	%s
-}`, user.Name, user.Email, user.Role, user.PasswordHash,
-		user.DateCreated.UTC().Format(time.RFC3339),
-		user.DateUpdated.UTC().Format(time.RFC3339),
+}`, usr.Name, usr.Email, usr.Role, usr.PasswordHash,
+		usr.DateCreated.UTC().Format(time.RFC3339),
+		usr.DateUpdated.UTC().Format(time.RFC3339),
 		result.document())
 
 	return mutation, result
 }
 
-func prepareUpdate(user User) (string, updateResult) {
+func prepareUpdate(usr Info) (string, updateResult) {
 	var result updateResult
 	mutation := fmt.Sprintf(`
 mutation {
@@ -227,9 +239,9 @@ mutation {
 		}
 	})
 	%s
-}`, user.ID, user.Name, user.Email, user.Role, user.PasswordHash,
-		user.DateCreated.UTC().Format(time.RFC3339),
-		user.DateUpdated.UTC().Format(time.RFC3339),
+}`, usr.ID, usr.Name, usr.Email, usr.Role, usr.PasswordHash,
+		usr.DateCreated.UTC().Format(time.RFC3339),
+		usr.DateUpdated.UTC().Format(time.RFC3339),
 		result.document())
 
 	return mutation, result

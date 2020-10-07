@@ -1,7 +1,7 @@
 package city
 
-// City represents a city and its coordinates.
-type City struct {
+// Info represents a city and its coordinates.
+type Info struct {
 	ID   string  `json:"id,omitempty"`
 	Name string  `json:"name"`
 	Lat  float64 `json:"lat"`

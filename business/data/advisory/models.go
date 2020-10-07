@@ -1,7 +1,7 @@
 package advisory
 
-// Advisory contains the travel advisory result captured for a city.
-type Advisory struct {
+// Info contains the travel advisory result captured for a city.
+type Info struct {
 	ID          string  `json:"id,omitempty"`
 	City        City    `json:"city"`
 	Country     string  `json:"country"`

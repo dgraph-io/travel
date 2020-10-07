@@ -14,20 +14,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-type fetch struct {
+type fetchGroup struct {
 	gqlConfig data.GraphQLConfig
 }
 
-func (f fetch) data(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	gql := data.NewGraphQL(f.gqlConfig)
+func (fg fetchGroup) data(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	gql := data.NewGraphQL(fg.gqlConfig)
+	c := city.New(gql)
+	p := place.New(gql)
 
 	params := httptreemux.ContextParams(r.Context())
-	city, err := city.QueryByName(context.Background(), gql, params["city"])
+	city, err := c.QueryByName(context.Background(), params["city"])
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
 
-	places, err := place.QueryByCity(context.Background(), gql, city.ID)
+	places, err := p.QueryByCity(context.Background(), city.ID)
 	if err != nil {
 		return errors.Wrap(err, "query places")
 	}
@@ -60,7 +62,7 @@ type doc struct {
 	Links []link `json:"links"`
 }
 
-func marshalCity(cityName string, places []place.Place) (string, error) {
+func marshalCity(cityName string, places []place.Info) (string, error) {
 
 	// Need the unique set of categories.
 	categories := make(map[string]string)

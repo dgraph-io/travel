@@ -21,12 +21,13 @@ func GetUser(gqlConfig data.GraphQLConfig, email string) error {
 	defer cancel()
 
 	gql := data.NewGraphQL(gqlConfig)
+	u := user.New(gql)
 
-	u, err := user.QueryByEmail(ctx, gql, email)
+	usr, err := u.QueryByEmail(ctx, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}
 
-	fmt.Printf("user: %#v\n", u)
+	fmt.Printf("user: %#v\n", usr)
 	return nil
 }

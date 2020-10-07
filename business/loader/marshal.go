@@ -11,8 +11,8 @@ import (
 
 // marshalPlace marshals a Place value from the places package into
 // a data Place value.
-func marshalPlace(feedData placesfeed.Place, cityID string, category string) place.Place {
-	return place.Place{
+func marshalPlace(feedData placesfeed.Place, cityID string, category string) place.Info {
+	return place.Info{
 		PlaceID:          feedData.PlaceID,
 		Category:         category,
 		City:             place.City{ID: cityID},
@@ -31,8 +31,8 @@ func marshalPlace(feedData placesfeed.Place, cityID string, category string) pla
 
 // marshalAdvisory marshals a Advisory value from the advisory package into
 // a data Advisory value.
-func marshalAdvisory(feedData advisoryfeed.Advisory, cityID string) advisory.Advisory {
-	return advisory.Advisory{
+func marshalAdvisory(feedData advisoryfeed.Advisory, cityID string) advisory.Info {
+	return advisory.Info{
 		City:        advisory.City{ID: cityID},
 		Country:     feedData.Country,
 		CountryCode: feedData.CountryCode,
@@ -46,8 +46,8 @@ func marshalAdvisory(feedData advisoryfeed.Advisory, cityID string) advisory.Adv
 
 // marshalWeather marshals a Weather value from the weather package into
 // a data Weather value.
-func marshalWeather(feedData weatherfeed.Weather, cityID string) weather.Weather {
-	return weather.Weather{
+func marshalWeather(feedData weatherfeed.Weather, cityID string) weather.Info {
+	return weather.Info{
 		City:          weather.City{ID: cityID},
 		CityName:      feedData.CityName,
 		Visibility:    feedData.Visibility,

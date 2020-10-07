@@ -103,30 +103,32 @@ func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) *gr
 
 // seedCity is a support test help function to consolidate the seeding of a
 // city since so many data tests need this functionality.
-func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newCity city.City) (*graphql.GraphQL, city.City) {
+func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newCity city.Info) (*graphql.GraphQL, city.Info) {
 	gql := waitReady(t, ctx, testID, tc)
+	c := city.New(gql)
 
-	city, err := city.Add(ctx, gql, newCity)
+	cty, err := c.Add(ctx, newCity)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city: %v", tests.Failed, testID, err)
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to add a city.", tests.Success, testID)
 
-	return gql, city
+	return gql, cty
 }
 
 // seedUser is a support test help function to consolidate the seeding of a
 // user since so many data tests need this functionality.
-func seedUser(t *testing.T, ctx context.Context, testID int, tc TestConfig, newUser user.NewUser, now time.Time) (*graphql.GraphQL, user.User) {
+func seedUser(t *testing.T, ctx context.Context, testID int, tc TestConfig, newUser user.NewUser, now time.Time) (*graphql.GraphQL, user.Info) {
 	gql := waitReady(t, ctx, testID, tc)
+	u := user.New(gql)
 
-	user, err := user.Add(ctx, gql, newUser, now)
+	usr, err := u.Add(ctx, newUser, now)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a user: %v", tests.Failed, testID, err)
 	}
 	t.Logf("\t%s\tTest %d:\tShould be able to add a user.", tests.Success, testID)
 
-	return gql, user
+	return gql, usr
 }
 
 // readiness validates the health check is working.
@@ -216,8 +218,9 @@ func addUser(tc TestConfig) func(t *testing.T) {
 					PasswordConfirm: "gophers",
 				}
 				gql, addedUser := seedUser(t, ctx, testID, tc, newUser, now)
+				u := user.New(gql)
 
-				retUser, err := user.QueryByID(ctx, gql, addedUser.ID)
+				retUser, err := u.QueryByID(ctx, addedUser.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user: %v", tests.Failed, testID, err)
 				}
@@ -233,7 +236,7 @@ func addUser(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same password hash.", tests.Success, testID)
 
-				userByEmail, err := user.QueryByEmail(ctx, gql, addedUser.Email)
+				userByEmail, err := u.QueryByEmail(ctx, addedUser.Email)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user by email: %v", tests.Failed, testID, err)
 				}
@@ -244,20 +247,20 @@ func addUser(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same user by email.", tests.Success, testID)
 
-				_, err = user.Add(ctx, gql, newUser, now)
+				_, err = u.Add(ctx, newUser, now)
 				if err == nil {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same user twice.", tests.Failed, testID)
 				}
 				t.Logf("\t%s\tTest %d:\tShould not be able to add the same user twice: %v", tests.Success, testID, err)
 
-				err = user.Delete(ctx, gql, addedUser.ID)
+				err = u.Delete(ctx, addedUser.ID)
 				if err != nil {
 					t.Logf("\t%s\tTest %d:\tShould be able to delete the user: %v.", tests.Failed, testID, err)
 				} else {
 					t.Logf("\t%s\tTest %d:\tShould be able to delete the user.", tests.Success, testID)
 				}
 
-				_, err = user.QueryByID(ctx, gql, addedUser.ID)
+				_, err = u.QueryByID(ctx, addedUser.ID)
 				if err == nil {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to query for the user.", tests.Failed, testID)
 				}
@@ -280,14 +283,15 @@ func addCity(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.City{
+				newCity := city.Info{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
+				c := city.New(gql)
 
-				retCity, err := city.QueryByID(ctx, gql, addedCity.ID)
+				retCity, err := c.QueryByID(ctx, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the city: %v", tests.Failed, testID, err)
 				}
@@ -298,7 +302,7 @@ func addCity(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same city.", tests.Success, testID)
 
-				cityByName, err := city.QueryByName(ctx, gql, addedCity.Name)
+				cityByName, err := c.QueryByName(ctx, addedCity.Name)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the city by name: %v", tests.Failed, testID, err)
 				}
@@ -310,13 +314,13 @@ func addCity(tc TestConfig) func(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould get back the same city by name.", tests.Success, testID)
 
 				addedCity.ID = ""
-				_, err = city.Add(ctx, gql, addedCity)
+				_, err = c.Add(ctx, addedCity)
 				if err == nil {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same city twice.", tests.Failed, testID)
 				}
 				t.Logf("\t%s\tTest %d:\tShould not be able to add the same city twice: %v", tests.Success, testID, err)
 
-				cities, err := city.QueryNames(ctx, gql)
+				cities, err := c.QueryNames(ctx)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the list of city names: %v", tests.Failed, testID, err)
 				}
@@ -345,14 +349,15 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.City{
+				newCity := city.Info{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
+				p := place.New(gql)
 
-				places := []place.Place{
+				places := []place.Info{
 					{
 						PlaceID:          "12345",
 						Category:         "test",
@@ -386,13 +391,13 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 				}
 
 				for i, newPlace := range places {
-					addedPlace, err := place.Add(ctx, gql, newPlace)
+					addedPlace, err := p.Add(ctx, newPlace)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to save a place in Dgraph: %v", tests.Failed, testID, err)
 					}
 					t.Logf("\t%s\tTest %d:\tShould be able to save a place in Dgraph.", tests.Success, testID)
 
-					retPlace, err := place.QueryByID(ctx, gql, addedPlace.ID)
+					retPlace, err := p.QueryByID(ctx, addedPlace.ID)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to query for the place: %v", tests.Failed, testID, err)
 					}
@@ -403,7 +408,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 					}
 					t.Logf("\t%s\tTest %d:\tShould get back the same place.", tests.Success, testID)
 
-					places, err := place.QueryByCity(ctx, gql, addedCity.ID)
+					places, err := p.QueryByCity(ctx, addedCity.ID)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to query city places: %v", tests.Failed, testID, err)
 					}
@@ -422,7 +427,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 					t.Logf("\t%s\tTest %d:\tShould get back the same place.", tests.Success, testID)
 
 					addedPlace.ID = ""
-					_, err = place.Add(ctx, gql, addedPlace)
+					_, err = p.Add(ctx, addedPlace)
 					if err == nil {
 						t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same place twice.", tests.Failed, testID)
 					}
@@ -445,14 +450,15 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.City{
+				newCity := city.Info{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
+				a := advisory.New(gql)
 
-				newAdvisory := advisory.Advisory{
+				newAdvisory := advisory.Info{
 					City:        advisory.City{ID: addedCity.ID},
 					Country:     "Australia",
 					CountryCode: "AU",
@@ -463,13 +469,13 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 					Source:      "friendly neighborhood community engineers",
 				}
 
-				addedAdvisory, err := advisory.Replace(ctx, gql, newAdvisory)
+				addedAdvisory, err := a.Replace(ctx, newAdvisory)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace an advisory in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace an advisory in Dgraph.", tests.Success, testID)
 
-				retAdvisory, err := advisory.QueryByCity(ctx, gql, addedCity.ID)
+				retAdvisory, err := a.QueryByCity(ctx, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 				}
@@ -482,13 +488,13 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 
 				addedAdvisory.ID = ""
 				addedAdvisory.Score = 6
-				addedAdvisory, err = advisory.Replace(ctx, gql, addedAdvisory)
+				addedAdvisory, err = a.Replace(ctx, addedAdvisory)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace an advisory twice in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace an advisory twice in Dgraph.", tests.Success, testID)
 
-				retAdvisory, err = advisory.QueryByCity(ctx, gql, addedCity.ID)
+				retAdvisory, err = a.QueryByCity(ctx, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 				}
@@ -515,14 +521,15 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.City{
+				newCity := city.Info{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
+				w := weather.New(gql)
 
-				newWeather := weather.Weather{
+				newWeather := weather.Info{
 					City:          weather.City{ID: addedCity.ID},
 					CityName:      "Sydney",
 					Visibility:    "clear",
@@ -539,13 +546,13 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 					Sunset:        10009945,
 				}
 
-				addedWeather, err := weather.Replace(ctx, gql, newWeather)
+				addedWeather, err := w.Replace(ctx, newWeather)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace the weather in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace the weather in Dgraph.", tests.Success, testID)
 
-				retWeather, err := weather.QueryByCity(ctx, gql, addedCity.ID)
+				retWeather, err := w.QueryByCity(ctx, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 				}
@@ -558,13 +565,13 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 
 				addedWeather.ID = ""
 				addedWeather.Desc = "test replace"
-				addedWeather, err = weather.Replace(ctx, gql, addedWeather)
+				addedWeather, err = w.Replace(ctx, addedWeather)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace the weather twice in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace the weather twice in Dgraph.", tests.Success, testID)
 
-				retWeather, err = weather.QueryByCity(ctx, gql, addedCity.ID)
+				retWeather, err = w.QueryByCity(ctx, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 				}

@@ -14,32 +14,44 @@ var (
 	ErrNotFound = errors.New("advisory not found")
 )
 
+// Advisory manages the set of API's for advisory access.
+type Advisory struct {
+	gql *graphql.GraphQL
+}
+
+// New constructs a Advisory for api access.
+func New(gql *graphql.GraphQL) Advisory {
+	return Advisory{
+		gql: gql,
+	}
+}
+
 // Replace replaces an advisory in the database and connects it
 // to the specified city.
-func Replace(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
-	if advisory.ID != "" {
-		return Advisory{}, errors.New("advisory contains id")
+func (a Advisory) Replace(ctx context.Context, adv Info) (Info, error) {
+	if adv.ID != "" {
+		return Info{}, errors.New("advisory contains id")
 	}
-	if advisory.City.ID == "" {
-		return Advisory{}, errors.New("cityid not provided")
+	if adv.City.ID == "" {
+		return Info{}, errors.New("cityid not provided")
 	}
 
-	if err := delete(ctx, gql, advisory.City.ID); err != nil {
+	if err := a.delete(ctx, adv.City.ID); err != nil {
 		if err != ErrNotFound {
-			return Advisory{}, errors.Wrap(err, "deleting advisory from database")
+			return Info{}, errors.Wrap(err, "deleting advisory from database")
 		}
 	}
 
-	advisory, err := add(ctx, gql, advisory)
+	adv, err := a.add(ctx, adv)
 	if err != nil {
-		return Advisory{}, errors.Wrap(err, "adding advisory to database")
+		return Info{}, errors.Wrap(err, "adding advisory to database")
 	}
 
-	return advisory, nil
+	return adv, nil
 }
 
 // QueryByCity returns the specified advisory from the database by the city id.
-func QueryByCity(ctx context.Context, gql *graphql.GraphQL, cityID string) (Advisory, error) {
+func (a Advisory) QueryByCity(ctx context.Context, cityID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -61,15 +73,15 @@ query {
 
 	var result struct {
 		GetCity struct {
-			Advisory Advisory `json:"advisory"`
+			Advisory Info `json:"advisory"`
 		} `json:"getCity"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
-		return Advisory{}, errors.Wrap(err, "query failed")
+	if err := a.gql.Query(ctx, query, &result); err != nil {
+		return Info{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetCity.Advisory.ID == "" {
-		return Advisory{}, ErrNotFound
+		return Info{}, ErrNotFound
 	}
 
 	return result.GetCity.Advisory, nil
@@ -77,28 +89,28 @@ query {
 
 // =============================================================================
 
-func add(ctx context.Context, gql *graphql.GraphQL, advisory Advisory) (Advisory, error) {
-	mutation, result := prepareAdd(advisory)
-	if err := gql.Query(ctx, mutation, &result); err != nil {
-		return Advisory{}, errors.Wrap(err, "failed to add place")
+func (a Advisory) add(ctx context.Context, adv Info) (Info, error) {
+	mutation, result := prepareAdd(adv)
+	if err := a.gql.Query(ctx, mutation, &result); err != nil {
+		return Info{}, errors.Wrap(err, "failed to add place")
 	}
 
 	if len(result.AddAdvisory.Advisory) != 1 {
-		return Advisory{}, errors.New("advisory id not returned")
+		return Info{}, errors.New("advisory id not returned")
 	}
 
-	advisory.ID = result.AddAdvisory.Advisory[0].ID
-	return advisory, nil
+	adv.ID = result.AddAdvisory.Advisory[0].ID
+	return adv, nil
 }
 
-func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
-	advisory, err := QueryByCity(ctx, gql, cityID)
+func (a Advisory) delete(ctx context.Context, cityID string) error {
+	adv, err := a.QueryByCity(ctx, cityID)
 	if err != nil {
 		return err
 	}
 
-	mutation, result := prepareDelete(advisory.ID)
-	if err := gql.Query(ctx, mutation, &result); err != nil {
+	mutation, result := prepareDelete(adv.ID)
+	if err := a.gql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}
 
@@ -112,7 +124,7 @@ func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
 
 // =============================================================================
 
-func prepareAdd(advisory Advisory) (string, addResult) {
+func prepareAdd(adv Info) (string, addResult) {
 	var result addResult
 	mutation := fmt.Sprintf(`
 mutation {
@@ -129,8 +141,8 @@ mutation {
 		source: %q
 	}])
 	%s
-}`, advisory.City.ID, advisory.Continent, advisory.Country, advisory.CountryCode,
-		advisory.LastUpdated, advisory.Message, advisory.Score, advisory.Source,
+}`, adv.City.ID, adv.Continent, adv.Country, adv.CountryCode,
+		adv.LastUpdated, adv.Message, adv.Score, adv.Source,
 		result.document())
 
 	return mutation, result

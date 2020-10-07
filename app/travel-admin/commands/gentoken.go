@@ -26,9 +26,10 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	defer cancel()
 
 	gql := data.NewGraphQL(gqlConfig)
+	u := user.New(gql)
 
 	// Retrieve the user by email so we have the roles for this user.
-	user, err := user.QueryByEmail(ctx, gql, email)
+	usr, err := u.QueryByEmail(ctx, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}
@@ -81,12 +82,12 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "travel project",
-			Subject:   user.ID,
+			Subject:   usr.ID,
 			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		Auth: auth.StandardClaims{
-			Role: user.Role,
+			Role: usr.Role,
 		},
 	}
 

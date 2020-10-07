@@ -14,32 +14,44 @@ var (
 	ErrNotFound = errors.New("weather not found")
 )
 
+// Weather manages the set of API's for city access.
+type Weather struct {
+	gql *graphql.GraphQL
+}
+
+// New constructs a Weather for api access.
+func New(gql *graphql.GraphQL) Weather {
+	return Weather{
+		gql: gql,
+	}
+}
+
 // Replace replaces a weather in the database and connects it
 // to the specified city.
-func Replace(ctx context.Context, gql *graphql.GraphQL, weather Weather) (Weather, error) {
-	if weather.ID != "" {
-		return Weather{}, errors.New("weather contains id")
+func (w Weather) Replace(ctx context.Context, wth Info) (Info, error) {
+	if wth.ID != "" {
+		return Info{}, errors.New("weather contains id")
 	}
-	if weather.City.ID == "" {
-		return Weather{}, errors.New("cityid not provided")
+	if wth.City.ID == "" {
+		return Info{}, errors.New("cityid not provided")
 	}
 
-	if err := delete(ctx, gql, weather.City.ID); err != nil {
+	if err := w.delete(ctx, wth.City.ID); err != nil {
 		if err != ErrNotFound {
-			return Weather{}, errors.Wrap(err, "deleting weather from database")
+			return Info{}, errors.Wrap(err, "deleting weather from database")
 		}
 	}
 
-	weather, err := add(ctx, gql, weather)
+	wth, err := w.add(ctx, wth)
 	if err != nil {
-		return Weather{}, errors.Wrap(err, "adding weather to database")
+		return Info{}, errors.Wrap(err, "adding weather to database")
 	}
 
-	return weather, nil
+	return wth, nil
 }
 
 // QueryByCity returns the specified weather from the database by the city id.
-func QueryByCity(ctx context.Context, gql *graphql.GraphQL, cityID string) (Weather, error) {
+func (w Weather) QueryByCity(ctx context.Context, cityID string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -67,15 +79,15 @@ query {
 
 	var result struct {
 		GetCity struct {
-			Weather Weather `json:"weather"`
+			Weather Info `json:"weather"`
 		} `json:"getCity"`
 	}
-	if err := gql.Query(ctx, query, &result); err != nil {
-		return Weather{}, errors.Wrap(err, "query failed")
+	if err := w.gql.Query(ctx, query, &result); err != nil {
+		return Info{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetCity.Weather.ID == "" {
-		return Weather{}, ErrNotFound
+		return Info{}, ErrNotFound
 	}
 
 	return result.GetCity.Weather, nil
@@ -83,28 +95,28 @@ query {
 
 // =============================================================================
 
-func add(ctx context.Context, gql *graphql.GraphQL, weather Weather) (Weather, error) {
-	mutation, result := prepareAdd(weather)
-	if err := gql.Query(ctx, mutation, &result); err != nil {
-		return Weather{}, errors.Wrap(err, "failed to add weather")
+func (w Weather) add(ctx context.Context, wth Info) (Info, error) {
+	mutation, result := prepareAdd(wth)
+	if err := w.gql.Query(ctx, mutation, &result); err != nil {
+		return Info{}, errors.Wrap(err, "failed to add weather")
 	}
 
 	if len(result.AddWeather.Weather) != 1 {
-		return Weather{}, errors.New("advisory id not returned")
+		return Info{}, errors.New("advisory id not returned")
 	}
 
-	weather.ID = result.AddWeather.Weather[0].ID
-	return weather, nil
+	wth.ID = result.AddWeather.Weather[0].ID
+	return wth, nil
 }
 
-func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
-	weather, err := QueryByCity(ctx, gql, cityID)
+func (w Weather) delete(ctx context.Context, cityID string) error {
+	wth, err := w.QueryByCity(ctx, cityID)
 	if err != nil {
 		return err
 	}
 
-	mutation, result := prepareDelete(weather.ID)
-	if err := gql.Query(ctx, mutation, &result); err != nil {
+	mutation, result := prepareDelete(wth.ID)
+	if err := w.gql.Query(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
 
@@ -118,7 +130,7 @@ func delete(ctx context.Context, gql *graphql.GraphQL, cityID string) error {
 
 // =============================================================================
 
-func prepareAdd(weather Weather) (string, addResult) {
+func prepareAdd(wth Info) (string, addResult) {
 	var result addResult
 	mutation := fmt.Sprintf(`
 mutation {
@@ -141,10 +153,10 @@ mutation {
 		wind_speed: %f
 	}])
 	%s
-}`, weather.City.ID, weather.CityName, weather.Desc, weather.FeelsLike, weather.Humidity,
-		weather.Pressure, weather.Sunrise, weather.Sunset, weather.Temp,
-		weather.MinTemp, weather.MaxTemp, weather.Visibility, weather.WindDirection,
-		weather.WindSpeed, result.document())
+}`, wth.City.ID, wth.CityName, wth.Desc, wth.FeelsLike, wth.Humidity,
+		wth.Pressure, wth.Sunrise, wth.Sunset, wth.Temp,
+		wth.MinTemp, wth.MaxTemp, wth.Visibility, wth.WindDirection,
+		wth.WindSpeed, result.document())
 
 	return mutation, result
 }
