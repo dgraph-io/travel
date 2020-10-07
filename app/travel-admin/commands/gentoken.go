@@ -49,13 +49,13 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	// provided to perform the task of retrieving a KID for a given public key.
 	// In this code, I am writing a lookup function that will return the public
 	// key for the private key provided with an arbitary KID.
-	keyID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-	keyLookupFunc := func(publicKID string) (*rsa.PublicKey, error) {
-		switch publicKID {
+	const keyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
+	lookup := func(kid string) (*rsa.PublicKey, error) {
+		switch kid {
 		case keyID:
 			return &privateKey.PublicKey, nil
 		}
-		return nil, fmt.Errorf("no public key found for the specified kid: %s", publicKID)
+		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
 	}
 
 	// An authenticator maintains the state required to handle JWT processing.
@@ -63,7 +63,7 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	// to the corresponding public key, the algorithms to use (RS256), and the
 	// key lookup function to perform the actual retrieve of the KID to public
 	// key lookup.
-	a, err := auth.New(privateKey, keyID, algorithm, keyLookupFunc)
+	a, err := auth.New("RS256", lookup, auth.Keys{keyID: privateKey})
 	if err != nil {
 		return errors.Wrap(err, "constructing authenticator")
 	}
@@ -95,7 +95,7 @@ func GenToken(gqlConfig data.GraphQLConfig, email string, privateKeyFile string,
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := a.GenerateToken(claims)
+	token, err := a.GenerateToken(keyID, claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}
