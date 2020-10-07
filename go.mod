@@ -14,10 +14,10 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
-	go.opencensus.io v0.22.4 // indirect
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	go.opencensus.io v0.22.5 // indirect
+	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	googlemaps.github.io/maps v1.2.2
+	googlemaps.github.io/maps v1.2.3
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
