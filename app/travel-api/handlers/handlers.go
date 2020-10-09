@@ -24,7 +24,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.
 		build:     build,
 		gqlConfig: gqlConfig,
 	}
-	app.Handle(http.MethodGet, "/v1/readiness", cg.readiness)
+	app.HandleDebug(http.MethodGet, "/v1/readiness", cg.readiness)
 
 	// Register the feed endpoints.
 	fg := feedGroup{
