@@ -58,7 +58,7 @@ spec:
           containerPort: 4080
         readinessProbe:
           httpGet:
-            path: /readiness
+            path: /debug/readiness
             port: 4080
           initialDelaySeconds: 30
           periodSeconds: 15
