@@ -17,11 +17,6 @@ spec:
       - name: api
         image: travel-api-amd64:1.0
         env:
-        - name: TRAVEL_DGRAPH_URL
-          valueFrom:
-            configMapKeyRef:
-              name: travel
-              key: dgraph_url
         - name: TRAVEL_API_KEYS_MAPS_KEY
           valueFrom:
             configMapKeyRef:
@@ -41,11 +36,6 @@ spec:
       - name: ui
         image: travel-ui-amd64:1.0
         env:
-        - name: TRAVEL_DGRAPH_URL
-          valueFrom:
-            configMapKeyRef:
-              name: travel
-              key: dgraph_url
         - name: TRAVEL_API_KEYS_MAPS_KEY
           valueFrom:
             configMapKeyRef:

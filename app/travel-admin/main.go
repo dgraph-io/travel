@@ -43,7 +43,7 @@ func run(log *log.Logger) error {
 			AuthToken      string
 		}
 		CustomFunctions struct {
-			UploadFeedURL string `conf:"default:http://travel-api:3000/v1/feed/upload"`
+			UploadFeedURL string `conf:"default:http://0.0.0.0:3000/v1/feed/upload"`
 		}
 		Search struct {
 			Categories []string `conf:"default:restaurant;bar;supermarket"`

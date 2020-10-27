@@ -47,7 +47,7 @@ go.opencensus.io/stats
 go.opencensus.io/stats/internal
 go.opencensus.io/stats/view
 go.opencensus.io/tag
-# golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+# golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish

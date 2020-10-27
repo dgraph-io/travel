@@ -60,7 +60,7 @@ func run(log *log.Logger) error {
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		Dgraph struct {
-			URL            string `conf:"default:http://dgraph-alpha:8080"`
+			URL            string `conf:"default:http://0.0.0.0:8080"`
 			AuthHeaderName string
 			AuthToken      string
 		}
