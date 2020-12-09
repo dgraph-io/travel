@@ -151,21 +151,21 @@ func (c City) add(ctx context.Context, traceID string, cty Info) (Info, error) {
 		return Info{}, errors.Wrap(err, "failed to add city")
 	}
 
-	if len(result.AddCity.City) != 1 {
+	if len(result.Resp.Entities) != 1 {
 		return Info{}, errors.New("city id not returned")
 	}
 
-	cty.ID = result.AddCity.City[0].ID
+	cty.ID = result.Resp.Entities[0].ID
 	return cty, nil
 }
 
 // =============================================================================
 
-func prepareAdd(cty Info) (string, addResult) {
-	var result addResult
+func prepareAdd(cty Info) (string, id) {
+	var result id
 	mutation := fmt.Sprintf(`
 	mutation {
-		addCity(input: [{
+		resp: addCity(input: [{
 			name: %q
 			lat: %f
 			lng: %f

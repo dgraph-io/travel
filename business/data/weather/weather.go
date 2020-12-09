@@ -109,11 +109,11 @@ func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error
 		return Info{}, errors.Wrap(err, "failed to add weather")
 	}
 
-	if len(result.AddWeather.Weather) != 1 {
+	if len(result.Resp.Entities) != 1 {
 		return Info{}, errors.New("advisory id not returned")
 	}
 
-	wth.ID = result.AddWeather.Weather[0].ID
+	wth.ID = result.Resp.Entities[0].ID
 	return wth, nil
 }
 
@@ -130,8 +130,8 @@ func (w Weather) delete(ctx context.Context, traceID string, cityID string) erro
 		return errors.Wrap(err, "failed to delete weather")
 	}
 
-	if result.DeleteWeather.NumUids != 1 {
-		msg := fmt.Sprintf("failed to delete advisory: NumUids: %d  Msg: %s", result.DeleteWeather.NumUids, result.DeleteWeather.Msg)
+	if result.Resp.NumUids != 1 {
+		msg := fmt.Sprintf("failed to delete advisory: NumUids: %d  Msg: %s", result.Resp.NumUids, result.Resp.Msg)
 		return errors.New(msg)
 	}
 
@@ -140,11 +140,11 @@ func (w Weather) delete(ctx context.Context, traceID string, cityID string) erro
 
 // =============================================================================
 
-func prepareAdd(wth Info) (string, addResult) {
-	var result addResult
+func prepareAdd(wth Info) (string, id) {
+	var result id
 	mutation := fmt.Sprintf(`
 mutation {
-	addWeather(input: [{
+	resp: addWeather(input: [{
 		city: {
 			id: %q
 		}
@@ -171,11 +171,11 @@ mutation {
 	return mutation, result
 }
 
-func prepareDelete(weatherID string) (string, deleteResult) {
-	var result deleteResult
+func prepareDelete(weatherID string) (string, result) {
+	var result result
 	mutation := fmt.Sprintf(`
 mutation {
-	deleteWeather(filter: { id: [%q] })
+	resp: deleteWeather(filter: { id: [%q] })
 	%s
 }`, weatherID, result.document())
 

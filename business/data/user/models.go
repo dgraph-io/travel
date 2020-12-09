@@ -22,44 +22,32 @@ type NewUser struct {
 	PasswordConfirm string `json:"password_confirm"`
 }
 
-type addResult struct {
-	AddUser struct {
-		User []struct {
+// =============================================================================
+
+type id struct {
+	Resp struct {
+		Entities []struct {
 			ID string `json:"id"`
-		} `json:"user"`
-	} `json:"addUser"`
+		} `json:"entities"`
+	} `json:"resp"`
 }
 
-func (addResult) document() string {
+func (id) document() string {
 	return `{
-		user {
+		entities: user {
 			id
 		}
 	}`
 }
 
-type updateResult struct {
-	UpdateUser struct {
+type result struct {
+	Resp struct {
 		Msg     string
 		NumUids int
-	} `json:"updateUser"`
+	} `json:"resp"`
 }
 
-func (updateResult) document() string {
-	return `{
-		msg,
-		numUids,
-	}`
-}
-
-type deleteResult struct {
-	DeleteUser struct {
-		Msg     string
-		NumUids int
-	} `json:"deleteUser"`
-}
-
-func (deleteResult) document() string {
+func (result) document() string {
 	return `{
 		msg,
 		numUids,

@@ -24,30 +24,32 @@ type City struct {
 	ID string `json:"id"`
 }
 
-type addResult struct {
-	AddWeather struct {
-		Weather []struct {
+// =============================================================================
+
+type id struct {
+	Resp struct {
+		Entities []struct {
 			ID string `json:"id"`
-		} `json:"weather"`
-	} `json:"addWeather"`
+		} `json:"entities"`
+	} `json:"resp"`
 }
 
-func (addResult) document() string {
+func (id) document() string {
 	return `{
-		weather {
+		entities: weather {
 			id
 		}
 	}`
 }
 
-type deleteResult struct {
-	DeleteWeather struct {
+type result struct {
+	Resp struct {
 		Msg     string
 		NumUids int
-	} `json:"deleteWeather"`
+	} `json:"resp"`
 }
 
-func (deleteResult) document() string {
+func (result) document() string {
 	return `{
 		msg,
 		numUids,

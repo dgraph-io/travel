@@ -103,11 +103,11 @@ func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, erro
 		return Info{}, errors.Wrap(err, "failed to add place")
 	}
 
-	if len(result.AddAdvisory.Advisory) != 1 {
+	if len(result.Resp.Entities) != 1 {
 		return Info{}, errors.New("advisory id not returned")
 	}
 
-	adv.ID = result.AddAdvisory.Advisory[0].ID
+	adv.ID = result.Resp.Entities[0].ID
 	return adv, nil
 }
 
@@ -124,8 +124,8 @@ func (a Advisory) delete(ctx context.Context, traceID string, cityID string) err
 		return errors.Wrap(err, "failed to delete advisory")
 	}
 
-	if result.DeleteAdvisory.NumUids != 1 {
-		msg := fmt.Sprintf("failed to delete advisory: NumUids: %d  Msg: %s", result.DeleteAdvisory.NumUids, result.DeleteAdvisory.Msg)
+	if result.Resp.NumUids != 1 {
+		msg := fmt.Sprintf("failed to delete advisory: NumUids: %d  Msg: %s", result.Resp.NumUids, result.Resp.Msg)
 		return errors.New(msg)
 	}
 
@@ -134,11 +134,11 @@ func (a Advisory) delete(ctx context.Context, traceID string, cityID string) err
 
 // =============================================================================
 
-func prepareAdd(adv Info) (string, addResult) {
-	var result addResult
+func prepareAdd(adv Info) (string, id) {
+	var result id
 	mutation := fmt.Sprintf(`
 mutation {
-	addAdvisory(input: [{
+	resp: addAdvisory(input: [{
 		city: {
 			id: %q
 		}
@@ -158,11 +158,11 @@ mutation {
 	return mutation, result
 }
 
-func prepareDelete(advisoryID string) (string, deleteResult) {
-	var result deleteResult
+func prepareDelete(advisoryID string) (string, result) {
+	var result result
 	mutation := fmt.Sprintf(`
 mutation {
-	deleteAdvisory(filter: { id: [%q] })
+	resp: deleteAdvisory(filter: { id: [%q] })
 	%s
 }`, advisoryID, result.document())
 

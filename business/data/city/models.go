@@ -8,17 +8,19 @@ type Info struct {
 	Lng  float64 `json:"lng"`
 }
 
-type addResult struct {
-	AddCity struct {
-		City []struct {
+// =============================================================================
+
+type id struct {
+	Resp struct {
+		Entities []struct {
 			ID string `json:"id"`
-		} `json:"city"`
-	} `json:"addCity"`
+		} `json:"entities"`
+	} `json:"resp"`
 }
 
-func (addResult) document() string {
+func (id) document() string {
 	return `{
-		city {
+		entities: city {
 			id
 		}
 	}`

@@ -234,21 +234,21 @@ func (p Place) add(ctx context.Context, traceID string, plc Info) (Info, error) 
 		return Info{}, errors.Wrap(err, "failed to add place")
 	}
 
-	if len(result.AddPlace.Place) != 1 {
+	if len(result.Resp.Entities) != 1 {
 		return Info{}, errors.New("place id not returned")
 	}
 
-	plc.ID = result.AddPlace.Place[0].ID
+	plc.ID = result.Resp.Entities[0].ID
 	return plc, nil
 }
 
 // =============================================================================
 
-func prepareAdd(plc Info) (string, addResult) {
-	var result addResult
+func prepareAdd(plc Info) (string, id) {
+	var result id
 	mutation := fmt.Sprintf(`
 mutation {
-	addPlace(input: [{
+	resp: addPlace(input: [{
 		address: %q
 		avg_user_rating: %f
 		category: %q

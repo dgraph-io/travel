@@ -18,30 +18,32 @@ type City struct {
 	ID string `json:"id"`
 }
 
-type addResult struct {
-	AddAdvisory struct {
-		Advisory []struct {
+// =============================================================================
+
+type id struct {
+	Resp struct {
+		Entities []struct {
 			ID string `json:"id"`
-		} `json:"advisory"`
-	} `json:"addAdvisory"`
+		} `json:"entities"`
+	} `json:"resp"`
 }
 
-func (addResult) document() string {
+func (id) document() string {
 	return `{
-		advisory {
+		entities: advisory {
 			id
 		}
 	}`
 }
 
-type deleteResult struct {
-	DeleteAdvisory struct {
+type result struct {
+	Resp struct {
 		Msg     string
 		NumUids int
-	} `json:"deleteAdvisory"`
+	} `json:"resp"`
 }
 
-func (deleteResult) document() string {
+func (result) document() string {
 	return `{
 		msg,
 		numUids,

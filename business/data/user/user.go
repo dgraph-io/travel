@@ -164,11 +164,11 @@ func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
 		return Info{}, errors.Wrap(err, "failed to add user")
 	}
 
-	if len(result.AddUser.User) != 1 {
+	if len(result.Resp.Entities) != 1 {
 		return Info{}, errors.New("user id not returned")
 	}
 
-	usr.ID = result.AddUser.User[0].ID
+	usr.ID = result.Resp.Entities[0].ID
 	return usr, nil
 }
 
@@ -184,8 +184,8 @@ func (u User) update(ctx context.Context, traceID string, usr Info) error {
 		return errors.Wrap(err, "failed to update user")
 	}
 
-	if result.UpdateUser.NumUids != 1 {
-		msg := fmt.Sprintf("failed to update user: NumUids: %d  Msg: %s", result.UpdateUser.NumUids, result.UpdateUser.Msg)
+	if result.Resp.NumUids != 1 {
+		msg := fmt.Sprintf("failed to update user: NumUids: %d  Msg: %s", result.Resp.NumUids, result.Resp.Msg)
 		return errors.New(msg)
 	}
 
@@ -204,8 +204,8 @@ func (u User) delete(ctx context.Context, traceID string, userID string) error {
 		return errors.Wrap(err, "failed to delete user")
 	}
 
-	if result.DeleteUser.NumUids != 0 {
-		msg := fmt.Sprintf("failed to delete user: NumUids: %d  Msg: %s", result.DeleteUser.NumUids, result.DeleteUser.Msg)
+	if result.Resp.NumUids != 0 {
+		msg := fmt.Sprintf("failed to delete user: NumUids: %d  Msg: %s", result.Resp.NumUids, result.Resp.Msg)
 		return errors.New(msg)
 	}
 
@@ -214,11 +214,11 @@ func (u User) delete(ctx context.Context, traceID string, userID string) error {
 
 // =============================================================================
 
-func prepareAdd(usr Info) (string, addResult) {
-	var result addResult
+func prepareAdd(usr Info) (string, id) {
+	var result id
 	mutation := fmt.Sprintf(`
 mutation {
-	addUser(input: [{
+	resp: addUser(input: [{
 		name: %q
 		email: %q
 		role: %s
@@ -235,11 +235,11 @@ mutation {
 	return mutation, result
 }
 
-func prepareUpdate(usr Info) (string, updateResult) {
-	var result updateResult
+func prepareUpdate(usr Info) (string, result) {
+	var result result
 	mutation := fmt.Sprintf(`
 mutation {
-	updateUser(input: {
+	resp: updateUser(input: {
 		filter: {
 		  id: [%q]
 		},
@@ -261,11 +261,11 @@ mutation {
 	return mutation, result
 }
 
-func prepareDelete(userID string) (string, deleteResult) {
-	var result deleteResult
+func prepareDelete(userID string) (string, result) {
+	var result result
 	mutation := fmt.Sprintf(`
 mutation {
-	deleteUser(filter: { id: [%q] })
+	resp: deleteUser(filter: { id: [%q] })
 	%s
 }`, userID, result.document())
 

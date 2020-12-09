@@ -23,17 +23,19 @@ type City struct {
 	ID string `json:"id"`
 }
 
-type addResult struct {
-	AddPlace struct {
-		Place []struct {
+// =============================================================================
+
+type id struct {
+	Resp struct {
+		Entities []struct {
 			ID string `json:"id"`
-		} `json:"place"`
-	} `json:"addPlace"`
+		} `json:"entities"`
+	} `json:"resp"`
 }
 
-func (addResult) document() string {
+func (id) document() string {
 	return `{
-		place {
+		entities: place {
 			id
 		}
 	}`
