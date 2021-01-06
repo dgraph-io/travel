@@ -20,7 +20,7 @@ import (
 	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgraph-io/travel/business/data/weather"
 	"github.com/dgraph-io/travel/foundation/tests"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -626,9 +626,8 @@ func performAuth() func(t *testing.T) {
 					StandardClaims: jwt.StandardClaims{
 						Issuer:    "travel project",
 						Subject:   "0x01",
-						Audience:  "students",
-						ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
-						IssuedAt:  time.Now().Unix(),
+						ExpiresAt: jwt.At(time.Now().Add(8760 * time.Hour)),
+						IssuedAt:  jwt.Now(),
 					},
 					Auth: auth.StandardClaims{
 						Role: "ADMIN",

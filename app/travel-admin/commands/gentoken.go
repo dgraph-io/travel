@@ -11,7 +11,7 @@ import (
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/auth"
 	"github.com/dgraph-io/travel/business/data/user"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -86,8 +86,8 @@ func GenToken(log *log.Logger, gqlConfig data.GraphQLConfig, email string, priva
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "travel project",
 			Subject:   usr.ID,
-			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
-			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: jwt.At(time.Now().Add(8760 * time.Hour)),
+			IssuedAt:  jwt.Now(),
 		},
 		Auth: auth.StandardClaims{
 			Role: usr.Role,
