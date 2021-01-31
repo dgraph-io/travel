@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.15.6 as build_travel-ui
+FROM golang:1.15.7 as build_travel-ui
 ENV CGO_ENABLED 0
 ARG VCS_REF
 
@@ -18,7 +18,7 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.12
+FROM alpine:3.13
 ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME

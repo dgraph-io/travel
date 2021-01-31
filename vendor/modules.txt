@@ -21,8 +21,6 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.17.0
 ## explicit
 github.com/go-playground/universal-translator
-# github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
-## explicit
 # github.com/google/go-cmp v0.5.4
 ## explicit
 github.com/google/go-cmp/cmp
@@ -30,7 +28,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/uuid v1.1.4
+# github.com/google/uuid v1.2.0
 ## explicit
 github.com/google/uuid
 # github.com/kr/text v0.2.0
@@ -41,7 +39,9 @@ github.com/leodido/go-urn
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# go.opencensus.io v0.22.5
+# github.com/stretchr/testify v1.7.0
+## explicit
+# go.opencensus.io v0.22.6
 ## explicit
 go.opencensus.io/internal/tagencoding
 go.opencensus.io/metric/metricdata
@@ -73,5 +73,5 @@ googlemaps.github.io/maps/metrics
 ## explicit
 gopkg.in/go-playground/validator.v9
 gopkg.in/go-playground/validator.v9/translations/en
-# gopkg.in/yaml.v3 v3.0.0-20210105161348-2e78108cf5f8
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 ## explicit
