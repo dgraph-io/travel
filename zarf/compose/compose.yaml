@@ -10,14 +10,14 @@ services:
     container_name: dgraph-zero
     networks:
       - shared-network
-    image: dgraph/dgraph:master
+    image: dgraph/dgraph:v20.11.1
     command: dgraph zero
 
   dgraph-alpha:
     container_name: dgraph-alpha
     networks:
       - shared-network
-    image: dgraph/dgraph:master
+    image: dgraph/dgraph:v20.11.1
     ports:
       - 8080:8080
     depends_on:

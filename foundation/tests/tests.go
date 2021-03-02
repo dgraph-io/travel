@@ -16,7 +16,7 @@ const (
 
 // Configuration for running tests.
 const (
-	dbImage = "dgraph/standalone:master"
+	dbImage = "dgraph/standalone:v20.11.1"
 	dbPort  = "8080"
 )
 
