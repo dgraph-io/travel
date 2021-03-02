@@ -2,6 +2,8 @@
 package schema
 
 import (
+	_ "embed" // Embed all documents
+
 	"bytes"
 	"context"
 	"encoding/json"
@@ -12,6 +14,16 @@ import (
 
 	"github.com/ardanlabs/graphql"
 	"github.com/pkg/errors"
+)
+
+// These variables will contain the contents of the schema and public key
+// used in Dgraph for JWT support.
+var (
+	//go:embed graphql/public_key.pem
+	publicKey string
+
+	//go:embed graphql/schema.graphql
+	schemaDoc string
 )
 
 // Schema error variables.
@@ -42,12 +54,12 @@ func New(graphql *graphql.GraphQL, config Config) (*Schema, error) {
 
 	// The actual CRLF (\n) must be converted to the characters '\n' so the
 	// entire key sits on one line.
-	publicKey := strings.ReplaceAll(schema.publicKey, "\n", "\\n")
+	publicKey := strings.ReplaceAll(publicKey, "\n", "\\n")
 
 	// Create the final schema document with the variable replacments by
 	// processing the template.
 	tmpl := template.New("schema")
-	if _, err := tmpl.Parse(schema.document); err != nil {
+	if _, err := tmpl.Parse(schemaDoc); err != nil {
 		return nil, errors.Wrap(err, "parsing template")
 	}
 	var document bytes.Buffer

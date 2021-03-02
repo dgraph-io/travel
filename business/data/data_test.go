@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -19,6 +18,7 @@ import (
 	"github.com/dgraph-io/travel/business/data/schema"
 	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgraph-io/travel/business/data/weather"
+	"github.com/dgraph-io/travel/foundation/keystore"
 	"github.com/dgraph-io/travel/foundation/tests"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/go-cmp/cmp"
@@ -75,7 +75,7 @@ func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) *gr
 	gqlConfig := data.GraphQLConfig{
 		URL:            tc.url,
 		AuthHeaderName: "X-Travel-Auth",
-		AuthToken:      schema.AdminJWT,
+		AuthToken:      "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0YmIyMTY1LTcxZTEtNDFhNi1hZjNlLTdkYTRhMGUxZTJjMSIsInR5cCI6IkpXVCJ9.eyJBdXRoIjp7IlJPTEUiOiJBRE1JTiJ9LCJleHAiOjE2MjMzNDI3MTQsImlhdCI6MTU5MTgwNjcxNCwiaXNzIjoidHJhdmVsIHByb2plY3QiLCJzdWIiOiIweDUifQ.dxZsiE9WSXBHB-WenJlSK6zqgXs7ykKpQM3BfrTd_WYvfjIo26FhlPxN-Fr_3dR5-U4aMAw61dTNxMMBNPbD4qs8-CnJ0xfSOl8Xa5Y3p-aKpYvTPL_rPZdjcfqTua2t_sOPmZ3d8_VWkKWmdK-42ab751tmXOCrM6kYXoS1_APQwXKfE_q5eBUlTfrIBR29vtrBfWnpN54wR4i-Uk6DalMOduUmUNuZnYGP9ocIU4Ao1RQ8TsZjo6iIsLGM3r86KYypBWsiRAZPMIZjoZAxqhjRBEOaqNUpq6X3vdhQcRYLgh_36_R1QPlhofAaNKrTMvcZNHkBrBsjOB5pwf6IMQ",
 	}
 	gql := data.NewGraphQL(gqlConfig)
 
@@ -601,22 +601,14 @@ func performAuth() func(t *testing.T) {
 			testID := 0
 			t.Logf("\tTest %d:\tWhen handling a single user.", testID)
 			{
+				keyID := "4754d86b-7a6d-4df5-9c65-224741361492"
 				privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to create a private key: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to create a private key.", tests.Success, testID)
 
-				const keyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-				lookup := func(kid string) (*rsa.PublicKey, error) {
-					switch kid {
-					case keyID:
-						return &privateKey.PublicKey, nil
-					}
-					return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
-				}
-
-				a, err := auth.New("RS256", lookup, auth.Keys{keyID: privateKey})
+				a, err := auth.New("RS256", keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", tests.Failed, testID, err)
 				}

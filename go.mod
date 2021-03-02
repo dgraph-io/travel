@@ -1,6 +1,6 @@
 module github.com/dgraph-io/travel
 
-go 1.15
+go 1.16
 
 require (
 	github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c

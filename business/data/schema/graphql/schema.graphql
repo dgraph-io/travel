@@ -1,0 +1,101 @@
+# This represents the schema for the project. It is written to be processed
+# by the Go templating engine to provide required parameters to be injected into
+# the schema. In a production system the schema should be embedded using a tool
+# like pakcr from the Buffalo project (https://github.com/gobuffalo/packr).
+
+enum Role {
+	ADMIN
+	EMAIL
+	MUTATE
+	QUERY
+}
+
+type User @auth(
+	query: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
+	add: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
+    update: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
+    delete: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
+){
+	id: ID!
+	email: String! @search(by: [exact])
+	name: String!
+	role: Role!
+	password_hash: String!
+	date_created: DateTime!
+	date_updated: DateTime!
+}
+
+type City {
+	id: ID!
+	name: String! @search(by: [exact])
+	lat: Float!
+	lng: Float!
+	places: [Place] @hasInverse(field: city)
+	advisory: Advisory @hasInverse(field: city)
+	weather: Weather @hasInverse(field: city)
+}
+
+type Advisory {
+	id: ID!
+	city: City!
+	continent: String!
+	country: String!
+	country_code: String!
+	last_updated: String
+	message: String
+	score: Float!
+	source: String
+}
+
+type Place {
+	id: ID!
+	address: String
+	avg_user_rating: Float
+	category: String @search(by: [exact])
+	city: City!
+	city_name: String!
+	gmaps_url: String
+	lat: Float!
+	lng: Float!
+	location_type: [String]
+	name: String! @search(by: [exact])
+	no_user_rating: Int
+	place_id: String!
+	photo_id: String
+}
+
+type Weather {
+	id: ID!
+	city: City!
+	city_name: String!
+	description: String
+	feels_like: Float
+	humidity: Int
+	pressure: Int
+	sunrise: Int
+	sunset: Int
+	temp: Float
+	temp_min: Float
+	temp_max: Float
+	visibility: String
+	wind_direction: Int
+	wind_speed: Float
+}
+
+type UploadFeedResponse @remote {
+	country_code: String
+	city_name: String
+	lat: Float
+	lng: Float
+	message: String
+}
+
+type Query{
+	uploadFeed(countryCode: String!, cityName: String!, lat: Float!, lng: Float!): UploadFeedResponse @custom(http:{
+		url: "{{.UploadFeedURL}}",
+		method: "POST",
+		body: "{countrycode: $countryCode, cityname: $cityName, lat: $lat, lng: $lng}"
+	})
+}
+
+# Dgraph.Authorization {"header":"X-Travel-Auth", "namespace":"Auth", "algo":"RS256", "verificationkey":"{{.PublicKey}}"}
