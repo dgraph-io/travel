@@ -1,7 +1,7 @@
 # github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c
 ## explicit
 github.com/AvraamMavridis/randomcolor
-# github.com/ardanlabs/conf v1.3.3
+# github.com/ardanlabs/conf v1.3.4
 ## explicit
 github.com/ardanlabs/conf
 # github.com/ardanlabs/graphql v1.4.2
@@ -31,8 +31,6 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/google/uuid v1.2.0
 ## explicit
 github.com/google/uuid
-# github.com/kr/text v0.2.0
-## explicit
 # github.com/leodido/go-urn v1.2.1
 ## explicit
 github.com/leodido/go-urn
@@ -41,7 +39,7 @@ github.com/leodido/go-urn
 github.com/pkg/errors
 # github.com/stretchr/testify v1.7.0
 ## explicit
-# go.opencensus.io v0.22.6
+# go.opencensus.io v0.23.0
 ## explicit
 go.opencensus.io/internal/tagencoding
 go.opencensus.io/metric/metricdata
@@ -51,11 +49,11 @@ go.opencensus.io/stats
 go.opencensus.io/stats/internal
 go.opencensus.io/stats/view
 go.opencensus.io/tag
-# golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+# golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-# golang.org/x/time v0.0.0-20201208040808-7e3f01d25324
+# golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 ## explicit
 golang.org/x/time/rate
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
@@ -65,8 +63,6 @@ golang.org/x/time/rate
 googlemaps.github.io/maps
 googlemaps.github.io/maps/internal
 googlemaps.github.io/maps/metrics
-# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
-## explicit
 # gopkg.in/go-playground/assert.v1 v1.2.1
 ## explicit
 # gopkg.in/go-playground/validator.v9 v9.31.0
