@@ -101,7 +101,7 @@ query {
 func (p Place) QueryByName(ctx context.Context, traceID string, name string) (Info, error) {
 	query := fmt.Sprintf(`
 query {
-	queryPlace(filter: { name: { eq: %q } }) {
+	queryPlace(filter: { name: { alloftext: %q } }) {
 		id
 		address
 		avg_user_rating

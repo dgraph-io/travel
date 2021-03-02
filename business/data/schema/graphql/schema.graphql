@@ -58,7 +58,7 @@ type Place {
 	lat: Float!
 	lng: Float!
 	location_type: [String]
-	name: String! @search(by: [exact])
+	name: String! @search(by: [fulltext])
 	no_user_rating: Int
 	place_id: String!
 	photo_id: String
@@ -82,6 +82,10 @@ type Weather {
 	wind_speed: Float
 }
 
+type PlaceCount @remote {
+	count: Int
+}
+
 type UploadFeedResponse @remote {
 	country_code: String
 	city_name: String
@@ -96,6 +100,14 @@ type Query{
 		method: "POST",
 		body: "{countrycode: $countryCode, cityname: $cityName, lat: $lat, lng: $lng}"
 	})
+
+	placesCount(search: String!): PlaceCount @custom(dql: """
+	query q($search: string) {
+		placesCount(func: type(Place)) @filter(anyoftext(Place.name, $search)) {
+			count: count(uid)
+		}
+	}
+	""")
 }
 
 # Dgraph.Authorization {"header":"X-Travel-Auth", "namespace":"Auth", "algo":"RS256", "verificationkey":"{{.PublicKey}}"}
