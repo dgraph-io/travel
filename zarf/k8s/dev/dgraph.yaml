@@ -120,8 +120,8 @@ spec:
                 fieldPath: metadata.namespace
           - name: DGRAPH_ALPHA_LRU_MB
             value: "1024"
-          - name: DGRAPH_ALPHA_WHITELIST
-            value: "0.0.0.0/0"
+          - name: DGRAPH_ALPHA_SECURITY
+            value: "whitelist=0.0.0.0/0"
         command:
           - bash
           - "-c"

@@ -11,7 +11,7 @@ services:
       - DGRAPH_ALPHA_MY=dgraph-alpha:7080
       - DGRAPH_ALPHA_LRU_MB=1024
       - DGRAPH_ALPHA_ZERO=dgraph-zero:5080
-      - DGRAPH_ALPHA_WHITELIST=0.0.0.0/0
+      - DGRAPH_ALPHA_SECURITY='whitelist=0.0.0.0/0'
 
   travel-api:
     environment:
