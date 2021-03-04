@@ -135,6 +135,18 @@ schema:
 seed: schema
 	go run app/travel-admin/main.go seed
 
+dropall:
+	curl -H "Content-Type: application/graphql" http://0.0.0.0:8080/alter -XPOST -d $ \
+	'{ \
+		"drop_all": true \
+	}'
+
+dropdata:
+	curl -H "Content-Type: application/graphql" http://0.0.0.0:8080/alter -XPOST -d $ \
+	'{ \
+		"drop_op": "DATA" \
+	}'
+
 # Running tests within the local computer
 
 test:

@@ -41,26 +41,26 @@ type Advisory {
 	continent: String!
 	country: String!
 	country_code: String!
+	score: Float!
 	last_updated: String
 	message: String
-	score: Float!
 	source: String
 }
 
 type Place {
 	id: ID!
-	name: String! @search(by: [fulltext]) @id
-	address: String
-	avg_user_rating: Float
-	category: String @search(by: [exact])
+	place_id: String! @search(by: [hash]) @id
+	name: String! @search(by: [fulltext])
+	category: String! @search(by: [exact])
 	city: City!
 	city_name: String!
-	gmaps_url: String
 	lat: Float!
 	lng: Float!
+	address: String
+	avg_user_rating: Float
+	gmaps_url: String
 	location_type: [String]
 	no_user_rating: Int
-	place_id: String!
 	photo_id: String
 }
 
@@ -94,13 +94,14 @@ type UploadFeedResponse @remote {
 	message: String
 }
 
-type Query{
+type Query {
 	uploadFeed(countryCode: String!, cityName: String!, lat: Float!, lng: Float!): UploadFeedResponse @custom(http:{
 		url: "{{.UploadFeedURL}}",
 		method: "POST",
 		body: "{countrycode: $countryCode, cityname: $cityName, lat: $lat, lng: $lng}"
 	})
 
+	# This shows how to create a query function to perform a DQL based query.
 	placesCount(search: String!): PlaceCount @custom(dql: """
 	query q($search: string) {
 		placesCount(func: type(Place)) @filter(anyoftext(Place.name, $search)) {
@@ -110,4 +111,4 @@ type Query{
 	""")
 }
 
-# Dgraph.Authorization {"header":"X-Travel-Auth", "namespace":"Auth", "algo":"RS256", "verificationkey":"{{.PublicKey}}"}
+# Dgraph.Authorization {"header":"X-Travel-Auth", "namespace":"Auth", "algo": "RS256", "verificationkey":"{{.PublicKey}}"}
