@@ -57,7 +57,7 @@ func TestData(t *testing.T) {
 	t.Run("readiness", readiness(tc.url))
 	t.Run("schema", addSchema(tc))
 	t.Run("user", addUser(tc))
-	t.Run("city", addCity(tc))
+	t.Run("city", upsertCity(tc))
 	t.Run("place", addPlace(tc))
 	t.Run("advisory", replaceAdvisory(tc))
 	t.Run("weather", replaceWeather(tc))
@@ -113,7 +113,7 @@ func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newC
 	gql := waitReady(t, ctx, testID, tc)
 	c := city.New(tc.log, gql)
 
-	cty, err := c.Add(ctx, tc.traceID, newCity)
+	cty, err := c.Upsert(ctx, tc.traceID, newCity)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city: %v", tests.Failed, testID, err)
 	}
@@ -279,8 +279,8 @@ func addUser(tc TestConfig) func(t *testing.T) {
 	return tf
 }
 
-// addCity validates a city node can be added to the database.
-func addCity(tc TestConfig) func(t *testing.T) {
+// upsertCity validates a city node can be added to the database.
+func upsertCity(tc TestConfig) func(t *testing.T) {
 	tf := func(t *testing.T) {
 		t.Log("Given the need to be able to validate storing a city.")
 		{
@@ -320,12 +320,20 @@ func addCity(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same city by name.", tests.Success, testID)
 
+				id := addedCity.ID
 				addedCity.ID = ""
-				_, err = c.Add(ctx, tc.traceID, addedCity)
-				if err == nil {
-					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same city twice.", tests.Failed, testID)
+				upsertCity, err := c.Upsert(ctx, tc.traceID, addedCity)
+				if err != nil {
+					t.Fatalf("\t%s\tTest %d:\tShould be able to upsert the same city twice: %v", tests.Failed, testID, err)
 				}
-				t.Logf("\t%s\tTest %d:\tShould not be able to add the same city twice: %v", tests.Success, testID, err)
+				t.Logf("\t%s\tTest %d:\tShould not be able to upsert the same city twice.", tests.Success, testID)
+
+				if id != upsertCity.ID {
+					t.Logf("\t\tTest %d:\tgot: %v", testID, upsertCity.ID)
+					t.Logf("\t\tTest %d:\texp: %v", testID, id)
+					t.Fatalf("\t%s\tTest %d:\tShould get back the same id for the city.", tests.Failed, testID)
+				}
+				t.Logf("\t%s\tTest %d:\tShould get back the same id for the city.", tests.Success, testID)
 
 				cities, err := c.QueryNames(ctx, tc.traceID)
 				if err != nil {
@@ -398,7 +406,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 				}
 
 				for i, newPlace := range places {
-					addedPlace, err := p.Add(ctx, tc.traceID, newPlace)
+					addedPlace, err := p.Upsert(ctx, tc.traceID, newPlace)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to save a place in Dgraph: %v", tests.Failed, testID, err)
 					}
@@ -433,12 +441,20 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 					}
 					t.Logf("\t%s\tTest %d:\tShould get back the same place.", tests.Success, testID)
 
+					id := addedPlace.ID
 					addedPlace.ID = ""
-					_, err = p.Add(ctx, tc.traceID, addedPlace)
-					if err == nil {
-						t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same place twice.", tests.Failed, testID)
+					upsertPlace, err := p.Upsert(ctx, tc.traceID, addedPlace)
+					if err != nil {
+						t.Fatalf("\t%s\tTest %d:\tShould be able to upsert the same place twice: %v", tests.Failed, testID, err)
 					}
-					t.Logf("\t%s\tTest %d:\tShould not be able to add the same place twice: %v", tests.Success, testID, err)
+					t.Logf("\t%s\tTest %d:\tShould not be able to upsert the same place twice.", tests.Success, testID)
+
+					if id != upsertPlace.ID {
+						t.Logf("\t\tTest %d:\tgot: %v", testID, upsertPlace.ID)
+						t.Logf("\t\tTest %d:\texp: %v", testID, id)
+						t.Fatalf("\t%s\tTest %d:\tShould get back the same id for the place.", tests.Failed, testID)
+					}
+					t.Logf("\t%s\tTest %d:\tShould get back the same id for the place.", tests.Success, testID)
 				}
 			}
 		}

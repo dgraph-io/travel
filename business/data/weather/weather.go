@@ -40,18 +40,15 @@ func (w Weather) Replace(ctx context.Context, traceID string, wth Info) (Info, e
 		return Info{}, errors.New("cityid not provided")
 	}
 
-	if err := w.delete(ctx, traceID, wth.City.ID); err != nil {
-		if err != ErrNotFound {
-			return Info{}, errors.Wrap(err, "deleting weather from database")
+	if oldWth, err := w.QueryByCity(ctx, traceID, wth.City.ID); err == nil {
+		if err := w.delete(ctx, traceID, oldWth.ID); err != nil {
+			if err != ErrNotFound {
+				return Info{}, errors.Wrap(err, "deleting weather from database")
+			}
 		}
 	}
 
-	wth, err := w.add(ctx, traceID, wth)
-	if err != nil {
-		return Info{}, errors.Wrap(err, "adding weather to database")
-	}
-
-	return wth, nil
+	return w.add(ctx, traceID, wth)
 }
 
 // QueryByCity returns the specified weather from the database by the city id.
@@ -101,29 +98,14 @@ query {
 
 // =============================================================================
 
-func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error) {
-	mutation, result := prepareAdd(wth)
-	w.log.Printf("%s: %s: %s", traceID, "weather.Add", data.Log(mutation))
+func (w Weather) delete(ctx context.Context, traceID string, wthID string) error {
+	var result result
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: deleteWeather(filter: { id: [%q] })
+		%s
+	}`, wthID, result.document())
 
-	if err := w.gql.Query(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to add weather")
-	}
-
-	if len(result.Resp.Entities) != 1 {
-		return Info{}, errors.New("advisory id not returned")
-	}
-
-	wth.ID = result.Resp.Entities[0].ID
-	return wth, nil
-}
-
-func (w Weather) delete(ctx context.Context, traceID string, cityID string) error {
-	wth, err := w.QueryByCity(ctx, traceID, cityID)
-	if err != nil {
-		return err
-	}
-
-	mutation, result := prepareDelete(wth.ID)
 	w.log.Printf("%s: %s: %s", traceID, "weather.Delete", data.Log(mutation))
 
 	if err := w.gql.Query(ctx, mutation, &result); err != nil {
@@ -138,46 +120,44 @@ func (w Weather) delete(ctx context.Context, traceID string, cityID string) erro
 	return nil
 }
 
-// =============================================================================
-
-func prepareAdd(wth Info) (string, id) {
+func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error) {
 	var result id
 	mutation := fmt.Sprintf(`
-mutation {
-	resp: addWeather(input: [{
-		city: {
-			id: %q
-		}
-		city_name: %q
-		description: %q
-		feels_like: %f
-		humidity: %d
-		pressure: %d
-		sunrise: %d
-		sunset: %d
-		temp: %f
-		temp_min: %f
-		temp_max: %f
-		visibility: %q
-		wind_direction: %d
-		wind_speed: %f
-	}])
-	%s
-}`, wth.City.ID, wth.CityName, wth.Desc, wth.FeelsLike, wth.Humidity,
+	mutation {
+		resp: addWeather(input: [{
+			city: {
+				id: %q
+			}
+			city_name: %q
+			description: %q
+			feels_like: %f
+			humidity: %d
+			pressure: %d
+			sunrise: %d
+			sunset: %d
+			temp: %f
+			temp_min: %f
+			temp_max: %f
+			visibility: %q
+			wind_direction: %d
+			wind_speed: %f
+		}])
+		%s
+	}`, wth.City.ID, wth.CityName, wth.Desc, wth.FeelsLike, wth.Humidity,
 		wth.Pressure, wth.Sunrise, wth.Sunset, wth.Temp,
 		wth.MinTemp, wth.MaxTemp, wth.Visibility, wth.WindDirection,
 		wth.WindSpeed, result.document())
 
-	return mutation, result
-}
+	w.log.Printf("%s: %s: %s", traceID, "weather.Add", data.Log(mutation))
 
-func prepareDelete(weatherID string) (string, result) {
-	var result result
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: deleteWeather(filter: { id: [%q] })
-	%s
-}`, weatherID, result.document())
+	if err := w.gql.Query(ctx, mutation, &result); err != nil {
+		return Info{}, errors.Wrap(err, "failed to add weather")
+	}
 
-	return mutation, result
+	if len(result.Resp.Entities) != 1 {
+		return Info{}, errors.New("advisory id not returned")
+	}
+
+	wth.ID = result.Resp.Entities[0].ID
+	return wth, nil
 }

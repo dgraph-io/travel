@@ -14,7 +14,6 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrExists   = errors.New("place exists")
 	ErrNotFound = errors.New("place not found")
 )
 
@@ -32,10 +31,10 @@ func New(log *log.Logger, gql *graphql.GraphQL) Place {
 	}
 }
 
-// Add adds a new place to the database. If the place already exists
-// this function will fail but the found place is returned. If the city is
-// being added, the city with the id from the database is returned.
-func (p Place) Add(ctx context.Context, traceID string, plc Info) (Info, error) {
+// Upsert adds a new place to the database if it doesn't already exist by name.
+// If the place already exists in the database, the function will return an Info
+// value with the existing id.
+func (p Place) Upsert(ctx context.Context, traceID string, plc Info) (Info, error) {
 	if plc.ID != "" {
 		return Info{}, errors.New("place contains id")
 	}
@@ -43,16 +42,13 @@ func (p Place) Add(ctx context.Context, traceID string, plc Info) (Info, error) 
 		return Info{}, errors.New("cityid not provided")
 	}
 
-	if plc, err := p.QueryByName(ctx, traceID, plc.Name); err == nil {
-		return plc, ErrExists
+	for i := range plc.LocationType {
+		if !strings.HasPrefix(plc.LocationType[i], `"`) {
+			plc.LocationType[i] = fmt.Sprintf(`"%s"`, plc.LocationType[i])
+		}
 	}
 
-	plc, err := p.add(ctx, traceID, plc)
-	if err != nil {
-		return Info{}, errors.Wrap(err, "adding place to database")
-	}
-
-	return plc, nil
+	return p.upsert(ctx, traceID, plc)
 }
 
 // QueryByID returns the specified place from the database by the place id.
@@ -220,18 +216,37 @@ query {
 
 // =============================================================================
 
-func (p Place) add(ctx context.Context, traceID string, plc Info) (Info, error) {
-	for i := range plc.LocationType {
-		if !strings.HasPrefix(plc.LocationType[i], `"`) {
-			plc.LocationType[i] = fmt.Sprintf(`"%s"`, plc.LocationType[i])
-		}
-	}
+func (p Place) upsert(ctx context.Context, traceID string, plc Info) (Info, error) {
+	var result id
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: addPlace(input: [{
+			name: %q
+			address: %q
+			avg_user_rating: %f
+			category: %q
+			city: {
+				id: %q
+			}
+			city_name: %q
+			gmaps_url: %q
+			lat: %f
+			lng: %f
+			location_type: [%q]
+			no_user_rating: %d
+			place_id: %q
+			photo_id: %q
+		}], upsert: true)
+		%s
+	}`, plc.Name, plc.Address, plc.AvgUserRating, plc.Category, plc.City.ID,
+		plc.CityName, plc.GmapsURL, plc.Lat, plc.Lng, strings.Join(plc.LocationType, ","),
+		plc.NumberOfRatings, plc.PlaceID, plc.PhotoReferenceID,
+		result.document())
 
-	mutation, result := prepareAdd(plc)
-	p.log.Printf("%s: %s: %s", traceID, "place.Add", data.Log(mutation))
+	p.log.Printf("%s: %s: %s", traceID, "place.Upsert", data.Log(mutation))
 
 	if err := p.gql.Query(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to add place")
+		return Info{}, errors.Wrap(err, "failed to upsert place")
 	}
 
 	if len(result.Resp.Entities) != 1 {
@@ -240,36 +255,4 @@ func (p Place) add(ctx context.Context, traceID string, plc Info) (Info, error) 
 
 	plc.ID = result.Resp.Entities[0].ID
 	return plc, nil
-}
-
-// =============================================================================
-
-func prepareAdd(plc Info) (string, id) {
-	var result id
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: addPlace(input: [{
-		address: %q
-		avg_user_rating: %f
-		category: %q
-		city: {
-			id: %q
-		}
-		city_name: %q
-		gmaps_url: %q
-		lat: %f
-		lng: %f
-		location_type: [%q]
-		name: %q
-		no_user_rating: %d
-		place_id: %q
-		photo_id: %q
-	}])
-	%s
-}`, plc.Address, plc.AvgUserRating, plc.Category, plc.City.ID, plc.CityName, plc.GmapsURL,
-		plc.Lat, plc.Lng, strings.Join(plc.LocationType, ","), plc.Name,
-		plc.NumberOfRatings, plc.PlaceID, plc.PhotoReferenceID,
-		result.document())
-
-	return mutation, result
 }

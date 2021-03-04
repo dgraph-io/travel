@@ -56,40 +56,35 @@ func (u User) Add(ctx context.Context, traceID string, nu NewUser, now time.Time
 		DateUpdated:  now,
 	}
 
-	usr, err = u.add(ctx, traceID, usr)
-	if err != nil {
-		return Info{}, errors.Wrap(err, "adding user to database")
-	}
-
-	return usr, nil
+	return u.add(ctx, traceID, usr)
 }
 
 // Update updates a user in the database by its ID. If the user doesn't
 // already exist, this function will fail.
 func (u User) Update(ctx context.Context, traceID string, usr Info) error {
+	if usr.ID == "" {
+		return errors.New("user missing id")
+	}
+
 	if _, err := u.QueryByID(ctx, traceID, usr.ID); err != nil {
 		return ErrNotExists
 	}
 
-	if err := u.update(ctx, traceID, usr); err != nil {
-		return errors.Wrap(err, "updating user in database")
-	}
-
-	return nil
+	return u.update(ctx, traceID, usr)
 }
 
 // Delete removes a user from the database by its ID. If the user doesn't
 // already exist, this function will fail.
 func (u User) Delete(ctx context.Context, traceID string, userID string) error {
+	if userID == "" {
+		return errors.New("missing user id")
+	}
+
 	if _, err := u.QueryByID(ctx, traceID, userID); err != nil {
 		return ErrNotExists
 	}
 
-	if err := u.delete(ctx, traceID, userID); err != nil {
-		return errors.Wrap(err, "deleting user in database")
-	}
-
-	return nil
+	return u.delete(ctx, traceID, userID)
 }
 
 // QueryByID returns the specified user from the database by the city id.
@@ -157,7 +152,23 @@ query {
 // =============================================================================
 
 func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
-	mutation, result := prepareAdd(usr)
+	var result id
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: addUser(input: [{
+			name: %q
+			email: %q
+			role: %s
+			password_hash: %q
+			date_created: %q
+			date_updated: %q
+		}])
+		%s
+	}`, usr.Name, usr.Email, usr.Role, usr.PasswordHash,
+		usr.DateCreated.UTC().Format(time.RFC3339),
+		usr.DateUpdated.UTC().Format(time.RFC3339),
+		result.document())
+
 	u.log.Printf("%s: %s: %s", traceID, "user.Add", data.Log(mutation))
 
 	if err := u.gql.Query(ctx, mutation, &result); err != nil {
@@ -173,11 +184,28 @@ func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
 }
 
 func (u User) update(ctx context.Context, traceID string, usr Info) error {
-	if usr.ID == "" {
-		return errors.New("user missing id")
-	}
+	var result result
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: updateUser(input: {
+			filter: {
+			id: [%q]
+			},
+			set: {
+				name: %q
+				email: %q
+				role: %s
+				password_hash: %q
+				date_created: %q
+				date_updated: %q
+			}
+		})
+		%s
+	}`, usr.ID, usr.Name, usr.Email, usr.Role, usr.PasswordHash,
+		usr.DateCreated.UTC().Format(time.RFC3339),
+		usr.DateUpdated.UTC().Format(time.RFC3339),
+		result.document())
 
-	mutation, result := prepareUpdate(usr)
 	u.log.Printf("%s: %s: %s", traceID, "user.Update", data.Log(mutation))
 
 	if err := u.gql.Query(ctx, mutation, nil); err != nil {
@@ -193,11 +221,13 @@ func (u User) update(ctx context.Context, traceID string, usr Info) error {
 }
 
 func (u User) delete(ctx context.Context, traceID string, userID string) error {
-	if userID == "" {
-		return errors.New("missing user id")
-	}
+	var result result
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: deleteUser(filter: { id: [%q] })
+		%s
+	}`, userID, result.document())
 
-	mutation, result := prepareDelete(userID)
 	u.log.Printf("%s: %s: %s", traceID, "user.Delete", data.Log(mutation))
 
 	if err := u.gql.Query(ctx, mutation, nil); err != nil {
@@ -210,64 +240,4 @@ func (u User) delete(ctx context.Context, traceID string, userID string) error {
 	}
 
 	return nil
-}
-
-// =============================================================================
-
-func prepareAdd(usr Info) (string, id) {
-	var result id
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: addUser(input: [{
-		name: %q
-		email: %q
-		role: %s
-		password_hash: %q
-		date_created: %q
-		date_updated: %q
-	}])
-	%s
-}`, usr.Name, usr.Email, usr.Role, usr.PasswordHash,
-		usr.DateCreated.UTC().Format(time.RFC3339),
-		usr.DateUpdated.UTC().Format(time.RFC3339),
-		result.document())
-
-	return mutation, result
-}
-
-func prepareUpdate(usr Info) (string, result) {
-	var result result
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: updateUser(input: {
-		filter: {
-		  id: [%q]
-		},
-		set: {
-			name: %q
-			email: %q
-  			role: %s
-  			password_hash: %q
-  			date_created: %q
-  			date_updated: %q
-		}
-	})
-	%s
-}`, usr.ID, usr.Name, usr.Email, usr.Role, usr.PasswordHash,
-		usr.DateCreated.UTC().Format(time.RFC3339),
-		usr.DateUpdated.UTC().Format(time.RFC3339),
-		result.document())
-
-	return mutation, result
-}
-
-func prepareDelete(userID string) (string, result) {
-	var result result
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: deleteUser(filter: { id: [%q] })
-	%s
-}`, userID, result.document())
-
-	return mutation, result
 }

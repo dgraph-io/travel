@@ -40,18 +40,15 @@ func (a Advisory) Replace(ctx context.Context, traceID string, adv Info) (Info, 
 		return Info{}, errors.New("cityid not provided")
 	}
 
-	if err := a.delete(ctx, traceID, adv.City.ID); err != nil {
-		if err != ErrNotFound {
-			return Info{}, errors.Wrap(err, "deleting advisory from database")
+	if oldAdv, err := a.QueryByCity(ctx, traceID, adv.City.ID); err == nil {
+		if err := a.delete(ctx, traceID, oldAdv.ID); err != nil {
+			if err != ErrNotFound {
+				return Info{}, errors.Wrap(err, "deleting advisory from database")
+			}
 		}
 	}
 
-	adv, err := a.add(ctx, traceID, adv)
-	if err != nil {
-		return Info{}, errors.Wrap(err, "adding advisory to database")
-	}
-
-	return adv, nil
+	return a.add(ctx, traceID, adv)
 }
 
 // QueryByCity returns the specified advisory from the database by the city id.
@@ -96,7 +93,26 @@ query {
 // =============================================================================
 
 func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, error) {
-	mutation, result := prepareAdd(adv)
+	var result id
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: addAdvisory(input: [{
+			city: {
+				id: %q
+			}
+			continent: %q
+			country: %q
+			country_code: %q
+			last_updated: %q
+			message: %q
+			score: %f
+			source: %q
+		}])
+		%s
+	}`, adv.City.ID, adv.Continent, adv.Country, adv.CountryCode,
+		adv.LastUpdated, adv.Message, adv.Score, adv.Source,
+		result.document())
+
 	a.log.Printf("%s: %s: %s", traceID, "advisory.Add", data.Log(mutation))
 
 	if err := a.gql.Query(ctx, mutation, &result); err != nil {
@@ -111,13 +127,14 @@ func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, erro
 	return adv, nil
 }
 
-func (a Advisory) delete(ctx context.Context, traceID string, cityID string) error {
-	adv, err := a.QueryByCity(ctx, traceID, cityID)
-	if err != nil {
-		return err
-	}
+func (a Advisory) delete(ctx context.Context, traceID string, advID string) error {
+	var result result
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: deleteAdvisory(filter: { id: [%q] })
+		%s
+	}`, advID, result.document())
 
-	mutation, result := prepareDelete(adv.ID)
 	a.log.Printf("%s: %s: %s", traceID, "advisory.Delete", data.Log(mutation))
 
 	if err := a.gql.Query(ctx, mutation, &result); err != nil {
@@ -130,41 +147,4 @@ func (a Advisory) delete(ctx context.Context, traceID string, cityID string) err
 	}
 
 	return nil
-}
-
-// =============================================================================
-
-func prepareAdd(adv Info) (string, id) {
-	var result id
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: addAdvisory(input: [{
-		city: {
-			id: %q
-		}
-		continent: %q
-		country: %q
-		country_code: %q
-		last_updated: %q
-		message: %q
-		score: %f
-		source: %q
-	}])
-	%s
-}`, adv.City.ID, adv.Continent, adv.Country, adv.CountryCode,
-		adv.LastUpdated, adv.Message, adv.Score, adv.Source,
-		result.document())
-
-	return mutation, result
-}
-
-func prepareDelete(advisoryID string) (string, result) {
-	var result result
-	mutation := fmt.Sprintf(`
-mutation {
-	resp: deleteAdvisory(filter: { id: [%q] })
-	%s
-}`, advisoryID, result.document())
-
-	return mutation, result
 }

@@ -13,7 +13,6 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrExists   = errors.New("city exists")
 	ErrNotFound = errors.New("city not found")
 )
 
@@ -31,20 +30,15 @@ func New(log *log.Logger, gql *graphql.GraphQL) City {
 	}
 }
 
-// Add adds a new city to the database. If the city already exists
-// this function will fail but the found city is returned. If the city is
-// being added, the city with the id from the database is returned.
-func (c City) Add(ctx context.Context, traceID string, cty Info) (Info, error) {
-	if cty, err := c.QueryByName(ctx, traceID, cty.Name); err == nil {
-		return cty, ErrExists
+// Upsert adds a new city to the database if it doesn't already exist by name.
+// If the city already exists in the database, the function will return an Info
+// value with the existing id.
+func (c City) Upsert(ctx context.Context, traceID string, cty Info) (Info, error) {
+	if cty.ID != "" {
+		return Info{}, errors.New("city contains id")
 	}
 
-	cty, err := c.add(ctx, traceID, cty)
-	if err != nil {
-		return Info{}, errors.Wrap(err, "adding city to database")
-	}
-
-	return cty, nil
+	return c.upsert(ctx, traceID, cty)
 }
 
 // QueryByID returns the specified city from the database by the city id.
@@ -139,16 +133,22 @@ func (c City) QueryNames(ctx context.Context, traceID string) ([]string, error) 
 
 // =============================================================================
 
-func (c City) add(ctx context.Context, traceID string, cty Info) (Info, error) {
-	if cty.ID != "" {
-		return Info{}, errors.New("city contains id")
-	}
+func (c City) upsert(ctx context.Context, traceID string, cty Info) (Info, error) {
+	var result id
+	mutation := fmt.Sprintf(`
+	mutation {
+		resp: addCity(input: [{
+			name: %q
+			lat: %f
+			lng: %f
+		}], upsert: true)
+		%s
+	}`, cty.Name, cty.Lat, cty.Lng, result.document())
 
-	mutation, result := prepareAdd(cty)
-	c.log.Printf("%s: %s: %s", traceID, "city.Add", data.Log(mutation))
+	c.log.Printf("%s: %s: %s", traceID, "city.Upsert", data.Log(mutation))
 
 	if err := c.gql.Query(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to add city")
+		return Info{}, errors.Wrap(err, "failed to upsert city")
 	}
 
 	if len(result.Resp.Entities) != 1 {
@@ -157,21 +157,4 @@ func (c City) add(ctx context.Context, traceID string, cty Info) (Info, error) {
 
 	cty.ID = result.Resp.Entities[0].ID
 	return cty, nil
-}
-
-// =============================================================================
-
-func prepareAdd(cty Info) (string, id) {
-	var result id
-	mutation := fmt.Sprintf(`
-	mutation {
-		resp: addCity(input: [{
-			name: %q
-			lat: %f
-			lng: %f
-		}])
-		%s
-	}`, cty.Name, cty.Lat, cty.Lng, result.document())
-
-	return mutation, result
 }

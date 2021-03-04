@@ -17,7 +17,7 @@ type User @auth(
     delete: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
 ){
 	id: ID!
-	email: String! @search(by: [exact])
+	email: String! @search(by: [hash]) @id
 	name: String!
 	role: Role!
 	password_hash: String!
@@ -27,7 +27,7 @@ type User @auth(
 
 type City {
 	id: ID!
-	name: String! @search(by: [exact])
+	name: String! @search(by: [hash]) @id
 	lat: Float!
 	lng: Float!
 	places: [Place] @hasInverse(field: city)
@@ -49,6 +49,7 @@ type Advisory {
 
 type Place {
 	id: ID!
+	name: String! @search(by: [fulltext]) @id
 	address: String
 	avg_user_rating: Float
 	category: String @search(by: [exact])
@@ -58,7 +59,6 @@ type Place {
 	lat: Float!
 	lng: Float!
 	location_type: [String]
-	name: String! @search(by: [fulltext])
 	no_user_rating: Int
 	place_id: String!
 	photo_id: String
