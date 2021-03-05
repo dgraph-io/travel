@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c
 	github.com/ardanlabs/conf v1.3.4
-	github.com/ardanlabs/graphql v1.4.5
+	github.com/ardanlabs/graphql v1.5.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 	github.com/dimfeld/httptreemux/v5 v5.2.2
 	github.com/go-playground/locales v0.13.0
