@@ -4,8 +4,8 @@ github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c/go.mod 
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/ardanlabs/conf v1.3.4 h1:XUbcIRAnGjshKlmVjrOEIPDtvzgzue8o8ub8vE7yQZk=
 github.com/ardanlabs/conf v1.3.4/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
-github.com/ardanlabs/graphql v1.4.3 h1:ZwOXES0FJHEHDUtgmucU+HlO5GLMHxtuGk0/EEBsHoU=
-github.com/ardanlabs/graphql v1.4.3/go.mod h1:wPX46LtdHTD5/dIHVbce18DDP9dKbCNdA5WVN4ioZSo=
+github.com/ardanlabs/graphql v1.4.5 h1:B4+7PzsyPID9jMvyOU9F+idqXYuYbJyFjZCFuqUj0I4=
+github.com/ardanlabs/graphql v1.4.5/go.mod h1:wPX46LtdHTD5/dIHVbce18DDP9dKbCNdA5WVN4ioZSo=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=

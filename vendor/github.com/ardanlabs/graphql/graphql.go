@@ -10,8 +10,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // These commands represents the set of know graphql commands.
@@ -21,20 +23,38 @@ const (
 	CmdDQL     = "query"
 )
 
+// This provides a default client configuration but it is recommended
+// this is replaced by the user using the WithClient function.
+var defaultClient = http.Client{
+	Transport: &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	},
+}
+
 // GraphQL represents a system that can accept a graphql query.
 type GraphQL struct {
-	url            string
-	authHeaderName string
-	authToken      string
-	client         *http.Client
+	url     string
+	headers map[string]string
+	client  *http.Client
 }
 
 // New constructs a GraphQL for use to making queries agains a specified host.
 // The url is the fully qualifying URL without the /graphql path.
-func New(url string, client *http.Client, options ...func(gql *GraphQL)) *GraphQL {
+func New(url string, options ...func(gql *GraphQL)) *GraphQL {
 	gql := GraphQL{
-		url:    strings.TrimRight(url, "/") + "/",
-		client: client,
+		url:     strings.TrimRight(url, "/") + "/",
+		headers: make(map[string]string),
+		client:  &defaultClient,
 	}
 	for _, option := range options {
 		option(&gql)
@@ -42,11 +62,17 @@ func New(url string, client *http.Client, options ...func(gql *GraphQL)) *GraphQ
 	return &gql
 }
 
-// WithAuth adds authentication parameters to the graphql client.
-func WithAuth(authHeaderName string, authToken string) func(gql *GraphQL) {
+// WithClient adds a custom client for processing requests.
+func WithClient(client *http.Client) func(gql *GraphQL) {
 	return func(gql *GraphQL) {
-		gql.authHeaderName = authHeaderName
-		gql.authToken = authToken
+		gql.client = client
+	}
+}
+
+// WithHeader adds a key value pair to the header for requests.
+func WithHeader(key string, value string) func(gql *GraphQL) {
+	return func(gql *GraphQL) {
+		gql.headers[key] = value
 	}
 }
 
@@ -96,8 +122,8 @@ func (g *GraphQL) Do(ctx context.Context, command string, r io.Reader, response 
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	if g.authToken != "" {
-		req.Header.Set(g.authHeaderName, g.authToken)
+	for key, value := range g.headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := g.client.Do(req)

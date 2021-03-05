@@ -36,8 +36,10 @@ func NewGraphQL(gqlConfig GraphQLConfig) *graphql.GraphQL {
 		},
 	}
 
-	auth := graphql.WithAuth(gqlConfig.AuthHeaderName, gqlConfig.AuthToken)
-	graphql := graphql.New(gqlConfig.URL, &client, auth)
+	graphql := graphql.New(gqlConfig.URL,
+		graphql.WithClient(&client),
+		graphql.WithHeader(gqlConfig.AuthHeaderName, gqlConfig.AuthToken),
+	)
 
 	return graphql
 }
