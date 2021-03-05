@@ -1,5 +1,6 @@
 // Package graphql provides support for executing mutations and queries against a
-// database using GraphQL. It was designed specifically for working with [Dgraph](https://dgraph.io/).
+// database using GraphQL. It was designed specifically for working with
+// [Dgraph](https://dgraph.io/) and has some Dgraph specific support.
 package graphql
 
 import (
@@ -16,8 +17,8 @@ import (
 // These commands represents the set of know graphql commands.
 const (
 	CmdAdmin   = "admin"
-	CmdQuery   = "graphql"
-	CmdQueryPM = "query"
+	CmdGraphQL = "graphql"
+	CmdDQL     = "query"
 )
 
 // GraphQL represents a system that can accept a graphql query.
@@ -51,12 +52,13 @@ func WithAuth(authHeaderName string, authToken string) func(gql *GraphQL) {
 
 // Query performs a GraphQL query against the configured server.
 func (g *GraphQL) Query(ctx context.Context, queryString string, response interface{}) error {
-	return g.QueryWithVars(ctx, CmdQuery, queryString, nil, response)
+	return g.QueryWithVars(ctx, CmdGraphQL, queryString, nil, response)
 }
 
-// QueryPM performs a GraphQL+- query against the configured Dgraph server.
-func (g *GraphQL) QueryPM(ctx context.Context, queryString string, response interface{}) error {
-	return g.QueryWithVars(ctx, CmdQueryPM, queryString, nil, response)
+// QueryDQL performs a Dgraph Query Language (DQL) query against the configured
+// Dgraph server.
+func (g *GraphQL) QueryDQL(ctx context.Context, queryString string, response interface{}) error {
+	return g.QueryWithVars(ctx, CmdDQL, queryString, nil, response)
 }
 
 // QueryWithVars performs a query against the configured server with variable substituion.
@@ -80,9 +82,9 @@ func (g *GraphQL) QueryWithVars(ctx context.Context, command string, queryString
 // Do provides the mechanics of handling a GraphQL request and response.
 func (g *GraphQL) Do(ctx context.Context, command string, r io.Reader, response interface{}) error {
 
-	// Want to capture the query being executed for logging.
-	// The TeeReader will write the query to this buffer when
-	// the request reads the query for the http call.
+	// Want to capture the query being executed for development level logging
+	// below. The TeeReader will write the query to this buffer when the request
+	// reads the query for the http call.
 	var query bytes.Buffer
 	r = io.TeeReader(r, &query)
 
@@ -113,6 +115,7 @@ func (g *GraphQL) Do(ctx context.Context, command string, r io.Reader, response 
 		return fmt.Errorf("graphql op error: status code: %s", resp.Status)
 	}
 
+	// This is for development level logging if running into a problem.
 	// fmt.Println("*****graphql*******>\n", query.String(), "\n", string(data))
 
 	result := struct {
