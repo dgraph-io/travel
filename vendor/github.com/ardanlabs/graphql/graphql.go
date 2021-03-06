@@ -65,7 +65,9 @@ func WithClient(client *http.Client) func(gql *GraphQL) {
 // WithHeader adds a key value pair to the header for requests.
 func WithHeader(key string, value string) func(gql *GraphQL) {
 	return func(gql *GraphQL) {
-		gql.headers[key] = value
+		if key != "" {
+			gql.headers[key] = value
+		}
 	}
 }
 

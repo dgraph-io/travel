@@ -118,7 +118,7 @@ function queryPlaceByCategory(cityName, category) {
 function queryPlaceByName(placeName) {
     return JSON.stringify({
         query: `query {
-            queryPlace(filter: { name: { eq: "` + placeName + `" } }) {
+            queryPlace(filter: { name: { alloftext: "` + placeName + `" } }) {
                 id
                 address
                 avg_user_rating
