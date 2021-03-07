@@ -79,7 +79,7 @@ query {
 			Advisory Info `json:"advisory"`
 		} `json:"getCity"`
 	}
-	if err := a.gql.Query(ctx, query, &result); err != nil {
+	if err := a.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -115,7 +115,7 @@ func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, erro
 
 	a.log.Printf("%s: %s: %s", traceID, "advisory.Add", data.Log(mutation))
 
-	if err := a.gql.Query(ctx, mutation, &result); err != nil {
+	if err := a.gql.Execute(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add place")
 	}
 
@@ -137,7 +137,7 @@ func (a Advisory) delete(ctx context.Context, traceID string, advID string) erro
 
 	a.log.Printf("%s: %s: %s", traceID, "advisory.Delete", data.Log(mutation))
 
-	if err := a.gql.Query(ctx, mutation, &result); err != nil {
+	if err := a.gql.Execute(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}
 

@@ -58,7 +58,7 @@ query {
 	var result struct {
 		GetCity Info `json:"getCity"`
 	}
-	if err := c.gql.Query(ctx, query, &result); err != nil {
+	if err := c.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -88,7 +88,7 @@ query {
 			Info
 		} `json:"queryCity"`
 	}
-	if err := c.gql.Query(ctx, query, &result); err != nil {
+	if err := c.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -115,7 +115,7 @@ func (c City) QueryNames(ctx context.Context, traceID string) ([]string, error) 
 			Info
 		} `json:"queryCity"`
 	}
-	if err := c.gql.Query(ctx, query, &result); err != nil {
+	if err := c.gql.Execute(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -147,7 +147,7 @@ func (c City) upsert(ctx context.Context, traceID string, cty Info) (Info, error
 
 	c.log.Printf("%s: %s: %s", traceID, "city.Upsert", data.Log(mutation))
 
-	if err := c.gql.Query(ctx, mutation, &result); err != nil {
+	if err := c.gql.Execute(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to upsert city")
 	}
 

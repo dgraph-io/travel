@@ -85,7 +85,7 @@ query {
 			Weather Info `json:"weather"`
 		} `json:"getCity"`
 	}
-	if err := w.gql.Query(ctx, query, &result); err != nil {
+	if err := w.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -108,7 +108,7 @@ func (w Weather) delete(ctx context.Context, traceID string, wthID string) error
 
 	w.log.Printf("%s: %s: %s", traceID, "weather.Delete", data.Log(mutation))
 
-	if err := w.gql.Query(ctx, mutation, &result); err != nil {
+	if err := w.gql.Execute(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
 
@@ -150,7 +150,7 @@ func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error
 
 	w.log.Printf("%s: %s: %s", traceID, "weather.Add", data.Log(mutation))
 
-	if err := w.gql.Query(ctx, mutation, &result); err != nil {
+	if err := w.gql.Execute(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add weather")
 	}
 

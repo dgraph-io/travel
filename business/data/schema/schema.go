@@ -82,8 +82,8 @@ func New(graphql *graphql.GraphQL, config Config) (*Schema, error) {
 // DropAll perform an alter operatation against the configured server
 // to remove all the data and schema.
 func (s *Schema) DropAll(ctx context.Context) error {
-	query := `{"drop_all": true}`
-	if err := s.graphql.Do(ctx, "alter", query, nil); err != nil {
+	r := strings.NewReader(`{"drop_all": true}`)
+	if err := s.graphql.RawRequest(ctx, "alter", r, nil); err != nil {
 		return errors.Wrap(err, "dropping schema and data")
 	}
 
@@ -102,8 +102,8 @@ func (s *Schema) DropAll(ctx context.Context) error {
 // DropData perform an alter operatation against the configured server
 // to remove all the data and schema.
 func (s *Schema) DropData(ctx context.Context) error {
-	query := `{"drop_op": "DATA"}`
-	if err := s.graphql.Do(ctx, "alter", query, nil); err != nil {
+	r := strings.NewReader(`{"drop_op": "DATA"}`)
+	if err := s.graphql.RawRequest(ctx, "alter", r, nil); err != nil {
 		return errors.Wrap(err, "dropping data")
 	}
 
@@ -132,7 +132,7 @@ func (s *Schema) Create(ctx context.Context) error {
 			}
 		}
 	}`
-	err = s.graphql.QueryEndpoint(ctx, "admin", query, nil,
+	err = s.graphql.ExecuteOnEndpoint(ctx, "admin", query, nil,
 		graphql.WithVariable("schema", s.document),
 	)
 	if err != nil {
@@ -179,7 +179,7 @@ func (s *Schema) retrieve(ctx context.Context) (string, error) {
 func (s *Schema) query(ctx context.Context) (string, error) {
 	query := `query { getGQLSchema { schema }}`
 	result := make(map[string]interface{})
-	if err := s.graphql.QueryEndpoint(ctx, "admin", query, &result); err != nil {
+	if err := s.graphql.ExecuteOnEndpoint(ctx, "admin", query, &result); err != nil {
 		return "", errors.Wrap(err, "query schema")
 	}
 

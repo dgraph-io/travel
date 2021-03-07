@@ -82,7 +82,7 @@ query {
 			Info
 		} `json:"getPlace"`
 	}
-	if err := p.gql.Query(ctx, query, &result); err != nil {
+	if err := p.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -122,7 +122,7 @@ query {
 	var result struct {
 		QueryPlace []Info `json:"queryPlace"`
 	}
-	if err := p.gql.Query(ctx, query, &result); err != nil {
+	if err := p.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -163,7 +163,7 @@ query {
 	var result struct {
 		QueryPlace []Info `json:"queryPlace"`
 	}
-	if err := p.gql.Query(ctx, query, &result); err != nil {
+	if err := p.gql.Execute(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -207,7 +207,7 @@ query {
 			Places []Info `json:"places"`
 		} `json:"getCity"`
 	}
-	if err := p.gql.Query(ctx, query, &result); err != nil {
+	if err := p.gql.Execute(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -245,7 +245,7 @@ func (p Place) upsert(ctx context.Context, traceID string, plc Info) (Info, erro
 
 	p.log.Printf("%s: %s: %s", traceID, "place.Upsert", data.Log(mutation))
 
-	if err := p.gql.Query(ctx, mutation, &result); err != nil {
+	if err := p.gql.Execute(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to upsert place")
 	}
 

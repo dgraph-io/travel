@@ -107,7 +107,7 @@ query {
 	var result struct {
 		GetUser Info `json:"getUser"`
 	}
-	if err := u.gql.Query(ctx, query, &result); err != nil {
+	if err := u.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -138,7 +138,7 @@ query {
 	var result struct {
 		QueryUser []Info `json:"queryUser"`
 	}
-	if err := u.gql.Query(ctx, query, &result); err != nil {
+	if err := u.gql.Execute(ctx, query, &result); err != nil {
 		return Info{}, errors.Wrap(err, "query failed")
 	}
 
@@ -171,7 +171,7 @@ func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Add", data.Log(mutation))
 
-	if err := u.gql.Query(ctx, mutation, &result); err != nil {
+	if err := u.gql.Execute(ctx, mutation, &result); err != nil {
 		return Info{}, errors.Wrap(err, "failed to add user")
 	}
 
@@ -208,7 +208,7 @@ func (u User) update(ctx context.Context, traceID string, usr Info) error {
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Update", data.Log(mutation))
 
-	if err := u.gql.Query(ctx, mutation, nil); err != nil {
+	if err := u.gql.Execute(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
 
@@ -230,7 +230,7 @@ func (u User) delete(ctx context.Context, traceID string, userID string) error {
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Delete", data.Log(mutation))
 
-	if err := u.gql.Query(ctx, mutation, nil); err != nil {
+	if err := u.gql.Execute(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to delete user")
 	}
 
