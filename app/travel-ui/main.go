@@ -53,7 +53,7 @@ func run(log *log.Logger) error {
 			// You need to generate a Google Key to support Places API and JS Maps.
 			// Once you have the key it's best to export it.
 			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
-			MapsKey string
+			MapsKey string `conf:"noprint"`
 		}
 	}
 	cfg.Version.SVN = build

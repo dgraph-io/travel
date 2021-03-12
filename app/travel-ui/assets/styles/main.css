@@ -25,6 +25,10 @@ tr:nth-child(odd) {
     height: 50px;
     float: right;
 }
+.ratevisit {
+    height: 50px;
+    float: right;
+}
 .cityselectionlabel {
     font-size: 26px;
     margin: 5px 10px 10px 0px;

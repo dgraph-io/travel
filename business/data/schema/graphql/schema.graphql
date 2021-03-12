@@ -5,16 +5,14 @@
 
 enum Role {
 	ADMIN
-	EMAIL
-	MUTATE
-	QUERY
+	USER
 }
 
 type User @auth(
-	query: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
-	add: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
-    update: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
-    delete: { rule: "{$ROLE: { eq: \"ADMIN\" } }" },
+	query: { or: [{rule: "{$ROLE: {eq: \"ADMIN\" }}"},{rule: "{$ROLE: {eq: \"USER\" }}"}] },
+	add: { rule: "{$ROLE: {eq: \"ADMIN\"}}" },
+    update: { rule: "{$ROLE: {eq: \"ADMIN\"}}" },
+    delete: { rule: "{$ROLE: {eq: \"ADMIN\"}}" },
 ){
 	id: ID!
 	email: String! @search(by: [hash]) @id
@@ -23,6 +21,7 @@ type User @auth(
 	password_hash: String!
 	date_created: DateTime!
 	date_updated: DateTime!
+	visited: [Place]
 }
 
 type City {

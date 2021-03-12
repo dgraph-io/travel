@@ -181,7 +181,7 @@ function showQueryResponse(query, resp) {
     return display;
 }
 
-function showNodeData(d, index, circles) {
+function showNodeData(d) {
     const nodeBox = document.getElementById("node");
     const queryBox = document.getElementById("query");
     const name = document.getElementById("cityselection").value;
@@ -272,6 +272,7 @@ function showNodeData(d, index, circles) {
                     innerData += "<dt>Lat: " + o.data.queryCity[0].places[i].lat + "</dt>";
                     innerData += "<dt>Lng: " + o.data.queryCity[0].places[i].lng + "</dt>";
                     innerData += "<dt>Avg User Rating: " + o.data.queryCity[0].places[i].avg_user_rating + "</dt>";
+                    innerData += "<dt>My Rating: " + " " + "</dt>";
                     innerData += "</dl></td></tr>";
                 }
                 innerData += "</table>";
@@ -296,6 +297,8 @@ function showNodeData(d, index, circles) {
                 innerHTML += "<dt>Lat: " + o.data.queryPlace[0].lat + "</dt>";
                 innerHTML += "<dt>Lng: " + o.data.queryPlace[0].lng + "</dt>";
                 innerHTML += "<dt>Avg User Rating: " + o.data.queryPlace[0].avg_user_rating + "</dt>";
+                innerHTML += "<dt>My Rating: " + " " + "</dt>";
+                innerHTML += "<dt>" + "<div class=\"ratevisit\"><div type=\"button\" class=\"button\" onclick=\"rateVisit(" + o.data.queryPlace[0].id + ")\">Rate Visit</div></div>" + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
                 nodeBox.innerHTML = innerHTML;
                 queryBox.innerHTML = showQueryResponse(query, o);
@@ -367,4 +370,8 @@ function addNewCity() {
         option.text = cityName.value;
         selection.add(option);
     });
+}
+
+function rateVisit(id) {
+    alert(id)
 }

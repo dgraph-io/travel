@@ -38,6 +38,9 @@ browse:
 logs:
 	docker-compose -f zarf/compose/compose.yaml logs -f
 
+dbonly:
+	docker-compose -f zarf/compose/compose-dbonly.yaml -f zarf/compose/compose-dbonly-config.yaml up --detach --remove-orphans
+
 # ==============================================================================
 # Running from within k8s/dev
 

@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/dgraph-io/travel.svg?style=svg)](https://circleci.com/gh/dgraph-io/travel)
 
-Copyright 2020 Dgraph
+Copyright 2020, 2021 Dgraph
 contact@dgraph.io
 
 ## Licensing

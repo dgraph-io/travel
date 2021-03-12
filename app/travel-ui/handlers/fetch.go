@@ -94,12 +94,12 @@ func marshalCity(cityName string, places []place.Info) (string, error) {
 		colorString := randomcolor.GetRandomColorInHex()
 		categories[category] = colorString
 		d.Nodes = append(d.Nodes, node{category, "place", 3, 15, colorString})
-		d.Links = append(d.Links, link{cityName, category, 2})
+		d.Links = append(d.Links, link{cityName, category, 20})
 	}
 
 	for _, place := range places {
 		d.Nodes = append(d.Nodes, node{place.Name, place.Category, 3, 8, categories[place.Category]})
-		d.Links = append(d.Links, link{place.Category, place.Name, 2})
+		d.Links = append(d.Links, link{place.Category, place.Name, 20})
 	}
 
 	data, err := json.Marshal(d)

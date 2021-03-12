@@ -10,10 +10,8 @@ import (
 
 // These constants represet the set of roles.
 const (
-	RoleAdmin  = "ADMIN"
-	RoleEmail  = "EMAIL"
-	RoleMutate = "MUTATE"
-	RoleQuery  = "QUERY"
+	RoleAdmin = "ADMIN"
+	RoleUser  = "USER"
 )
 
 // ctxKey represents the type of value for the context key.

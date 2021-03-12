@@ -1,0 +1,25 @@
+version: '3.8'
+
+networks:
+  shared-network:
+    driver: bridge
+
+services:
+
+  dgraph-zero:
+    container_name: dgraph-zero
+    networks:
+      - shared-network
+    image: dgraph/dgraph:master
+    command: dgraph zero
+
+  dgraph-alpha:
+    container_name: dgraph-alpha
+    networks:
+      - shared-network
+    image: dgraph/dgraph:master
+    ports:
+      - 8080:8080
+    depends_on:
+      - dgraph-zero
+    command: dgraph alpha --vmodule=server=3
