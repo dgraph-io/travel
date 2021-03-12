@@ -246,3 +246,18 @@ tr:nth-child(odd) {
     text-decoration: none;
     cursor: pointer;
 }
+.rating {
+    unicode-bidi: bidi-override;
+    padding-right: 70px;
+    direction: rtl;
+ }
+.rating > span {
+    display: inline-block;
+    position: relative;
+    font-size: 80px;
+}
+.rating > span:hover:before,
+.rating > span:hover ~ span:before {
+    content: "\2605";
+    position: absolute;
+}

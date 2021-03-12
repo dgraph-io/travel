@@ -298,7 +298,7 @@ function showNodeData(d) {
                 innerHTML += "<dt>Lng: " + o.data.queryPlace[0].lng + "</dt>";
                 innerHTML += "<dt>Avg User Rating: " + o.data.queryPlace[0].avg_user_rating + "</dt>";
                 innerHTML += "<dt>My Rating: " + " " + "</dt>";
-                innerHTML += "<dt>" + "<div class=\"ratevisit\"><div type=\"button\" class=\"button\" onclick=\"rateVisit(" + o.data.queryPlace[0].id + ")\">Rate Visit</div></div>" + "</dt>";
+                innerHTML += "<dt>" + "<div class=\"ratevisit\"><div type=\"button\" class=\"button\" onclick=\"showRatingModal(" + o.data.queryPlace[0].id + ")\">Rate Visit</div></div>" + "</dt>";
                 innerHTML += "</dl></td></tr></table>";
                 nodeBox.innerHTML = innerHTML;
                 queryBox.innerHTML = showQueryResponse(query, o);
@@ -312,8 +312,17 @@ function convertKelvin(k) {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
+window.onclick = function(event) {
+    const newCityModal = document.getElementById("newcitymodal");
+    const ratingModal = document.getElementById("ratingmodal");
+    if (event.target == newCityModal || event.target == ratingModal) {
+        newCityModal.style.display = "none";
+        ratingModal.style.display = "none";
+    }
+}
+
 function showNewCityModal() {
-    const message = document.getElementById("modalmessage");
+    const message = document.getElementById("newcitymodalmessage");
     const modal = document.getElementById("newcitymodal");
     message.innerText = "";
     modal.style.display = "block";
@@ -322,13 +331,6 @@ function showNewCityModal() {
 function closeNewCityModal() {
     const modal = document.getElementById("newcitymodal");
     modal.style.display = "none";
-}
-
-window.onclick = function(event) {
-    const modal = document.getElementById("newcitymodal");
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
 }
 
 function addNewCity() {
@@ -372,7 +374,20 @@ function addNewCity() {
     });
 }
 
-function rateVisit(id) {
-    var id = "0x" + id.toString(16)
-    alert(id)
+function showRatingModal(placeID) {
+    var id = "0x" + placeID.toString(16)
+
+    const message = document.getElementById("ratingmodalmessage");
+    const modal = document.getElementById("ratingmodal");
+    message.innerText = "";
+    modal.style.display = "block";
+}
+
+function closeRatingModal() {
+    const modal = document.getElementById("ratingmodal");
+    modal.style.display = "none";
+}
+
+function addRating() {
+    alert("here now");
 }
