@@ -373,5 +373,6 @@ function addNewCity() {
 }
 
 function rateVisit(id) {
+    var id = "0x" + id.toString(16)
     alert(id)
 }
