@@ -53,8 +53,8 @@ func run(log *log.Logger) error {
 			// You need to generate a Google Key to support Places API and JS Maps.
 			// Once you have the key it's best to export it.
 			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
-			MapsKey    string `conf:"noprint"`
-			WeatherKey string `conf:"default:5b68961dd2602c2f722f02448d2de823,noprint"`
+			MapsKey    string `conf:"mask"`
+			WeatherKey string `conf:"default:5b68961dd2602c2f722f02448d2de823,mask"`
 		}
 		URL struct {
 			Advisory string `conf:"default:https://www.travel-advisory.info/api"`
