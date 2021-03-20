@@ -1,4 +1,6 @@
-package tests
+// Package docker provides support for starting and stopping docker containers
+// for running tests.
+package docker
 
 import (
 	"bytes"
@@ -14,8 +16,13 @@ type Container struct {
 	Host string // IP:Port
 }
 
-func startContainer(t *testing.T, image string, port string) *Container {
-	cmd := exec.Command("docker", "run", "-P", "-d", image)
+// StartContainer starts the specified container for running tests.
+func StartContainer(t *testing.T, image string, port string, args ...string) *Container {
+	arg := []string{"run", "-P", "-d"}
+	arg = append(arg, args...)
+	arg = append(arg, image)
+
+	cmd := exec.Command("docker", arg...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
@@ -50,7 +57,8 @@ func startContainer(t *testing.T, image string, port string) *Container {
 	return &c
 }
 
-func stopContainer(t *testing.T, id string) {
+// StopContainer stops and removes the specified container.
+func StopContainer(t *testing.T, id string) {
 	if err := exec.Command("docker", "stop", id).Run(); err != nil {
 		t.Fatalf("could not stop container: %v", err)
 	}
@@ -60,6 +68,15 @@ func stopContainer(t *testing.T, id string) {
 		t.Fatalf("could not remove container: %v", err)
 	}
 	t.Log("Removed:", id)
+}
+
+// DumpContainerLogs outputs logs from the running docker container.
+func DumpContainerLogs(t *testing.T, id string) {
+	out, err := exec.Command("docker", "logs", id).CombinedOutput()
+	if err != nil {
+		t.Fatalf("could not log container: %v", err)
+	}
+	t.Logf("Logs for %s\n%s:", id, out)
 }
 
 func extractIPPort(t *testing.T, doc []map[string]interface{}, port string) (string, string) {

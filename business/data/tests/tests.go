@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	"github.com/dgraph-io/travel/foundation/docker"
 )
 
 // Success and failure markers.
@@ -23,14 +25,14 @@ const (
 // NewUnit creates a test value with necessary application state to run
 // database tests. It will return the host to use to connect to the database.
 func NewUnit(t *testing.T) (*log.Logger, string, func()) {
-	c := startContainer(t, dbImage, dbPort)
+	c := docker.StartContainer(t, dbImage, dbPort)
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
 		t.Helper()
 		t.Log("tearing down test ...")
-		stopContainer(t, c.ID)
+		docker.StopContainer(t, c.ID)
 	}
 
 	url := fmt.Sprintf("http://%s", c.Host)
