@@ -1,7 +1,7 @@
 # github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c
 ## explicit
 github.com/AvraamMavridis/randomcolor
-# github.com/ardanlabs/conf v1.3.5
+# github.com/ardanlabs/conf v1.3.6
 ## explicit
 github.com/ardanlabs/conf
 # github.com/ardanlabs/graphql v1.6.1

@@ -2,8 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c h1:XLynE8YGJdvPN65iI+G+Ys5ZUVS6YxWk8WPe/FmBReg=
 github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c/go.mod h1:vX+Cl5GOtK2DkzgsggLoeNUbxAcUWBaybCKzVRYsRMo=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/ardanlabs/conf v1.3.5 h1:P/1riLKmh42IgbC8nXlTRm4dEmxj1ACCZcbZhSxzF9I=
-github.com/ardanlabs/conf v1.3.5/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
+github.com/ardanlabs/conf v1.3.6 h1:YaiHdUo+MW4uN6mgOM8iwFsjRMUKttuTw48mzUKOBm0=
+github.com/ardanlabs/conf v1.3.6/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
 github.com/ardanlabs/graphql v1.6.1 h1:Ky8EvTlJgFCo/zUMaNXJoIRNSV280p9eMZ7O0uJuWQk=
 github.com/ardanlabs/graphql v1.6.1/go.mod h1:wPX46LtdHTD5/dIHVbce18DDP9dKbCNdA5WVN4ioZSo=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
