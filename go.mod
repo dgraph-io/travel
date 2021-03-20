@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c
-	github.com/ardanlabs/conf v1.3.4
+	github.com/ardanlabs/conf v1.3.6
 	github.com/ardanlabs/graphql v1.6.1
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 	github.com/dimfeld/httptreemux/v5 v5.2.2
@@ -16,7 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	googlemaps.github.io/maps v1.3.1

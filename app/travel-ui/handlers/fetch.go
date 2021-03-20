@@ -28,16 +28,16 @@ func (fg fetchGroup) data(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 
 	gql := data.NewGraphQL(fg.gqlConfig)
-	c := city.New(fg.log, gql)
-	p := place.New(fg.log, gql)
+	cityStore := city.NewStore(fg.log, gql)
+	placeStore := place.NewStore(fg.log, gql)
 
 	params := httptreemux.ContextParams(r.Context())
-	city, err := c.QueryByName(context.Background(), v.TraceID, params["city"])
+	city, err := cityStore.QueryByName(context.Background(), v.TraceID, params["city"])
 	if err != nil {
 		return errors.Wrap(err, "query city")
 	}
 
-	places, err := p.QueryByCity(context.Background(), v.TraceID, city.ID)
+	places, err := placeStore.QueryByCity(context.Background(), v.TraceID, city.ID)
 	if err != nil {
 		return errors.Wrap(err, "query places")
 	}
@@ -70,7 +70,7 @@ type doc struct {
 	Links []link `json:"links"`
 }
 
-func marshalCity(cityName string, places []place.Info) (string, error) {
+func marshalCity(cityName string, places []place.Place) (string, error) {
 
 	// Need the unique set of categories.
 	categories := make(map[string]string)

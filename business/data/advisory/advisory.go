@@ -16,15 +16,15 @@ var (
 	ErrNotFound = errors.New("advisory not found")
 )
 
-// Advisory manages the set of API's for advisory access.
-type Advisory struct {
+// Store manages the set of API's for advisory access.
+type Store struct {
 	log *log.Logger
 	gql *graphql.GraphQL
 }
 
-// New constructs a Advisory for api access.
-func New(log *log.Logger, gql *graphql.GraphQL) Advisory {
-	return Advisory{
+// NewStore constructs a advisory store for api access.
+func NewStore(log *log.Logger, gql *graphql.GraphQL) Store {
+	return Store{
 		log: log,
 		gql: gql,
 	}
@@ -32,27 +32,27 @@ func New(log *log.Logger, gql *graphql.GraphQL) Advisory {
 
 // Replace replaces an advisory in the database and connects it
 // to the specified city.
-func (a Advisory) Replace(ctx context.Context, traceID string, adv Info) (Info, error) {
+func (s Store) Replace(ctx context.Context, traceID string, adv Advisory) (Advisory, error) {
 	if adv.ID != "" {
-		return Info{}, errors.New("advisory contains id")
+		return Advisory{}, errors.New("advisory contains id")
 	}
 	if adv.City.ID == "" {
-		return Info{}, errors.New("cityid not provided")
+		return Advisory{}, errors.New("cityid not provided")
 	}
 
-	if oldAdv, err := a.QueryByCity(ctx, traceID, adv.City.ID); err == nil {
-		if err := a.delete(ctx, traceID, oldAdv.ID); err != nil {
+	if oldAdv, err := s.QueryByCity(ctx, traceID, adv.City.ID); err == nil {
+		if err := s.delete(ctx, traceID, oldAdv.ID); err != nil {
 			if err != ErrNotFound {
-				return Info{}, errors.Wrap(err, "deleting advisory from database")
+				return Advisory{}, errors.Wrap(err, "deleting advisory from database")
 			}
 		}
 	}
 
-	return a.add(ctx, traceID, adv)
+	return s.add(ctx, traceID, adv)
 }
 
 // QueryByCity returns the specified advisory from the database by the city id.
-func (a Advisory) QueryByCity(ctx context.Context, traceID string, cityID string) (Info, error) {
+func (s Store) QueryByCity(ctx context.Context, traceID string, cityID string) (Advisory, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -72,19 +72,19 @@ query {
 	}
 }`, cityID)
 
-	a.log.Printf("%s: %s: %s", traceID, "advisory.QueryByID", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "advisory.QueryByID", data.Log(query))
 
 	var result struct {
 		GetCity struct {
-			Advisory Info `json:"advisory"`
+			Advisory Advisory `json:"advisory"`
 		} `json:"getCity"`
 	}
-	if err := a.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return Advisory{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetCity.Advisory.ID == "" {
-		return Info{}, ErrNotFound
+		return Advisory{}, ErrNotFound
 	}
 
 	return result.GetCity.Advisory, nil
@@ -92,7 +92,7 @@ query {
 
 // =============================================================================
 
-func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, error) {
+func (s Store) add(ctx context.Context, traceID string, adv Advisory) (Advisory, error) {
 	var result id
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -113,21 +113,21 @@ func (a Advisory) add(ctx context.Context, traceID string, adv Info) (Info, erro
 		adv.LastUpdated, adv.Message, adv.Score, adv.Source,
 		result.document())
 
-	a.log.Printf("%s: %s: %s", traceID, "advisory.Add", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "advisory.Add", data.Log(mutation))
 
-	if err := a.gql.Execute(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to add place")
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
+		return Advisory{}, errors.Wrap(err, "failed to add place")
 	}
 
 	if len(result.Resp.Entities) != 1 {
-		return Info{}, errors.New("advisory id not returned")
+		return Advisory{}, errors.New("advisory id not returned")
 	}
 
 	adv.ID = result.Resp.Entities[0].ID
 	return adv, nil
 }
 
-func (a Advisory) delete(ctx context.Context, traceID string, advID string) error {
+func (s Store) delete(ctx context.Context, traceID string, advID string) error {
 	var result result
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -135,9 +135,9 @@ func (a Advisory) delete(ctx context.Context, traceID string, advID string) erro
 		%s
 	}`, advID, result.document())
 
-	a.log.Printf("%s: %s: %s", traceID, "advisory.Delete", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "advisory.Delete", data.Log(mutation))
 
-	if err := a.gql.Execute(ctx, mutation, &result); err != nil {
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete advisory")
 	}
 

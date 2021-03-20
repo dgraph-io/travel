@@ -2,8 +2,8 @@ package user
 
 import "time"
 
-// Info represents someone with access to the system.
-type Info struct {
+// User represents someone with access to the system.
+type User struct {
 	ID           string    `json:"id"`
 	Name         string    `json:"name"`
 	Email        string    `json:"email"`

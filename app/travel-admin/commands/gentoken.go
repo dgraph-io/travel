@@ -8,8 +8,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/dgraph-io/travel/business/auth"
 	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/data/auth"
 	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgraph-io/travel/foundation/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
@@ -28,12 +28,14 @@ func GenToken(log *log.Logger, gqlConfig data.GraphQLConfig, email string, priva
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gql := data.NewGraphQL(gqlConfig)
-	u := user.New(log, gql)
+	store := user.NewStore(
+		log,
+		data.NewGraphQL(gqlConfig),
+	)
 	traceID := uuid.New().String()
 
 	// Retrieve the user by email so we have the roles for this user.
-	usr, err := u.QueryByEmail(ctx, traceID, email)
+	usr, err := store.QueryByEmail(ctx, traceID, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}

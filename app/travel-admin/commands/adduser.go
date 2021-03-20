@@ -22,11 +22,13 @@ func AddUser(log *log.Logger, gqlConfig data.GraphQLConfig, newUser user.NewUser
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gql := data.NewGraphQL(gqlConfig)
-	u := user.New(log, gql)
+	store := user.NewStore(
+		log,
+		data.NewGraphQL(gqlConfig),
+	)
 	traceID := uuid.New().String()
 
-	usr, err := u.Add(ctx, traceID, newUser, time.Now())
+	usr, err := store.Add(ctx, traceID, newUser, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "adding user")
 	}

@@ -1,7 +1,7 @@
 package place
 
-// Info contains the place data points captured from the API.
-type Info struct {
+// Place contains the place data points captured from the API.
+type Place struct {
 	ID               string   `json:"id,omitempty"`
 	Category         string   `json:"category"`
 	City             City     `json:"city"`

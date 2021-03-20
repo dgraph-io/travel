@@ -1,7 +1,7 @@
 # github.com/AvraamMavridis/randomcolor v0.0.0-20180822172341-208aff70bf2c
 ## explicit
 github.com/AvraamMavridis/randomcolor
-# github.com/ardanlabs/conf v1.3.4
+# github.com/ardanlabs/conf v1.3.6
 ## explicit
 github.com/ardanlabs/conf
 # github.com/ardanlabs/graphql v1.6.1
@@ -49,7 +49,7 @@ go.opencensus.io/stats
 go.opencensus.io/stats/internal
 go.opencensus.io/stats/view
 go.opencensus.io/tag
-# golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+# golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish

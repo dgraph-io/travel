@@ -16,15 +16,15 @@ var (
 	ErrNotFound = errors.New("weather not found")
 )
 
-// Weather manages the set of API's for city access.
-type Weather struct {
+// Store manages the set of API's for city access.
+type Store struct {
 	log *log.Logger
 	gql *graphql.GraphQL
 }
 
-// New constructs a Weather for api access.
-func New(log *log.Logger, gql *graphql.GraphQL) Weather {
-	return Weather{
+// NewStore constructs a weather store for api access.
+func NewStore(log *log.Logger, gql *graphql.GraphQL) Store {
+	return Store{
 		log: log,
 		gql: gql,
 	}
@@ -32,27 +32,27 @@ func New(log *log.Logger, gql *graphql.GraphQL) Weather {
 
 // Replace replaces a weather in the database and connects it
 // to the specified city.
-func (w Weather) Replace(ctx context.Context, traceID string, wth Info) (Info, error) {
+func (s Store) Replace(ctx context.Context, traceID string, wth Weather) (Weather, error) {
 	if wth.ID != "" {
-		return Info{}, errors.New("weather contains id")
+		return Weather{}, errors.New("weather contains id")
 	}
 	if wth.City.ID == "" {
-		return Info{}, errors.New("cityid not provided")
+		return Weather{}, errors.New("cityid not provided")
 	}
 
-	if oldWth, err := w.QueryByCity(ctx, traceID, wth.City.ID); err == nil {
-		if err := w.delete(ctx, traceID, oldWth.ID); err != nil {
+	if oldWth, err := s.QueryByCity(ctx, traceID, wth.City.ID); err == nil {
+		if err := s.delete(ctx, traceID, oldWth.ID); err != nil {
 			if err != ErrNotFound {
-				return Info{}, errors.Wrap(err, "deleting weather from database")
+				return Weather{}, errors.Wrap(err, "deleting weather from database")
 			}
 		}
 	}
 
-	return w.add(ctx, traceID, wth)
+	return s.add(ctx, traceID, wth)
 }
 
 // QueryByCity returns the specified weather from the database by the city id.
-func (w Weather) QueryByCity(ctx context.Context, traceID string, cityID string) (Info, error) {
+func (s Store) QueryByCity(ctx context.Context, traceID string, cityID string) (Weather, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -78,19 +78,19 @@ query {
 	}
 }`, cityID)
 
-	w.log.Printf("%s: %s: %s", traceID, "weather.QueryByID", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "weather.QueryByID", data.Log(query))
 
 	var result struct {
 		GetCity struct {
-			Weather Info `json:"weather"`
+			Weather Weather `json:"weather"`
 		} `json:"getCity"`
 	}
-	if err := w.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return Weather{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetCity.Weather.ID == "" {
-		return Info{}, ErrNotFound
+		return Weather{}, ErrNotFound
 	}
 
 	return result.GetCity.Weather, nil
@@ -98,7 +98,7 @@ query {
 
 // =============================================================================
 
-func (w Weather) delete(ctx context.Context, traceID string, wthID string) error {
+func (s Store) delete(ctx context.Context, traceID string, wthID string) error {
 	var result result
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -106,9 +106,9 @@ func (w Weather) delete(ctx context.Context, traceID string, wthID string) error
 		%s
 	}`, wthID, result.document())
 
-	w.log.Printf("%s: %s: %s", traceID, "weather.Delete", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "weather.Delete", data.Log(mutation))
 
-	if err := w.gql.Execute(ctx, mutation, &result); err != nil {
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
 		return errors.Wrap(err, "failed to delete weather")
 	}
 
@@ -120,7 +120,7 @@ func (w Weather) delete(ctx context.Context, traceID string, wthID string) error
 	return nil
 }
 
-func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error) {
+func (s Store) add(ctx context.Context, traceID string, wth Weather) (Weather, error) {
 	var result id
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -148,14 +148,14 @@ func (w Weather) add(ctx context.Context, traceID string, wth Info) (Info, error
 		wth.MinTemp, wth.MaxTemp, wth.Visibility, wth.WindDirection,
 		wth.WindSpeed, result.document())
 
-	w.log.Printf("%s: %s: %s", traceID, "weather.Add", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "weather.Add", data.Log(mutation))
 
-	if err := w.gql.Execute(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to add weather")
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
+		return Weather{}, errors.Wrap(err, "failed to add weather")
 	}
 
 	if len(result.Resp.Entities) != 1 {
-		return Info{}, errors.New("advisory id not returned")
+		return Weather{}, errors.New("advisory id not returned")
 	}
 
 	wth.ID = result.Resp.Entities[0].ID

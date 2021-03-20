@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/graphql"
+	"github.com/dgraph-io/travel/business/auth"
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/advisory"
-	"github.com/dgraph-io/travel/business/data/auth"
 	"github.com/dgraph-io/travel/business/data/city"
 	"github.com/dgraph-io/travel/business/data/place"
 	"github.com/dgraph-io/travel/business/data/ready"
@@ -109,11 +109,11 @@ func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) *gr
 
 // seedCity is a support test help function to consolidate the seeding of a
 // city since so many data tests need this functionality.
-func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newCity city.Info) (*graphql.GraphQL, city.Info) {
+func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newCity city.City) (*graphql.GraphQL, city.City) {
 	gql := waitReady(t, ctx, testID, tc)
-	c := city.New(tc.log, gql)
+	store := city.NewStore(tc.log, gql)
 
-	cty, err := c.Upsert(ctx, tc.traceID, newCity)
+	cty, err := store.Upsert(ctx, tc.traceID, newCity)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a city: %v", tests.Failed, testID, err)
 	}
@@ -124,11 +124,11 @@ func seedCity(t *testing.T, ctx context.Context, testID int, tc TestConfig, newC
 
 // seedUser is a support test help function to consolidate the seeding of a
 // user since so many data tests need this functionality.
-func seedUser(t *testing.T, ctx context.Context, testID int, tc TestConfig, newUser user.NewUser, now time.Time) (*graphql.GraphQL, user.Info) {
+func seedUser(t *testing.T, ctx context.Context, testID int, tc TestConfig, newUser user.NewUser, now time.Time) (*graphql.GraphQL, user.User) {
 	gql := waitReady(t, ctx, testID, tc)
-	u := user.New(tc.log, gql)
+	store := user.NewStore(tc.log, gql)
 
-	usr, err := u.Add(ctx, tc.traceID, newUser, now)
+	usr, err := store.Add(ctx, tc.traceID, newUser, now)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to add a user: %v", tests.Failed, testID, err)
 	}
@@ -226,9 +226,9 @@ func addUser(tc TestConfig) func(t *testing.T) {
 					PasswordConfirm: "gophers",
 				}
 				gql, addedUser := seedUser(t, ctx, testID, tc, newUser, now)
-				u := user.New(tc.log, gql)
+				store := user.NewStore(tc.log, gql)
 
-				retUser, err := u.QueryByID(ctx, traceID, addedUser.ID)
+				retUser, err := store.QueryByID(ctx, traceID, addedUser.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user: %v", tests.Failed, testID, err)
 				}
@@ -244,7 +244,7 @@ func addUser(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same password hash.", tests.Success, testID)
 
-				userByEmail, err := u.QueryByEmail(ctx, traceID, addedUser.Email)
+				userByEmail, err := store.QueryByEmail(ctx, traceID, addedUser.Email)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the user by email: %v", tests.Failed, testID, err)
 				}
@@ -255,20 +255,20 @@ func addUser(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same user by email.", tests.Success, testID)
 
-				_, err = u.Add(ctx, traceID, newUser, now)
+				_, err = store.Add(ctx, traceID, newUser, now)
 				if err == nil {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to add the same user twice.", tests.Failed, testID)
 				}
 				t.Logf("\t%s\tTest %d:\tShould not be able to add the same user twice: %v", tests.Success, testID, err)
 
-				err = u.Delete(ctx, traceID, addedUser.ID)
+				err = store.Delete(ctx, traceID, addedUser.ID)
 				if err != nil {
 					t.Logf("\t%s\tTest %d:\tShould be able to delete the user: %v.", tests.Failed, testID, err)
 				} else {
 					t.Logf("\t%s\tTest %d:\tShould be able to delete the user.", tests.Success, testID)
 				}
 
-				_, err = u.QueryByID(ctx, traceID, addedUser.ID)
+				_, err = store.QueryByID(ctx, traceID, addedUser.ID)
 				if err == nil {
 					t.Fatalf("\t%s\tTest %d:\tShould not be able to query for the user.", tests.Failed, testID)
 				}
@@ -290,15 +290,15 @@ func upsertCity(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.Info{
+				newCity := city.City{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
-				c := city.New(tc.log, gql)
+				store := city.NewStore(tc.log, gql)
 
-				retCity, err := c.QueryByID(ctx, tc.traceID, addedCity.ID)
+				retCity, err := store.QueryByID(ctx, tc.traceID, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the city: %v", tests.Failed, testID, err)
 				}
@@ -309,7 +309,7 @@ func upsertCity(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same city.", tests.Success, testID)
 
-				cityByName, err := c.QueryByName(ctx, tc.traceID, addedCity.Name)
+				cityByName, err := store.QueryByName(ctx, tc.traceID, addedCity.Name)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the city by name: %v", tests.Failed, testID, err)
 				}
@@ -322,7 +322,7 @@ func upsertCity(tc TestConfig) func(t *testing.T) {
 
 				id := addedCity.ID
 				addedCity.ID = ""
-				upsertCity, err := c.Upsert(ctx, tc.traceID, addedCity)
+				upsertCity, err := store.Upsert(ctx, tc.traceID, addedCity)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to upsert the same city twice: %v", tests.Failed, testID, err)
 				}
@@ -335,7 +335,7 @@ func upsertCity(tc TestConfig) func(t *testing.T) {
 				}
 				t.Logf("\t%s\tTest %d:\tShould get back the same id for the city.", tests.Success, testID)
 
-				cities, err := c.QueryNames(ctx, tc.traceID)
+				cities, err := store.QueryNames(ctx, tc.traceID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the list of city names: %v", tests.Failed, testID, err)
 				}
@@ -364,15 +364,15 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.Info{
+				newCity := city.City{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
-				p := place.New(tc.log, gql)
+				store := place.NewStore(tc.log, gql)
 
-				places := []place.Info{
+				places := []place.Place{
 					{
 						PlaceID:          "12345",
 						Category:         "test",
@@ -406,13 +406,13 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 				}
 
 				for i, newPlace := range places {
-					addedPlace, err := p.Upsert(ctx, tc.traceID, newPlace)
+					addedPlace, err := store.Upsert(ctx, tc.traceID, newPlace)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to save a place in Dgraph: %v", tests.Failed, testID, err)
 					}
 					t.Logf("\t%s\tTest %d:\tShould be able to save a place in Dgraph.", tests.Success, testID)
 
-					retPlace, err := p.QueryByID(ctx, tc.traceID, addedPlace.ID)
+					retPlace, err := store.QueryByID(ctx, tc.traceID, addedPlace.ID)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to query for the place: %v", tests.Failed, testID, err)
 					}
@@ -423,7 +423,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 					}
 					t.Logf("\t%s\tTest %d:\tShould get back the same place.", tests.Success, testID)
 
-					places, err := p.QueryByCity(ctx, tc.traceID, addedCity.ID)
+					places, err := store.QueryByCity(ctx, tc.traceID, addedCity.ID)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to query city places: %v", tests.Failed, testID, err)
 					}
@@ -443,7 +443,7 @@ func addPlace(tc TestConfig) func(t *testing.T) {
 
 					id := addedPlace.ID
 					addedPlace.ID = ""
-					upsertPlace, err := p.Upsert(ctx, tc.traceID, addedPlace)
+					upsertPlace, err := store.Upsert(ctx, tc.traceID, addedPlace)
 					if err != nil {
 						t.Fatalf("\t%s\tTest %d:\tShould be able to upsert the same place twice: %v", tests.Failed, testID, err)
 					}
@@ -473,15 +473,15 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.Info{
+				newCity := city.City{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
-				a := advisory.New(tc.log, gql)
+				store := advisory.NewStore(tc.log, gql)
 
-				newAdvisory := advisory.Info{
+				newAdvisory := advisory.Advisory{
 					City:        advisory.City{ID: addedCity.ID},
 					Country:     "Australia",
 					CountryCode: "AU",
@@ -492,13 +492,13 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 					Source:      "friendly neighborhood community engineers",
 				}
 
-				addedAdvisory, err := a.Replace(ctx, tc.traceID, newAdvisory)
+				addedAdvisory, err := store.Replace(ctx, tc.traceID, newAdvisory)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace an advisory in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace an advisory in Dgraph.", tests.Success, testID)
 
-				retAdvisory, err := a.QueryByCity(ctx, tc.traceID, addedCity.ID)
+				retAdvisory, err := store.QueryByCity(ctx, tc.traceID, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 				}
@@ -511,13 +511,13 @@ func replaceAdvisory(tc TestConfig) func(t *testing.T) {
 
 				addedAdvisory.ID = ""
 				addedAdvisory.Score = 6
-				addedAdvisory, err = a.Replace(ctx, tc.traceID, addedAdvisory)
+				addedAdvisory, err = store.Replace(ctx, tc.traceID, addedAdvisory)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace an advisory twice in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace an advisory twice in Dgraph.", tests.Success, testID)
 
-				retAdvisory, err = a.QueryByCity(ctx, tc.traceID, addedCity.ID)
+				retAdvisory, err = store.QueryByCity(ctx, tc.traceID, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the advisory: %v", tests.Failed, testID, err)
 				}
@@ -544,15 +544,15 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 				defer cancel()
 
-				newCity := city.Info{
+				newCity := city.City{
 					Name: "sydney",
 					Lat:  -33.865143,
 					Lng:  151.209900,
 				}
 				gql, addedCity := seedCity(t, ctx, testID, tc, newCity)
-				w := weather.New(tc.log, gql)
+				store := weather.NewStore(tc.log, gql)
 
-				newWeather := weather.Info{
+				newWeather := weather.Weather{
 					City:          weather.City{ID: addedCity.ID},
 					CityName:      "Sydney",
 					Visibility:    "clear",
@@ -569,13 +569,13 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 					Sunset:        10009945,
 				}
 
-				addedWeather, err := w.Replace(ctx, tc.traceID, newWeather)
+				addedWeather, err := store.Replace(ctx, tc.traceID, newWeather)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace the weather in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace the weather in Dgraph.", tests.Success, testID)
 
-				retWeather, err := w.QueryByCity(ctx, tc.traceID, addedCity.ID)
+				retWeather, err := store.QueryByCity(ctx, tc.traceID, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 				}
@@ -588,13 +588,13 @@ func replaceWeather(tc TestConfig) func(t *testing.T) {
 
 				addedWeather.ID = ""
 				addedWeather.Desc = "test replace"
-				addedWeather, err = w.Replace(ctx, tc.traceID, addedWeather)
+				addedWeather, err = store.Replace(ctx, tc.traceID, addedWeather)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to replace the weather twice in Dgraph: %v", tests.Failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to replace the weather twice in Dgraph.", tests.Success, testID)
 
-				retWeather, err = w.QueryByCity(ctx, tc.traceID, addedCity.ID)
+				retWeather, err = store.QueryByCity(ctx, tc.traceID, addedCity.ID)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to query for the weather: %v", tests.Failed, testID, err)
 				}

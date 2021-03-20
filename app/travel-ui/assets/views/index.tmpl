@@ -66,7 +66,20 @@
 						<tr><td>Latitude:</td><td><input id="lat" type="text"/></td></tr>
 						<tr><td>Longitude:</td><td><input id="lng" type="text"/></td></tr>
 						<tr><td colspan="2"><div type="button" id="addCity" class="tab" onclick="addNewCity()">Add City</div></td></tr>
-						<tr><td id="modalmessage" colspan="2"></td></tr>
+						<tr><td id="newcitymodalmessage" colspan="2"></td></tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div id="ratingmodal" class="modal">
+			<div class="modalcontent">
+				<div class="modalheader">
+					<span class="close" onclick="closeRatingModal()">&times;</span>
+					<span>Give Rating</span>
+				</div>
+				<div class="modalbody">
+						<div class="rating" onclick="addRating()"><span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span></div>
+						<div id="ratingmodalmessage">Some Message</div>
 					</table>
 				</div>
 			</div>
