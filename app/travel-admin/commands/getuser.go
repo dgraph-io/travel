@@ -22,11 +22,13 @@ func GetUser(log *log.Logger, gqlConfig data.GraphQLConfig, email string) error 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gql := data.NewGraphQL(gqlConfig)
-	u := user.New(log, gql)
+	store := user.NewStore(
+		log,
+		data.NewGraphQL(gqlConfig),
+	)
 	traceID := uuid.New().String()
 
-	usr, err := u.QueryByEmail(ctx, traceID, email)
+	usr, err := store.QueryByEmail(ctx, traceID, email)
 	if err != nil {
 		return errors.Wrap(err, "getting user")
 	}

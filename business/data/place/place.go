@@ -17,29 +17,29 @@ var (
 	ErrNotFound = errors.New("place not found")
 )
 
-// Place manages the set of API's for place access.
-type Place struct {
+// Store manages the set of API's for place access.
+type Store struct {
 	log *log.Logger
 	gql *graphql.GraphQL
 }
 
-// New constructs a Place for api access.
-func New(log *log.Logger, gql *graphql.GraphQL) Place {
-	return Place{
+// NewStore constructs a place store for api access.
+func NewStore(log *log.Logger, gql *graphql.GraphQL) Store {
+	return Store{
 		log: log,
 		gql: gql,
 	}
 }
 
 // Upsert adds a new place to the database if it doesn't already exist by name.
-// If the place already exists in the database, the function will return an Info
+// If the place already exists in the database, the function will return an Place
 // value with the existing id.
-func (p Place) Upsert(ctx context.Context, traceID string, plc Info) (Info, error) {
+func (s Store) Upsert(ctx context.Context, traceID string, plc Place) (Place, error) {
 	if plc.ID != "" {
-		return Info{}, errors.New("place contains id")
+		return Place{}, errors.New("place contains id")
 	}
 	if plc.City.ID == "" {
-		return Info{}, errors.New("cityid not provided")
+		return Place{}, errors.New("cityid not provided")
 	}
 
 	for i := range plc.LocationType {
@@ -48,11 +48,11 @@ func (p Place) Upsert(ctx context.Context, traceID string, plc Info) (Info, erro
 		}
 	}
 
-	return p.upsert(ctx, traceID, plc)
+	return s.upsert(ctx, traceID, plc)
 }
 
 // QueryByID returns the specified place from the database by the place id.
-func (p Place) QueryByID(ctx context.Context, traceID string, placeID string) (Info, error) {
+func (s Store) QueryByID(ctx context.Context, traceID string, placeID string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getPlace(id: %q) {
@@ -75,26 +75,26 @@ query {
 	}
 }`, placeID)
 
-	p.log.Printf("%s: %s: %s", traceID, "place.QueryByID", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "place.QueryByID", data.Log(query))
 
 	var result struct {
 		GetPlace struct {
-			Info
+			Place
 		} `json:"getPlace"`
 	}
-	if err := p.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return Place{}, errors.Wrap(err, "query failed")
 	}
 
-	if result.GetPlace.Info.ID == "" {
-		return Info{}, ErrNotFound
+	if result.GetPlace.Place.ID == "" {
+		return Place{}, ErrNotFound
 	}
 
-	return result.GetPlace.Info, nil
+	return result.GetPlace.Place, nil
 }
 
 // QueryByName returns the specified place from the database by name.
-func (p Place) QueryByName(ctx context.Context, traceID string, name string) (Info, error) {
+func (s Store) QueryByName(ctx context.Context, traceID string, name string) (Place, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { name: { alloftext: %q } }) {
@@ -117,17 +117,17 @@ query {
 	}
 }`, name)
 
-	p.log.Printf("%s: %s: %s", traceID, "place.QueryByName", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "place.QueryByName", data.Log(query))
 
 	var result struct {
-		QueryPlace []Info `json:"queryPlace"`
+		QueryPlace []Place `json:"queryPlace"`
 	}
-	if err := p.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return Place{}, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.QueryPlace) != 1 {
-		return Info{}, ErrNotFound
+		return Place{}, ErrNotFound
 	}
 
 	return result.QueryPlace[0], nil
@@ -135,7 +135,7 @@ query {
 
 // QueryByCategory returns the collection of places from the database
 // by the cagtegory name.
-func (p Place) QueryByCategory(ctx context.Context, traceID string, category string) ([]Info, error) {
+func (s Store) QueryByCategory(ctx context.Context, traceID string, category string) ([]Place, error) {
 	query := fmt.Sprintf(`
 query {
 	queryPlace(filter: { category: { eq: %q } }) {
@@ -158,12 +158,12 @@ query {
 	}
 }`, category)
 
-	p.log.Printf("%s: %s: %s", traceID, "place.QueryByCategory", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "place.QueryByCategory", data.Log(query))
 
 	var result struct {
-		QueryPlace []Info `json:"queryPlace"`
+		QueryPlace []Place `json:"queryPlace"`
 	}
-	if err := p.gql.Execute(ctx, query, &result); err != nil {
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -175,7 +175,7 @@ query {
 }
 
 // QueryByCity returns the collection of places from the database by the city id.
-func (p Place) QueryByCity(ctx context.Context, traceID string, cityID string) ([]Info, error) {
+func (s Store) QueryByCity(ctx context.Context, traceID string, cityID string) ([]Place, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -200,14 +200,14 @@ query {
 	}
 }`, cityID)
 
-	p.log.Printf("%s: %s: %s", traceID, "place.QueryByCity", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "place.QueryByCity", data.Log(query))
 
 	var result struct {
 		GetCity struct {
-			Places []Info `json:"places"`
+			Places []Place `json:"places"`
 		} `json:"getCity"`
 	}
-	if err := p.gql.Execute(ctx, query, &result); err != nil {
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -216,7 +216,7 @@ query {
 
 // =============================================================================
 
-func (p Place) upsert(ctx context.Context, traceID string, plc Info) (Info, error) {
+func (s Store) upsert(ctx context.Context, traceID string, plc Place) (Place, error) {
 	var result id
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -243,14 +243,14 @@ func (p Place) upsert(ctx context.Context, traceID string, plc Info) (Info, erro
 		plc.NumberOfRatings, plc.PlaceID, plc.PhotoReferenceID,
 		result.document())
 
-	p.log.Printf("%s: %s: %s", traceID, "place.Upsert", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "place.Upsert", data.Log(mutation))
 
-	if err := p.gql.Execute(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to upsert place")
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
+		return Place{}, errors.Wrap(err, "failed to upsert place")
 	}
 
 	if len(result.Resp.Entities) != 1 {
-		return Info{}, errors.New("place id not returned")
+		return Place{}, errors.New("place id not returned")
 	}
 
 	plc.ID = result.Resp.Entities[0].ID

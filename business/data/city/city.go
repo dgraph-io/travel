@@ -16,33 +16,33 @@ var (
 	ErrNotFound = errors.New("city not found")
 )
 
-// City manages the set of API's for city access.
-type City struct {
+// Store manages the set of API's for city access.
+type Store struct {
 	log *log.Logger
 	gql *graphql.GraphQL
 }
 
-// New constructs a City for api access.
-func New(log *log.Logger, gql *graphql.GraphQL) City {
-	return City{
+// NewStore constructs a city store for api access.
+func NewStore(log *log.Logger, gql *graphql.GraphQL) Store {
+	return Store{
 		log: log,
 		gql: gql,
 	}
 }
 
 // Upsert adds a new city to the database if it doesn't already exist by name.
-// If the city already exists in the database, the function will return an Info
+// If the city already exists in the database, the function will return an City
 // value with the existing id.
-func (c City) Upsert(ctx context.Context, traceID string, cty Info) (Info, error) {
+func (s Store) Upsert(ctx context.Context, traceID string, cty City) (City, error) {
 	if cty.ID != "" {
-		return Info{}, errors.New("city contains id")
+		return City{}, errors.New("city contains id")
 	}
 
-	return c.upsert(ctx, traceID, cty)
+	return s.upsert(ctx, traceID, cty)
 }
 
 // QueryByID returns the specified city from the database by the city id.
-func (c City) QueryByID(ctx context.Context, traceID string, cityID string) (Info, error) {
+func (s Store) QueryByID(ctx context.Context, traceID string, cityID string) (City, error) {
 	query := fmt.Sprintf(`
 query {
 	getCity(id: %q) {
@@ -53,24 +53,24 @@ query {
 	}
 }`, cityID)
 
-	c.log.Printf("%s: %s: %s", traceID, "city.QueryByID", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "city.QueryByID", data.Log(query))
 
 	var result struct {
-		GetCity Info `json:"getCity"`
+		GetCity City `json:"getCity"`
 	}
-	if err := c.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return City{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetCity.ID == "" {
-		return Info{}, ErrNotFound
+		return City{}, ErrNotFound
 	}
 
 	return result.GetCity, nil
 }
 
 // QueryByName returns the specified city from the database by the city name.
-func (c City) QueryByName(ctx context.Context, traceID string, name string) (Info, error) {
+func (s Store) QueryByName(ctx context.Context, traceID string, name string) (City, error) {
 	query := fmt.Sprintf(`
 query {
 	queryCity(filter: { name: { eq: %q } }) {
@@ -81,26 +81,26 @@ query {
 	}
 }`, name)
 
-	c.log.Printf("%s: %s: %s", traceID, "city.QueryByName", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "city.QueryByName", data.Log(query))
 
 	var result struct {
 		QueryCity []struct {
-			Info
+			City
 		} `json:"queryCity"`
 	}
-	if err := c.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return City{}, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.QueryCity) != 1 {
-		return Info{}, ErrNotFound
+		return City{}, ErrNotFound
 	}
 
-	return result.QueryCity[0].Info, nil
+	return result.QueryCity[0].City, nil
 }
 
 // QueryNames returns the list of city names currently loaded in the database.
-func (c City) QueryNames(ctx context.Context, traceID string) ([]string, error) {
+func (s Store) QueryNames(ctx context.Context, traceID string) ([]string, error) {
 	query := `
 	query {
 		queryCity(filter: { }) {
@@ -108,14 +108,14 @@ func (c City) QueryNames(ctx context.Context, traceID string) ([]string, error) 
 		}
 	}`
 
-	c.log.Printf("%s: %s: %s", traceID, "city.QueryNames", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "city.QueryNames", data.Log(query))
 
 	var result struct {
 		QueryCity []struct {
-			Info
+			City
 		} `json:"queryCity"`
 	}
-	if err := c.gql.Execute(ctx, query, &result); err != nil {
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
 
@@ -133,7 +133,7 @@ func (c City) QueryNames(ctx context.Context, traceID string) ([]string, error) 
 
 // =============================================================================
 
-func (c City) upsert(ctx context.Context, traceID string, cty Info) (Info, error) {
+func (s Store) upsert(ctx context.Context, traceID string, cty City) (City, error) {
 	var result id
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -145,14 +145,14 @@ func (c City) upsert(ctx context.Context, traceID string, cty Info) (Info, error
 		%s
 	}`, cty.Name, cty.Lat, cty.Lng, result.document())
 
-	c.log.Printf("%s: %s: %s", traceID, "city.Upsert", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "city.Upsert", data.Log(mutation))
 
-	if err := c.gql.Execute(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to upsert city")
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
+		return City{}, errors.Wrap(err, "failed to upsert city")
 	}
 
 	if len(result.Resp.Entities) != 1 {
-		return Info{}, errors.New("city id not returned")
+		return City{}, errors.New("city id not returned")
 	}
 
 	cty.ID = result.Resp.Entities[0].ID

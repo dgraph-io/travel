@@ -20,15 +20,15 @@ var (
 	ErrNotFound  = errors.New("user not found")
 )
 
-// User manages the set of API's for user access.
-type User struct {
+// Store manages the set of API's for user access.
+type Store struct {
 	log *log.Logger
 	gql *graphql.GraphQL
 }
 
-// New constructs a User for api access.
-func New(log *log.Logger, gql *graphql.GraphQL) User {
-	return User{
+// NewStore constructs a user store for api access.
+func NewStore(log *log.Logger, gql *graphql.GraphQL) Store {
+	return Store{
 		log: log,
 		gql: gql,
 	}
@@ -37,17 +37,17 @@ func New(log *log.Logger, gql *graphql.GraphQL) User {
 // Add adds a new user to the database. If the user already exists
 // this function will fail but the found user is returned. If the user is
 // being added, the user with the id from the database is returned.
-func (u User) Add(ctx context.Context, traceID string, nu NewUser, now time.Time) (Info, error) {
-	if usr, err := u.QueryByEmail(ctx, traceID, nu.Email); err == nil {
+func (s Store) Add(ctx context.Context, traceID string, nu NewUser, now time.Time) (User, error) {
+	if usr, err := s.QueryByEmail(ctx, traceID, nu.Email); err == nil {
 		return usr, ErrExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return Info{}, errors.Wrap(err, "generating password hash")
+		return User{}, errors.Wrap(err, "generating password hash")
 	}
 
-	usr := Info{
+	usr := User{
 		Name:         nu.Name,
 		Email:        nu.Email,
 		Role:         nu.Role,
@@ -56,39 +56,39 @@ func (u User) Add(ctx context.Context, traceID string, nu NewUser, now time.Time
 		DateUpdated:  now,
 	}
 
-	return u.add(ctx, traceID, usr)
+	return s.add(ctx, traceID, usr)
 }
 
 // Update updates a user in the database by its ID. If the user doesn't
 // already exist, this function will fail.
-func (u User) Update(ctx context.Context, traceID string, usr Info) error {
+func (s Store) Update(ctx context.Context, traceID string, usr User) error {
 	if usr.ID == "" {
 		return errors.New("user missing id")
 	}
 
-	if _, err := u.QueryByID(ctx, traceID, usr.ID); err != nil {
+	if _, err := s.QueryByID(ctx, traceID, usr.ID); err != nil {
 		return ErrNotExists
 	}
 
-	return u.update(ctx, traceID, usr)
+	return s.update(ctx, traceID, usr)
 }
 
 // Delete removes a user from the database by its ID. If the user doesn't
 // already exist, this function will fail.
-func (u User) Delete(ctx context.Context, traceID string, userID string) error {
+func (s Store) Delete(ctx context.Context, traceID string, userID string) error {
 	if userID == "" {
 		return errors.New("missing user id")
 	}
 
-	if _, err := u.QueryByID(ctx, traceID, userID); err != nil {
+	if _, err := s.QueryByID(ctx, traceID, userID); err != nil {
 		return ErrNotExists
 	}
 
-	return u.delete(ctx, traceID, userID)
+	return s.delete(ctx, traceID, userID)
 }
 
 // QueryByID returns the specified user from the database by the city id.
-func (u User) QueryByID(ctx context.Context, traceID string, userID string) (Info, error) {
+func (s Store) QueryByID(ctx context.Context, traceID string, userID string) (User, error) {
 	query := fmt.Sprintf(`
 query {
 	getUser(id: %q) {
@@ -102,24 +102,24 @@ query {
 	}
 }`, userID)
 
-	u.log.Printf("%s: %s: %s", traceID, "user.QueryByID", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "user.QueryByID", data.Log(query))
 
 	var result struct {
-		GetUser Info `json:"getUser"`
+		GetUser User `json:"getUser"`
 	}
-	if err := u.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return User{}, errors.Wrap(err, "query failed")
 	}
 
 	if result.GetUser.ID == "" {
-		return Info{}, ErrNotFound
+		return User{}, ErrNotFound
 	}
 
 	return result.GetUser, nil
 }
 
 // QueryByEmail returns the specified user from the database by email.
-func (u User) QueryByEmail(ctx context.Context, traceID string, email string) (Info, error) {
+func (s Store) QueryByEmail(ctx context.Context, traceID string, email string) (User, error) {
 	query := fmt.Sprintf(`
 query {
 	queryUser(filter: { email: { eq: %q } }) {
@@ -133,17 +133,17 @@ query {
 	}
 }`, email)
 
-	u.log.Printf("%s: %s: %s", traceID, "user.QueryByEmail", data.Log(query))
+	s.log.Printf("%s: %s: %s", traceID, "user.QueryByEmail", data.Log(query))
 
 	var result struct {
-		QueryUser []Info `json:"queryUser"`
+		QueryUser []User `json:"queryUser"`
 	}
-	if err := u.gql.Execute(ctx, query, &result); err != nil {
-		return Info{}, errors.Wrap(err, "query failed")
+	if err := s.gql.Execute(ctx, query, &result); err != nil {
+		return User{}, errors.Wrap(err, "query failed")
 	}
 
 	if len(result.QueryUser) != 1 {
-		return Info{}, ErrNotFound
+		return User{}, ErrNotFound
 	}
 
 	return result.QueryUser[0], nil
@@ -151,7 +151,7 @@ query {
 
 // =============================================================================
 
-func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
+func (s Store) add(ctx context.Context, traceID string, usr User) (User, error) {
 	var result id
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -169,21 +169,21 @@ func (u User) add(ctx context.Context, traceID string, usr Info) (Info, error) {
 		usr.DateUpdated.UTC().Format(time.RFC3339),
 		result.document())
 
-	u.log.Printf("%s: %s: %s", traceID, "user.Add", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "user.Add", data.Log(mutation))
 
-	if err := u.gql.Execute(ctx, mutation, &result); err != nil {
-		return Info{}, errors.Wrap(err, "failed to add user")
+	if err := s.gql.Execute(ctx, mutation, &result); err != nil {
+		return User{}, errors.Wrap(err, "failed to add user")
 	}
 
 	if len(result.Resp.Entities) != 1 {
-		return Info{}, errors.New("user id not returned")
+		return User{}, errors.New("user id not returned")
 	}
 
 	usr.ID = result.Resp.Entities[0].ID
 	return usr, nil
 }
 
-func (u User) update(ctx context.Context, traceID string, usr Info) error {
+func (s Store) update(ctx context.Context, traceID string, usr User) error {
 	var result result
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -206,9 +206,9 @@ func (u User) update(ctx context.Context, traceID string, usr Info) error {
 		usr.DateUpdated.UTC().Format(time.RFC3339),
 		result.document())
 
-	u.log.Printf("%s: %s: %s", traceID, "user.Update", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "user.Update", data.Log(mutation))
 
-	if err := u.gql.Execute(ctx, mutation, nil); err != nil {
+	if err := s.gql.Execute(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
 
@@ -220,7 +220,7 @@ func (u User) update(ctx context.Context, traceID string, usr Info) error {
 	return nil
 }
 
-func (u User) delete(ctx context.Context, traceID string, userID string) error {
+func (s Store) delete(ctx context.Context, traceID string, userID string) error {
 	var result result
 	mutation := fmt.Sprintf(`
 	mutation {
@@ -228,9 +228,9 @@ func (u User) delete(ctx context.Context, traceID string, userID string) error {
 		%s
 	}`, userID, result.document())
 
-	u.log.Printf("%s: %s: %s", traceID, "user.Delete", data.Log(mutation))
+	s.log.Printf("%s: %s: %s", traceID, "user.Delete", data.Log(mutation))
 
-	if err := u.gql.Execute(ctx, mutation, nil); err != nil {
+	if err := s.gql.Execute(ctx, mutation, nil); err != nil {
 		return errors.Wrap(err, "failed to delete user")
 	}
 

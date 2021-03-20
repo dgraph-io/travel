@@ -110,36 +110,42 @@ func UpdateData(log *log.Logger, gqlConfig data.GraphQLConfig, traceID string, c
 	return nil
 }
 
+type store struct {
+	advisory advisory.Store
+	city     city.Store
+	place    place.Store
+	weather  weather.Store
+}
+
 type loader struct {
-	log      *log.Logger
-	gql      *graphql.GraphQL
-	advisory advisory.Advisory
-	city     city.City
-	place    place.Place
-	weather  weather.Weather
+	log   *log.Logger
+	gql   *graphql.GraphQL
+	store store
 }
 
 func newLoader(log *log.Logger, gql *graphql.GraphQL) loader {
 	return loader{
-		log:      log,
-		gql:      gql,
-		advisory: advisory.New(log, gql),
-		city:     city.New(log, gql),
-		place:    place.New(log, gql),
-		weather:  weather.New(log, gql),
+		log: log,
+		gql: gql,
+		store: store{
+			advisory: advisory.NewStore(log, gql),
+			city:     city.NewStore(log, gql),
+			place:    place.NewStore(log, gql),
+			weather:  weather.NewStore(log, gql),
+		},
 	}
 }
 
 // upsertCity add the specified city into the database.
-func (l loader) upsertCity(ctx context.Context, traceID string, name string, lat float64, lng float64) (city.Info, error) {
-	newCity := city.Info{
+func (l loader) upsertCity(ctx context.Context, traceID string, name string, lat float64, lng float64) (city.City, error) {
+	newCity := city.City{
 		Name: name,
 		Lat:  lat,
 		Lng:  lng,
 	}
-	newCity, err := l.city.Upsert(ctx, traceID, newCity)
+	newCity, err := l.store.city.Upsert(ctx, traceID, newCity)
 	if err != nil {
-		return city.Info{}, errors.Wrapf(err, "adding city: %s", name)
+		return city.City{}, errors.Wrapf(err, "adding city: %s", name)
 	}
 
 	log.Printf("feed: Work: Upserted City: ID: %s Name: %s Lat: %f Lng: %f", newCity.ID, name, lat, lng)
@@ -155,7 +161,7 @@ func (l loader) replaceWeather(ctx context.Context, traceID string, apiKey strin
 	}
 
 	newWeather := marshalWeather(feedData, cityID)
-	newWeather, err = l.weather.Replace(ctx, traceID, newWeather)
+	newWeather, err = l.store.weather.Replace(ctx, traceID, newWeather)
 	if err != nil {
 		return errors.Wrap(err, "storing weather")
 	}
@@ -172,7 +178,7 @@ func (l loader) replaceAdvisory(ctx context.Context, traceID string, url string,
 	}
 
 	newAdvisory := marshalAdvisory(feedData, cityID)
-	newAdvisory, err = l.advisory.Replace(ctx, traceID, newAdvisory)
+	newAdvisory, err = l.store.advisory.Replace(ctx, traceID, newAdvisory)
 	if err != nil {
 		return errors.Wrap(err, "replacing advisory")
 	}
@@ -182,7 +188,7 @@ func (l loader) replaceAdvisory(ctx context.Context, traceID string, url string,
 }
 
 // upsertPlaces pulls place information and adds new places to the specified city.
-func (l loader) upsertPlaces(ctx context.Context, traceID string, apiKey string, cty city.Info, categories []string, radius uint) error {
+func (l loader) upsertPlaces(ctx context.Context, traceID string, apiKey string, cty city.City, categories []string, radius uint) error {
 	client, err := maps.NewClient(maps.WithAPIKey(apiKey))
 	if err != nil {
 		return errors.Wrap(err, "creating map client")
@@ -206,7 +212,7 @@ func (l loader) upsertPlaces(ctx context.Context, traceID string, apiKey string,
 			}
 
 			for _, feedData := range feedList {
-				newPlace, err := l.place.Upsert(ctx, traceID, marshalPlace(feedData, cty.ID, category))
+				newPlace, err := l.store.place.Upsert(ctx, traceID, marshalPlace(feedData, cty.ID, category))
 				if err != nil {
 					return errors.Wrapf(err, "adding place: %s", newPlace.Name)
 				}

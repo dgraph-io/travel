@@ -1,7 +1,7 @@
 package weather
 
-// Info contains the weather data points captured from the API.
-type Info struct {
+// Weather contains the weather data points captured from the API.
+type Weather struct {
 	ID            string  `json:"id,omitempty"`
 	City          City    `json:"city"`
 	CityName      string  `json:"city_name"`
