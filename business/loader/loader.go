@@ -12,7 +12,6 @@ import (
 	"github.com/dgraph-io/travel/business/data/advisory"
 	"github.com/dgraph-io/travel/business/data/city"
 	"github.com/dgraph-io/travel/business/data/place"
-	"github.com/dgraph-io/travel/business/data/ready"
 	"github.com/dgraph-io/travel/business/data/schema"
 	"github.com/dgraph-io/travel/business/data/weather"
 	advisoryfeed "github.com/dgraph-io/travel/business/feeds/advisory"
@@ -63,7 +62,7 @@ func UpdateSchema(gqlConfig data.GraphQLConfig, schemaConfig schema.Config) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := ready.Validate(ctx, gqlConfig.URL, 5*time.Second)
+	err := data.Validate(ctx, gqlConfig.URL, 5*time.Second)
 	if err != nil {
 		return errors.Wrapf(err, "waiting for database to be ready")
 	}

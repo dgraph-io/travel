@@ -14,7 +14,6 @@ import (
 	"github.com/dgraph-io/travel/business/data/advisory"
 	"github.com/dgraph-io/travel/business/data/city"
 	"github.com/dgraph-io/travel/business/data/place"
-	"github.com/dgraph-io/travel/business/data/ready"
 	"github.com/dgraph-io/travel/business/data/schema"
 	"github.com/dgraph-io/travel/business/data/tests"
 	"github.com/dgraph-io/travel/business/data/user"
@@ -66,7 +65,7 @@ func TestData(t *testing.T) {
 
 // waitReady provides support for making sure the database is ready to be used.
 func waitReady(t *testing.T, ctx context.Context, testID int, tc TestConfig) *graphql.GraphQL {
-	err := ready.Validate(ctx, tc.url, time.Second)
+	err := data.Validate(ctx, tc.url, time.Second)
 	if err != nil {
 		t.Fatalf("\t%s\tTest %d:\tShould be able to see Dgraph is ready: %v", tests.Failed, testID, err)
 	}
@@ -161,7 +160,7 @@ func readiness(url string) func(t *testing.T) {
 						ctx, cancel := context.WithTimeout(context.Background(), test.timeout)
 						defer cancel()
 
-						err := ready.Validate(ctx, url, test.retryDelay)
+						err := data.Validate(ctx, url, test.retryDelay)
 						switch test.success {
 						case true:
 							if err != nil {

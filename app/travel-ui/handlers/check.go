@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/data/ready"
 	"github.com/dgraph-io/travel/foundation/web"
 )
 
@@ -27,7 +26,7 @@ func (cg *checkGroup) readiness(ctx context.Context, w http.ResponseWriter, r *h
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	if err := ready.Validate(ctx, cg.gqlConfig.URL, 100*time.Millisecond); err != nil {
+	if err := data.Validate(ctx, cg.gqlConfig.URL, 100*time.Millisecond); err != nil {
 
 		// If the database is not ready we will tell the client and use a 500
 		// status. Do not respond by just returning an error because further up in
