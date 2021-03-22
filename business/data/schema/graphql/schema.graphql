@@ -1,8 +1,3 @@
-# This represents the schema for the project. It is written to be processed
-# by the Go templating engine to provide required parameters to be injected into
-# the schema. In a production system the schema should be embedded using a tool
-# like pakcr from the Buffalo project (https://github.com/gobuffalo/packr).
-
 enum Role {
 	ADMIN
 	USER
@@ -81,9 +76,8 @@ type Weather {
 	wind_speed: Float
 }
 
-type PlaceCount @remote {
-	count: Int
-}
+# ==============================================================================
+# Custom Queries
 
 type UploadFeedResponse @remote {
 	country_code: String
@@ -93,6 +87,15 @@ type UploadFeedResponse @remote {
 	message: String
 }
 
+type Data {
+    code: String
+    message: String
+}
+
+type DataResponse {
+	data: Data
+}
+
 type Query {
 	uploadFeed(countryCode: String!, cityName: String!, lat: Float!, lng: Float!): UploadFeedResponse @custom(http:{
 		url: "{{.UploadFeedURL}}",
@@ -100,14 +103,26 @@ type Query {
 		body: "{countrycode: $countryCode, cityname: $cityName, lat: $lat, lng: $lng}"
 	})
 
-	# This shows how to create a query function to perform a DQL based query.
-	placesCount(search: String!): PlaceCount @custom(dql: """
-	query q($search: string) {
-		placesCount(func: type(Place)) @filter(anyoftext(Place.name, $search)) {
-			count: count(uid)
+	addUserRating(email: String!, placeId: String!, stars: Int!): DataResponse @custom(dql: """
+		upsert {
+  			query {
+				var(func: eq(User.email, $email)) {
+					c as uid
+				}
+				var(func: eq(Place.place_id, $placeId)) {
+					p as uid
+				}
+			}
+			mutation {
+				set {
+					uid(c) <User.visited> uid(p) (stars=$stars) .
+				}
+			}
 		}
-	}
 	""")
 }
+
+# ==============================================================================
+# Authentication and Authortization
 
 # Dgraph.Authorization {"header":"X-Travel-Auth", "namespace":"Auth", "algo": "RS256", "verificationkey":"{{.PublicKey}}"}

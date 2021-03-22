@@ -150,12 +150,14 @@ dropdata:
 		"drop_op": "DATA" \
 	}'
 
+# ==============================================================================
 # Running tests within the local computer
 
 test:
 	go test ./... -count=1
 	staticcheck ./...
 
+# ==============================================================================
 # Modules support
 
 deps-reset:

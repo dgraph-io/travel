@@ -388,6 +388,13 @@ function closeRatingModal() {
     modal.style.display = "none";
 }
 
-function addRating() {
-    alert("here now");
+function addRating(star) {
+    for (i = 1; i <= 5; i++) {
+        const selectedStar = document.getElementById("star" + i);
+        if (i <= star) {
+            selectedStar.innerText = "★";
+            continue;
+        }
+        selectedStar.innerText = "☆";
+    }
 }

@@ -78,7 +78,13 @@
 					<span>Give Rating</span>
 				</div>
 				<div class="modalbody">
-						<div class="rating" onclick="addRating()"><span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span></div>
+						<div class="rating">
+							<span id="star5" onclick="addRating(5)">☆</span>
+							<span id="star4" onclick="addRating(4)">☆</span>
+							<span id="star3" onclick="addRating(3)">☆</span>
+							<span id="star2" onclick="addRating(2)">☆</span>
+							<span id="star1" onclick="addRating(1)">☆</span>
+						</div>
 						<div id="ratingmodalmessage">Some Message</div>
 					</table>
 				</div>
