@@ -66,7 +66,7 @@ kind-ui: ui
 	kubectl delete pods -lapp=travel
 
 kind-logs:
-	kubectl logs -lapp=travel --all-containers=true -f
+	kubectl logs -lapp=travel --all-containers=true -f --tail=100
 
 kind-status:
 	kubectl get nodes
