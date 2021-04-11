@@ -61,6 +61,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 		if err != nil {
 			return errors.Wrap(err, "open key file")
 		}
+		defer file.Close()
 
 		privatePEM, err := io.ReadAll(file)
 		if err != nil {

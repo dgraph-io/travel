@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
+	"os"
 	"time"
 
 	"github.com/dgraph-io/travel/business/auth"
@@ -40,7 +41,15 @@ func GenToken(log *log.Logger, gqlConfig data.GraphQLConfig, email string, priva
 		return errors.Wrap(err, "getting user")
 	}
 
-	privatePEM, err := ioutil.ReadFile(privateKeyFile)
+	// limit PEM file size to 1 megabyte. This should be reasonable for
+	// almost any PEM file and prevents shenanegans like linking the file
+	// to /dev/random or something like that.
+	pkf, err := os.Open(privateKeyFile)
+	if err != nil {
+		return errors.Wrap(err, "opening PEM private key file")
+	}
+	defer pkf.Close()
+	privatePEM, err := io.ReadAll(io.LimitReader(pkf, 1024*1024))
 	if err != nil {
 		return errors.Wrap(err, "reading PEM private key file")
 	}

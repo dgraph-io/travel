@@ -6,7 +6,7 @@ package advisory
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -42,7 +42,7 @@ func Search(ctx context.Context, url string, countryCode string) (Advisory, erro
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Advisory{}, err
 	}
