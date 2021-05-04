@@ -60,9 +60,11 @@ func run(log *log.Logger) error {
 			Weather  string `conf:"default:http://api.openweathermap.org/data/2.5/weather"`
 		}
 		Dgraph struct {
-			URL            string `conf:"default:http://0.0.0.0:8080"`
-			AuthHeaderName string
-			AuthToken      string
+			URL             string `conf:"default:http://0.0.0.0:8080"`
+			AuthHeaderName  string `conf:"default:X-Travel-Auth"`
+			AuthToken       string
+			CloudHeaderName string `conf:"default:X-Auth-Token"`
+			CloudToken      string
 		}
 	}
 	cfg.Version.SVN = build
@@ -127,9 +129,11 @@ func run(log *log.Logger) error {
 
 	// Capture the configuration for Dgraph.
 	gqlConfig := data.GraphQLConfig{
-		URL:            cfg.Dgraph.URL,
-		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
-		AuthToken:      cfg.Dgraph.AuthToken,
+		URL:             cfg.Dgraph.URL,
+		AuthHeaderName:  cfg.Dgraph.AuthHeaderName,
+		AuthToken:       cfg.Dgraph.AuthToken,
+		CloudHeaderName: cfg.Dgraph.CloudHeaderName,
+		CloudToken:      cfg.Dgraph.CloudToken,
 	}
 
 	loaderConfig := loader.Config{

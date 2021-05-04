@@ -38,9 +38,11 @@ func run(log *log.Logger) error {
 		conf.Version
 		Args   conf.Args
 		Dgraph struct {
-			URL            string `conf:"default:http://0.0.0.0:8080"`
-			AuthHeaderName string `conf:"default:X-Travel-Auth"`
-			AuthToken      string
+			URL             string `conf:"default:http://0.0.0.0:8080"`
+			AuthHeaderName  string `conf:"default:X-Travel-Auth"`
+			AuthToken       string
+			CloudHeaderName string `conf:"default:X-Auth-Token"`
+			CloudToken      string
 		}
 		CustomFunctions struct {
 			UploadFeedURL string `conf:"default:http://0.0.0.0:3000/v1/feed/upload"`
@@ -108,9 +110,11 @@ func run(log *log.Logger) error {
 	// Commands
 
 	gqlConfig := data.GraphQLConfig{
-		URL:            cfg.Dgraph.URL,
-		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
-		AuthToken:      cfg.Dgraph.AuthToken,
+		URL:             cfg.Dgraph.URL,
+		AuthHeaderName:  cfg.Dgraph.AuthHeaderName,
+		AuthToken:       cfg.Dgraph.AuthToken,
+		CloudHeaderName: cfg.Dgraph.CloudHeaderName,
+		CloudToken:      cfg.Dgraph.CloudToken,
 	}
 
 	switch cfg.Args.Num(0) {

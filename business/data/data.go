@@ -17,9 +17,11 @@ import (
 // GraphQLConfig represents comfiguration needed to support managing, mutating,
 // and querying the database.
 type GraphQLConfig struct {
-	URL            string
-	AuthHeaderName string
-	AuthToken      string
+	URL             string
+	AuthHeaderName  string
+	AuthToken       string
+	CloudHeaderName string
+	CloudToken      string
 }
 
 // NewGraphQL constructs a graphql value for use to access the databse.
@@ -43,6 +45,7 @@ func NewGraphQL(gqlConfig GraphQLConfig) *graphql.GraphQL {
 	graphql := graphql.New(gqlConfig.URL,
 		graphql.WithClient(&client),
 		graphql.WithHeader(gqlConfig.AuthHeaderName, gqlConfig.AuthToken),
+		graphql.WithHeader(gqlConfig.CloudHeaderName, gqlConfig.CloudToken),
 	)
 
 	return graphql

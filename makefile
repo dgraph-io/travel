@@ -47,6 +47,9 @@ dbonly:
 kind-up:
 	kind create cluster --image kindest/node:v1.20.2 --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
 
+kind-cloud-up:
+	kind create cluster --image kindest/node:v1.20.2 --name dgraph-travel-cluster --config zarf/k8s/stg/kind-config.yaml
+
 kind-down:
 	kind delete cluster --name dgraph-travel-cluster
 
@@ -56,6 +59,9 @@ kind-load:
 
 kind-services:
 	kustomize build zarf/k8s/dev | kubectl apply -f -
+
+kind-cloud-services:
+	kustomize build zarf/k8s/stg | kubectl apply -f -
 
 kind-api: api
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
@@ -83,23 +89,6 @@ kind-schema:
 
 kind-seed: kind-schema
 	go run app/travel-admin/main.go seed 
-
-# ==============================================================================
-# Running from within the local with Slash
-
-slash-run: slash-up seed slash-browse
-
-slash-up:
-	docker-compose -f zarf/compose/compose-slash.yaml -f zarf/compose/compose-slash-config.yaml up --detach --remove-orphans
-
-slash-down:
-	docker-compose -f zarf/compose/compose-slash.yaml down --remove-orphans
-
-slash-browse:
-	python -m webbrowser "http://localhost"
-
-slash-logs:
-	docker-compose -f zarf/compose/compose-slash.yaml logs -f
 
 # ==============================================================================
 # Running Local

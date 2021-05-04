@@ -44,10 +44,12 @@ func run(log *log.Logger) error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Dgraph struct {
-			URL            string `conf:"default:http://0.0.0.0:8080"`
-			BrowserURL     string `conf:"default:http://0.0.0.0:8080"`
-			AuthHeaderName string
-			AuthToken      string
+			URL             string `conf:"default:http://0.0.0.0:8080"`
+			BrowserURL      string `conf:"default:http://0.0.0.0:8080"`
+			AuthHeaderName  string `conf:"default:X-Travel-Auth"`
+			AuthToken       string
+			CloudHeaderName string `conf:"default:X-Auth-Token"`
+			CloudToken      string
 		}
 		APIKeys struct {
 			// You need to generate a Google Key to support Places API and JS Maps.
@@ -118,9 +120,11 @@ func run(log *log.Logger) error {
 
 	// Capture the configuration for Dgraph.
 	gqlConfig := data.GraphQLConfig{
-		URL:            cfg.Dgraph.URL,
-		AuthHeaderName: cfg.Dgraph.AuthHeaderName,
-		AuthToken:      cfg.Dgraph.AuthToken,
+		URL:             cfg.Dgraph.URL,
+		AuthHeaderName:  cfg.Dgraph.AuthHeaderName,
+		AuthToken:       cfg.Dgraph.AuthToken,
+		CloudHeaderName: cfg.Dgraph.CloudHeaderName,
+		CloudToken:      cfg.Dgraph.CloudToken,
 	}
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.

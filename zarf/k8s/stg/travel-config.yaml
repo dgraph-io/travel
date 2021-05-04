@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: travel
+data:
+  map_key: ""
+  dgraph_url: "https://12060636-087e-4a09-818a-47fd1eb4f0af.us-west-2.aws.cloud.dgraph.io/graphql"

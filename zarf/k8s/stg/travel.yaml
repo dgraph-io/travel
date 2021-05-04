@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        env:
+        - name: TRAVEL_DGRAPH_URL
+          valueFrom:
+            configMapKeyRef:
+              name: travel
+              key: dgraph_url
+      - name: ui
+        env:
+        - name: TRAVEL_DGRAPH_URL
+          valueFrom:
+            configMapKeyRef:
+              name: travel
+              key: dgraph_url
