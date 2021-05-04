@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -174,7 +175,7 @@ func (g *GraphQL) RawRequest(ctx context.Context, endpoint string, r io.Reader, 
 	}
 	defer resp.Body.Close()
 
-	data, err := io.ReadAll(resp.Body)
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("graphql copy error: %w", err)
 	}
