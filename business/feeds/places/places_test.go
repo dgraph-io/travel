@@ -34,7 +34,7 @@ func TestPlaces(t *testing.T) {
 
 			var savePlace string
 			for i := 0; i < 2; i++ {
-				places, err := places.Search(context.Background(), client, &filter)
+				places, err := places.Search(context.Background(), &client, &filter)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to search for places : %v", failed, testID, err)
 				}
@@ -65,7 +65,7 @@ type mockSearcher struct {
 }
 
 // NearbySearch implements the NearbySearcher interface.
-func (s mockSearcher) NearbySearch(ctx context.Context, r *maps.NearbySearchRequest) (maps.PlacesSearchResponse, error) {
+func (s *mockSearcher) NearbySearch(ctx context.Context, r *maps.NearbySearchRequest) (maps.PlacesSearchResponse, error) {
 	var response maps.PlacesSearchResponse
 	if err := json.Unmarshal([]byte(result[s.result]), &response); err != nil {
 		return maps.PlacesSearchResponse{}, err
