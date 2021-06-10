@@ -45,10 +45,10 @@ dbonly:
 # Running from within k8s/dev
 
 kind-up:
-	kind create cluster --image kindest/node:v1.20.2 --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
+	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
 
 kind-cloud-up:
-	kind create cluster --image kindest/node:v1.20.2 --name dgraph-travel-cluster --config zarf/k8s/stg/kind-config.yaml
+	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/stg/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name dgraph-travel-cluster
@@ -138,6 +138,9 @@ dropdata:
 	'{ \
 		"drop_op": "DATA" \
 	}'
+
+token:
+	go run app/travel-admin/main.go gentoken bill@ardanlabs.com zarf/keys/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem RS256
 
 # ==============================================================================
 # Running tests within the local computer

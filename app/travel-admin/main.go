@@ -89,7 +89,7 @@ func run(log *log.Logger) error {
 
 	// For convenience with the training material, an ADMIN token is provided.
 	if cfg.Dgraph.AuthToken == "" {
-		cfg.Dgraph.AuthToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0YmIyMTY1LTcxZTEtNDFhNi1hZjNlLTdkYTRhMGUxZTJjMSIsInR5cCI6IkpXVCJ9.eyJBdXRoIjp7IlJPTEUiOiJBRE1JTiJ9LCJleHAiOjE2MjMzNDI3MTQsImlhdCI6MTU5MTgwNjcxNCwiaXNzIjoidHJhdmVsIHByb2plY3QiLCJzdWIiOiIweDUifQ.dxZsiE9WSXBHB-WenJlSK6zqgXs7ykKpQM3BfrTd_WYvfjIo26FhlPxN-Fr_3dR5-U4aMAw61dTNxMMBNPbD4qs8-CnJ0xfSOl8Xa5Y3p-aKpYvTPL_rPZdjcfqTua2t_sOPmZ3d8_VWkKWmdK-42ab751tmXOCrM6kYXoS1_APQwXKfE_q5eBUlTfrIBR29vtrBfWnpN54wR4i-Uk6DalMOduUmUNuZnYGP9ocIU4Ao1RQ8TsZjo6iIsLGM3r86KYypBWsiRAZPMIZjoZAxqhjRBEOaqNUpq6X3vdhQcRYLgh_36_R1QPlhofAaNKrTMvcZNHkBrBsjOB5pwf6IMQ"
+		cfg.Dgraph.AuthToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0YmIyMTY1LTcxZTEtNDFhNi1hZjNlLTdkYTRhMGUxZTJjMSIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ3NzY5NTI2NDkuOTExNzcxLCJpYXQiOjE2MjMzNTI2NDkuOTExNzczLCJpc3MiOiJ0cmF2ZWwgcHJvamVjdCIsInN1YiI6IkFETUlOIiwiQXV0aCI6eyJST0xFIjoiQURNSU4ifX0.RjpCUPuXBI1VK49SHR0EwCRiqRTV-EITwdv8b5se__C02hbhs6-POTpjao82Ng_pIcznFzpvmevCaXCnJRJeBIOpeSCkTG3PD9ISWwGWCFA9KIaCCgTlNsUL14JzSVHrEMYOkCNDLoa0RNO_ZoHkunGyd818RwnqoxlQ6e9OCJzeKzrOgGK2_JCmBQ5G497nDEVwlP7V3zR2K0Bt21zXa2YjGgbIOj31yf6USXznlP3v9Gw8ES5sDeAd0Irp3VReQEfkn-rVDkopRLmyso-TPesDWjGTFuERAGDLifO0CiQGgCTtGZ-gPMrA3vsHAG3GsQmjBziUNmmzBErBG0J5ag"
 	}
 
 	// =========================================================================
