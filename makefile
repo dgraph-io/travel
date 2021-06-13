@@ -65,21 +65,30 @@ kind-cloud-services:
 
 kind-api: api
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
-	kubectl delete pods -lapp=travel
+	kubectl delete pods -l app=travel
 
 kind-ui: ui
 	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
-	kubectl delete pods -lapp=travel
+	kubectl delete pods -l app=travel
 
 kind-logs:
-	kubectl logs -lapp=travel --all-containers=true -f --tail=100
+	kubectl logs -l app=travel --all-containers true -f --tail 100
 
 kind-status:
-	kubectl get nodes
-	kubectl get pods --watch
+	kubectl get nodes -o wide
+	kubectl get svc -o wide
+	kubectl get pods -o wide --watch
 
 kind-status-full:
-	kubectl describe pod -lapp=travel
+	kubectl describe nodes
+	kubectl describe svc
+	kubectl describe pod -l app=travel
+
+kind-events:
+	kubectl get ev --sort-by metadata.creationTimestamp
+
+kind-events-warn:
+	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 kind-delete:
 	kustomize build . | kubectl delete -f -
