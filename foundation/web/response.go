@@ -4,21 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
 // Respond converts a Go value to JSON and sends it to the client.
 func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statusCode int) error {
 
 	// Set the status code for the request logger middleware.
-	// If the context is missing this value, request the service
-	// to be shutdown gracefully.
-	v, ok := ctx.Value(KeyValues).(*Values)
-	if !ok {
-		return NewShutdownError("web value missing from context")
+	// If the context is missing this value, don't set it and
+	// make sure a reponse is provided.
+	if v, ok := ctx.Value(KeyValues).(*Values); ok {
+		v.StatusCode = statusCode
 	}
-	v.StatusCode = statusCode
 
 	// If there is nothing to marshal then set status code and return.
 	if statusCode == http.StatusNoContent {
@@ -43,31 +39,5 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statu
 		return err
 	}
 
-	return nil
-}
-
-// RespondError sends an error reponse back to the client.
-func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
-
-	// If the error was of the type *Error, the handler has
-	// a specific status code and error to return.
-	if webErr, ok := errors.Cause(err).(*Error); ok {
-		er := ErrorResponse{
-			Error:  webErr.Err.Error(),
-			Fields: webErr.Fields,
-		}
-		if err := Respond(ctx, w, er, webErr.Status); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// If not, the handler sent any arbitrary error value so use 500.
-	er := ErrorResponse{
-		Error: http.StatusText(http.StatusInternalServerError),
-	}
-	if err := Respond(ctx, w, er, http.StatusInternalServerError); err != nil {
-		return err
-	}
 	return nil
 }

@@ -14,7 +14,8 @@ import (
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/app/travel-api/handlers"
 	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/loader"
+	"github.com/dgraph-io/travel/business/feeds/loader"
+	"github.com/dgraph-io/travel/business/sys/metrics"
 	"github.com/pkg/errors"
 )
 
@@ -158,7 +159,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, gqlConfig, loaderConfig),
+		Handler:      handlers.API(build, shutdown, log, metrics.New(), gqlConfig, loaderConfig),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

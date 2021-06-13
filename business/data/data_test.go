@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/graphql"
-	"github.com/dgraph-io/travel/business/auth"
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/advisory"
 	"github.com/dgraph-io/travel/business/data/city"
@@ -18,6 +17,7 @@ import (
 	"github.com/dgraph-io/travel/business/data/tests"
 	"github.com/dgraph-io/travel/business/data/user"
 	"github.com/dgraph-io/travel/business/data/weather"
+	"github.com/dgraph-io/travel/business/sys/auth"
 	"github.com/dgraph-io/travel/foundation/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/go-cmp/cmp"

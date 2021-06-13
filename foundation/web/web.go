@@ -15,7 +15,7 @@ import (
 // ctxKey represents the type of value for the context key.
 type ctxKey int
 
-// KeyValues is how request values or stored/retrieved.
+// KeyValues is how request values are stored/retrieved.
 const KeyValues ctxKey = 1
 
 // Values represent state for each request.
@@ -38,7 +38,7 @@ var registered = make(map[string]bool)
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
-// data/logic on this App struct
+// data/logic on this App struct.
 type App struct {
 	*httptreemux.ContextMux
 	shutdown chan os.Signal
@@ -47,13 +47,11 @@ type App struct {
 
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
-	app := App{
+	return &App{
 		ContextMux: httptreemux.NewContextMux(),
 		shutdown:   shutdown,
 		mw:         mw,
 	}
-
-	return &app
 }
 
 // SignalShutdown is used to gracefully shutdown the app when an integrity

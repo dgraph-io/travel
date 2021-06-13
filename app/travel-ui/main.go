@@ -14,6 +14,7 @@ import (
 	"github.com/ardanlabs/conf"
 	"github.com/dgraph-io/travel/app/travel-ui/handlers"
 	"github.com/dgraph-io/travel/business/data"
+	"github.com/dgraph-io/travel/business/sys/metrics"
 	"github.com/pkg/errors"
 )
 
@@ -133,7 +134,7 @@ func run(log *log.Logger) error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log, gqlConfig, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
+	handler, err := handlers.UI(build, shutdown, log, metrics.New(), gqlConfig, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}

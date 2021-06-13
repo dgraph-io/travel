@@ -8,16 +8,17 @@ import (
 	"os"
 
 	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/loader"
-	"github.com/dgraph-io/travel/business/mid"
+	"github.com/dgraph-io/travel/business/feeds/loader"
+	"github.com/dgraph-io/travel/business/sys/metrics"
+	"github.com/dgraph-io/travel/business/web/mid"
 	"github.com/dgraph-io/travel/foundation/web"
 )
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.GraphQLConfig, loaderConfig loader.Config) *web.App {
+func API(build string, shutdown chan os.Signal, log *log.Logger, metrics *metrics.Metrics, gqlConfig data.GraphQLConfig, loaderConfig loader.Config) *web.App {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
-	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
+	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(metrics), mid.Panics(log))
 
 	// Register the check endpoints.
 	cg := checkGroup{

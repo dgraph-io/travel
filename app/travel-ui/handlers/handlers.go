@@ -9,14 +9,15 @@ import (
 	"os"
 
 	"github.com/dgraph-io/travel/business/data"
-	"github.com/dgraph-io/travel/business/mid"
+	"github.com/dgraph-io/travel/business/sys/metrics"
+	"github.com/dgraph-io/travel/business/web/mid"
 	"github.com/dgraph-io/travel/foundation/web"
 	"github.com/pkg/errors"
 )
 
 // UI constructs an http.Handler with all application routes defined.
-func UI(build string, shutdown chan os.Signal, log *log.Logger, gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey string) (*web.App, error) {
-	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
+func UI(build string, shutdown chan os.Signal, log *log.Logger, metrics *metrics.Metrics, gqlConfig data.GraphQLConfig, browserEndpoint string, mapsKey string) (*web.App, error) {
+	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(metrics), mid.Panics(log))
 
 	// Register the index page for the website.
 	ig, err := newIndex(gqlConfig, browserEndpoint, mapsKey)

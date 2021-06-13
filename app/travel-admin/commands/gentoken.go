@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/dgraph-io/travel/business/auth"
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/user"
+	"github.com/dgraph-io/travel/business/sys/auth"
 	"github.com/dgraph-io/travel/foundation/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/uuid"

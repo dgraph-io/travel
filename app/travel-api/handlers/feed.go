@@ -9,7 +9,7 @@ import (
 
 	"github.com/dgraph-io/travel/business/data"
 	"github.com/dgraph-io/travel/business/data/schema"
-	"github.com/dgraph-io/travel/business/loader"
+	"github.com/dgraph-io/travel/business/feeds/loader"
 	"github.com/dgraph-io/travel/foundation/web"
 	"github.com/pkg/errors"
 )
