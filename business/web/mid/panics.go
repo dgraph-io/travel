@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/dgraph-io/travel/business/sys/metrics"
 	"github.com/dgraph-io/travel/foundation/web"
@@ -26,11 +25,7 @@ func Panics(log *log.Logger) web.Middleware {
 			defer func() {
 				if rec := recover(); rec != nil {
 					err = errors.Errorf("PANIC: %v", rec)
-
-					// Don't count anything on /debug routes towards metrics.
-					if !strings.HasPrefix(r.URL.Path, "/debug") {
-						metrics.AddPanics(ctx)
-					}
+					metrics.AddPanics(ctx)
 				}
 			}()
 

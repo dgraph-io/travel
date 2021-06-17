@@ -35,14 +35,15 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Configuration
 
-	var cfg struct {
+	cfg := struct {
 		conf.Version
 		Web struct {
 			UIHost          string        `conf:"default:0.0.0.0:80"`
 			DebugHost       string        `conf:"default:0.0.0.0:4080"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:5s"`
-			ShutdownTimeout time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s"`
 		}
 		Dgraph struct {
 			URL             string `conf:"default:http://0.0.0.0:8080"`
@@ -58,9 +59,12 @@ func run(log *log.Logger) error {
 			// export UI_API_KEYS_MAPS_KEY=<KEY HERE>
 			MapsKey string `conf:"noprint"`
 		}
+	}{
+		Version: conf.Version{
+			SVN:  build,
+			Desc: "copyright information here",
+		},
 	}
-	cfg.Version.SVN = build
-	cfg.Version.Desc = "copyright information here"
 
 	const prefix = "TRAVEL"
 	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
@@ -98,26 +102,7 @@ func run(log *log.Logger) error {
 	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
-	// Start Debug Service
-	//
-	// /debug/pprof - Added to the default mux by importing the net/http/pprof package.
-	// /debug/vars - Added to the default mux by importing the expvar package.
-	//
-	// Not concerned with shutting this down when the application is shutdown.
-
-	log.Println("main: Initializing debugging support")
-
-	go func() {
-		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
-		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Printf("main: Debug Listener closed : %v", err)
-		}
-	}()
-
-	// =========================================================================
-	// Start UI Service
-
-	log.Println("main: Initializing UI support")
+	// Initialize GraphQL Support
 
 	// Capture the configuration for Dgraph.
 	gqlConfig := data.GraphQLConfig{
@@ -128,13 +113,39 @@ func run(log *log.Logger) error {
 		CloudToken:      cfg.Dgraph.CloudToken,
 	}
 
+	// =========================================================================
+	// Start Debug Service
+
+	// Not concerned with shutting this down when the application is shutdown.
+
+	log.Println("main: Initializing debugging support")
+
+	// The Debug function returns a mux to listen and serve on for all the debug
+	// related endpoints. This include the standard library endpoints.
+
+	debugMux := handlers.DebugMux(build, gqlConfig)
+
+	// Start the service listening for debug requests.
+	// Not concerned with shutting this down with load shedding.
+	go func() {
+		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debugMux); err != nil {
+			log.Printf("main: Debug Listener closed : %v", err)
+		}
+	}()
+
+	// =========================================================================
+	// Start UI Service
+
+	log.Println("main: Initializing UI support")
+
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// Load the templates and bind the handlers.
-	handler, err := handlers.UI(build, shutdown, log, metrics.New(), gqlConfig, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
+	uiMux, err := handlers.UIMux(build, shutdown, log, metrics.New(), gqlConfig, cfg.Dgraph.BrowserURL, cfg.APIKeys.MapsKey)
 	if err != nil {
 		return errors.Wrap(err, "unable to bind handlers")
 	}
@@ -142,7 +153,7 @@ func run(log *log.Logger) error {
 	// Create the server to handle and route traffic.
 	ui := http.Server{
 		Addr:         cfg.Web.UIHost,
-		Handler:      handler,
+		Handler:      uiMux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"runtime"
-	"strings"
 
 	"github.com/dgraph-io/travel/business/sys/metrics"
 	"github.com/dgraph-io/travel/foundation/web"
@@ -26,12 +25,6 @@ func Metrics(data *metrics.Metrics) web.Middleware {
 			err := handler(ctx, w, r)
 
 			// Handle updating the metrics that can be handled here.
-
-			// Don't count anything on /debug routes towards metrics.
-			// Call the next handler to continue processing.
-			if strings.HasPrefix(r.URL.Path, "/debug") {
-				return err
-			}
 
 			// Increment the request counter.
 			data.Requests.Add(1)

@@ -36,14 +36,15 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Configuration
 
-	var cfg struct {
+	cfg := struct {
 		conf.Version
 		Web struct {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:5s"`
-			ShutdownTimeout time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s"`
 		}
 		Search struct {
 			Categories []string `conf:"default:restaurant;bar;supermarket"`
@@ -67,9 +68,12 @@ func run(log *log.Logger) error {
 			CloudHeaderName string `conf:"default:X-Auth-Token"`
 			CloudToken      string
 		}
+	}{
+		Version: conf.Version{
+			SVN:  build,
+			Desc: "copyright information here",
+		},
 	}
-	cfg.Version.SVN = build
-	cfg.Version.Desc = "copyright information here"
 
 	const prefix = "TRAVEL"
 	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
@@ -107,26 +111,7 @@ func run(log *log.Logger) error {
 	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
-	// Start Debug Service
-	//
-	// /debug/pprof - Added to the default mux by importing the net/http/pprof package.
-	// /debug/vars - Added to the default mux by importing the expvar package.
-	//
-	// Not concerned with shutting this down when the application is shutdown.
-
-	log.Println("main: Initializing debugging support")
-
-	go func() {
-		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
-		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Printf("main: Debug Listener closed : %v", err)
-		}
-	}()
-
-	// =========================================================================
-	// Start API Service
-
-	log.Println("main : Started : Initializing API support")
+	// Initialize GraphQL Support
 
 	// Capture the configuration for Dgraph.
 	gqlConfig := data.GraphQLConfig{
@@ -136,6 +121,32 @@ func run(log *log.Logger) error {
 		CloudHeaderName: cfg.Dgraph.CloudHeaderName,
 		CloudToken:      cfg.Dgraph.CloudToken,
 	}
+
+	// =========================================================================
+	// Start Debug Service
+
+	// Not concerned with shutting this down when the application is shutdown.
+
+	log.Println("main: Initializing debugging support")
+
+	// The Debug function returns a mux to listen and serve on for all the debug
+	// related endpoints. This include the standard library endpoints.
+
+	debugMux := handlers.DebugMux(build, gqlConfig)
+
+	// Start the service listening for debug requests.
+	// Not concerned with shutting this down with load shedding.
+	go func() {
+		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debugMux); err != nil {
+			log.Printf("main: Debug Listener closed : %v", err)
+		}
+	}()
+
+	// =========================================================================
+	// Start API Service
+
+	log.Println("main : Started : Initializing API support")
 
 	loaderConfig := loader.Config{
 		Filter: loader.Filter{
@@ -157,11 +168,15 @@ func run(log *log.Logger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
+	apiMux := handlers.APIMux(build, shutdown, log, metrics.New(), gqlConfig, loaderConfig)
+
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, metrics.New(), gqlConfig, loaderConfig),
+		Handler:      apiMux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     log,
 	}
 
 	// Make a channel to listen for errors coming from the listener. Use a
