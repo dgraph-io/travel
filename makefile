@@ -68,11 +68,11 @@ kind-services:
 
 kind-api: api
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
-	kubectl delete pods -l app=travel
+	kubectl rollout restart deployment travel-pod
 
 kind-ui: ui
 	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
-	kubectl delete pods -l app=travel
+	kubectl rollout restart deployment travel-pod
 
 kind-logs:
 	kubectl logs -l app=travel --all-containers true -f --tail 100
