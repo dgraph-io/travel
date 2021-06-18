@@ -42,13 +42,19 @@ dbonly:
 	docker-compose -f zarf/compose/compose-dbonly.yaml -f zarf/compose/compose-dbonly-config.yaml up --detach --remove-orphans
 
 # ==============================================================================
-# Running from within k8s/dev
-
-kind-up:
-	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/dev/kind-config.yaml
+# Running Dgraph in Cloud
 
 kind-cloud-up:
-	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/stg/kind-config.yaml
+	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/cloud/kind-config.yaml
+
+kind-cloud-services:
+	kustomize build zarf/k8s/cloud | kubectl apply -f -
+
+# ==============================================================================
+# Running from within k8s
+
+kind-up:
+	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/kind/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name dgraph-travel-cluster
@@ -58,10 +64,7 @@ kind-load:
 	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
 
 kind-services:
-	kustomize build zarf/k8s/dev | kubectl apply -f -
-
-kind-cloud-services:
-	kustomize build zarf/k8s/stg | kubectl apply -f -
+	kustomize build zarf/k8s/kind | kubectl apply -f -
 
 kind-api: api
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
@@ -97,7 +100,7 @@ kind-schema:
 	go run app/travel-admin/main.go --custom-functions-upload-feed-url=http://localhost:3000/v1/feed/upload schema
 
 kind-seed: kind-schema
-	go run app/travel-admin/main.go seed 
+	go run app/travel-admin/main.go seed
 
 # ==============================================================================
 # Running Local
