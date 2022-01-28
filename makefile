@@ -54,7 +54,10 @@ kind-cloud-services:
 # Running from within k8s
 
 kind-up:
-	kind create cluster --image kindest/node:v1.21.1 --name dgraph-travel-cluster --config zarf/k8s/kind/kind-config.yaml
+	kind create cluster \
+		--image kindest/node:v1.23.0@sha256:49824ab1727c04e56a21a5d8372a402fcd32ea51ac96a2706a12af38934f81ac \
+		--name dgraph-travel-cluster \
+		--config zarf/k8s/kind/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name dgraph-travel-cluster
@@ -63,7 +66,7 @@ kind-load:
 	kind load docker-image travel-api-amd64:1.0 --name dgraph-travel-cluster
 	kind load docker-image travel-ui-amd64:1.0 --name dgraph-travel-cluster
 
-kind-services:
+kind-apply:
 	kustomize build zarf/k8s/kind | kubectl apply -f -
 
 kind-api: api

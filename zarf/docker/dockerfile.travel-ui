@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.16 as build_travel-ui
+FROM golang:1.17 as build_travel-ui
 ENV CGO_ENABLED 0
 ARG VCS_REF
 
