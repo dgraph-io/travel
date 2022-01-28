@@ -47,8 +47,8 @@ type GraphQL struct {
 // against the specified url. The url represents a fully qualified URL without
 // the `graphql` endpoint attached. If `/graphql` is provided, it's trimmed off.
 func New(url string, options ...func(gql *GraphQL)) *GraphQL {
-	url = strings.TrimRight(url, "/graphql")
-	url = strings.TrimRight(url, "/") + "/"
+	url = strings.TrimSuffix(url, "/graphql")
+	url = strings.TrimSuffix(url, "/") + "/"
 
 	gql := GraphQL{
 		url:     url,

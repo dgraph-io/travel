@@ -3,7 +3,7 @@ Simple GraphQL client for executing mutations and queries.
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/graphql.svg?style=svg)](https://circleci.com/gh/ardanlabs/graphql)
 
-Copyright 2020, Ardan Labs  
+Copyright 2020, 2021, Ardan Labs  
 info@ardanlabs.com
 
 ## Licensing
