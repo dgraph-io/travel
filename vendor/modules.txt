@@ -50,16 +50,14 @@ go.opencensus.io/stats
 go.opencensus.io/stats/internal
 go.opencensus.io/stats/view
 go.opencensus.io/tag
-# golang.org/x/crypto v0.0.0-20220126234351-aa10faf2a1f8
+# golang.org/x/crypto v0.1.0
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/sha3
-# golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
-## explicit
+# golang.org/x/sys v0.1.0
 golang.org/x/sys/cpu
-# golang.org/x/text v0.3.7
-## explicit
+# golang.org/x/text v0.4.0
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
